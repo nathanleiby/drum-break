@@ -1,4 +1,7 @@
-use macroquad::prelude::*;
+use macroquad::{
+    audio::{load_sound, play_sound_once},
+    prelude::*,
+};
 
 fn window_conf() -> Conf {
     Conf {
@@ -18,12 +21,19 @@ async fn main() {
     let mut y = screen_height() / 2.0;
     let mut seconds: f32 = 0.0;
 
+    let hihat_sound = load_sound("res/closed-hihat.wav").await.unwrap();
+    let open_hihat_sound = load_sound("res/open-hihat.wav").await.unwrap();
+    let snare_sound = load_sound("res/snare.wav").await.unwrap();
+    let kick_sound = load_sound("res/kick.wav").await.unwrap();
+
     loop {
         clear_background(LIGHTGRAY);
 
+        // using delta time
         let delta = get_frame_time();
         seconds += delta;
 
+        // testing keyboard input
         if is_key_down(KeyCode::Right) {
             x += delta * MOVE_SPEED;
         }
@@ -35,6 +45,20 @@ async fn main() {
         }
         if is_key_down(KeyCode::Up) {
             y -= delta * MOVE_SPEED;
+        }
+
+        // playing sounds
+        if is_key_pressed(KeyCode::A) {
+            play_sound_once(&hihat_sound)
+        }
+        if is_key_pressed(KeyCode::S) {
+            play_sound_once(&snare_sound)
+        }
+        if is_key_pressed(KeyCode::D) {
+            play_sound_once(&kick_sound)
+        }
+        if is_key_pressed(KeyCode::F) {
+            play_sound_once(&open_hihat_sound)
         }
 
         draw_beat_grid();
