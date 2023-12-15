@@ -6,5 +6,5 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-# kira = "0.8.5"
-macroquad = { version = "0.4.4", features = ["audio"] }
+kira = "0.8.5"
+macroquad = { version = "0.4.4" }
