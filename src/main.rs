@@ -62,7 +62,11 @@ async fn main() {
         }
 
         draw_beat_grid();
-        draw_position_line(seconds);
+
+        // Get current beat (from 0 to BEATS_PER_LOOP)
+        let seconds_per_loop = BEAT_DURATION_SECONDS * BEATS_PER_LOOP;
+        let current_beat = (seconds % seconds_per_loop) / seconds_per_loop * BEATS_PER_LOOP;
+        draw_position_line(current_beat);
 
         // TIL: If you alt-tab while a button is pressed, Macroquad will not treat it as released
         draw_user_controlled_object(x, y);
@@ -71,21 +75,23 @@ async fn main() {
     }
 }
 
-const BEAT_WIDTH: f32 = 64.0;
+const BEATS_PER_LOOP: f32 = 4.; // TODO: was 16.
+                                // const BEATS_PER_LOOP: f32 = 16.;
+
+const BEAT_WIDTH_PX: f32 = 64.0;
 const BEAT_PADDING: f32 = 4.;
 
-const GRID_WIDTH: f32 = BEAT_WIDTH * 16.;
-const ROW_HEIGHT: f32 = BEAT_WIDTH;
+const GRID_WIDTH: f32 = BEAT_WIDTH_PX * 16.;
+const ROW_HEIGHT: f32 = BEAT_WIDTH_PX;
 
 const GRID_LEFT_X: f32 = 32.;
 const GRID_TOP_Y: f32 = 32.;
 
 const BPM: f32 = 120.0;
 const BEAT_DURATION_SECONDS: f32 = 60. / BPM;
-const BEATS_IN_GRID: f32 = 16.;
 
 fn draw_beat_grid() {
-    let start_x = GRID_LEFT_X + BEAT_WIDTH;
+    let start_x = GRID_LEFT_X + BEAT_WIDTH_PX;
     let start_y = GRID_TOP_Y;
     for i in 1..=5 {
         let y = start_y + i as f32 * ROW_HEIGHT;
@@ -93,8 +99,8 @@ fn draw_beat_grid() {
     }
 
     // draw vertical lines every 4 beats
-    for i in 0..=16 {
-        let x = start_x + i as f32 * BEAT_WIDTH;
+    for i in 0..=(BEATS_PER_LOOP as i32) {
+        let x = start_x + i as f32 * BEAT_WIDTH_PX;
         draw_line(x, start_y, x, start_y + ROW_HEIGHT * 5., 4.0, BLACK);
     }
     // samba beat!
@@ -125,28 +131,24 @@ fn draw_user_controlled_object(x: f32, y: f32) {
     draw_rectangle(x, y, 32., 32., BLUE);
 }
 
-fn draw_position_line(seconds: f32) {
-    let start_x = GRID_LEFT_X + BEAT_WIDTH;
+fn draw_position_line(current_beat: f32) {
+    let start_x = GRID_LEFT_X + BEAT_WIDTH_PX;
     let start_y = GRID_TOP_Y;
 
-    // total seconds for 16 beats
-    let total_seconds = BEAT_DURATION_SECONDS * 16.0;
-    let seconds_per_pixel = total_seconds / GRID_WIDTH;
-
-    // draw a vertical line at the current positon
-    let x = start_x + (seconds % (BEATS_IN_GRID * BEAT_DURATION_SECONDS)) / seconds_per_pixel;
+    // draw a vertical line at the current positonj
+    let x = start_x + current_beat * BEAT_WIDTH_PX;
     draw_line(x, start_y, x, start_y + ROW_HEIGHT * 5., 4.0, RED);
 }
 
 fn draw_note(beats_offset: f32, row: usize) {
     let beat_duration = 1 as f32;
-    let x = GRID_LEFT_X + beats_offset * BEAT_WIDTH;
+    let x = GRID_LEFT_X + beats_offset * BEAT_WIDTH_PX;
     let y = GRID_TOP_Y + row as f32 * ROW_HEIGHT;
     draw_rectangle(
         x + BEAT_PADDING / 2.,
         y + BEAT_PADDING / 2.,
-        BEAT_WIDTH * beat_duration - BEAT_PADDING,
-        BEAT_WIDTH - BEAT_PADDING,
+        BEAT_WIDTH_PX * beat_duration - BEAT_PADDING,
+        BEAT_WIDTH_PX - BEAT_PADDING,
         ORANGE,
     );
 }
