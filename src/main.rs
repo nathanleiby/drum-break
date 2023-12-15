@@ -82,6 +82,7 @@ const GRID_TOP_Y: f32 = 32.;
 
 const BPM: f32 = 120.0;
 const BEAT_DURATION_SECONDS: f32 = 60. / BPM;
+const BEATS_IN_GRID: f32 = 16.;
 
 fn draw_beat_grid() {
     let start_x = GRID_LEFT_X + BEAT_WIDTH;
@@ -133,7 +134,7 @@ fn draw_position_line(seconds: f32) {
     let seconds_per_pixel = total_seconds / GRID_WIDTH;
 
     // draw a vertical line at the current positon
-    let x = start_x + seconds / seconds_per_pixel;
+    let x = start_x + (seconds % (BEATS_IN_GRID * BEAT_DURATION_SECONDS)) / seconds_per_pixel;
     draw_line(x, start_y, x, start_y + ROW_HEIGHT * 5., 4.0, RED);
 }
 
