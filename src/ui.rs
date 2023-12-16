@@ -2,14 +2,22 @@ use crate::{consts::*, Voices};
 
 use macroquad::prelude::*;
 
-pub fn render_ui(voices: &Voices, bpm: f64, current_beat: f64) {
-    clear_background(LIGHTGRAY);
-    draw_beat_grid(voices);
-    draw_position_line(current_beat);
-    draw_status(bpm, current_beat / 2.);
+pub struct UI {}
+
+impl UI {
+    pub fn new() -> Self {
+        Self {}
+    }
+
+    pub fn render(self: &Self, voices: &Voices, bpm: f64, current_beat: f64) {
+        clear_background(LIGHTGRAY);
+        draw_beat_grid(voices);
+        draw_position_line(current_beat);
+        draw_status(bpm, current_beat / 2.);
+    }
 }
 
-pub fn draw_status(bpm: f64, current_beat: f64) {
+fn draw_status(bpm: f64, current_beat: f64) {
     draw_text(
         format!("BPM: {bpm}").as_str(),
         (GRID_LEFT_X) as f32,
@@ -25,7 +33,8 @@ pub fn draw_status(bpm: f64, current_beat: f64) {
         DARKGRAY,
     );
 }
-pub fn draw_beat_grid(voices: &Voices) {
+
+fn draw_beat_grid(voices: &Voices) {
     let closed_hihat_notes = &voices.closed_hihat;
     let snare_notes = &voices.snare;
     let kick_notes = &voices.kick;
@@ -80,7 +89,7 @@ pub fn draw_beat_grid(voices: &Voices) {
     }
 }
 
-pub fn draw_position_line(current_beat: f64) {
+fn draw_position_line(current_beat: f64) {
     let start_x = GRID_LEFT_X;
     let start_y = GRID_TOP_Y;
 
