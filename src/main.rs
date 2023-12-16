@@ -1,5 +1,3 @@
-use std::thread::current;
-
 use macroquad::prelude::*;
 
 use kira::{
@@ -7,7 +5,6 @@ use kira::{
     manager::{backend::DefaultBackend, AudioManager, AudioManagerSettings},
     sound::static_sound::{StaticSoundData, StaticSoundSettings},
     tween::Tween,
-    StartTime,
 };
 
 fn window_conf() -> Conf {
@@ -46,22 +43,18 @@ async fn main() {
         .into_iter()
         .map(|x| x - 1.)
         .collect();
-    let snare_notes = vec![1., 3., 6., 8., 10., 13., 15.];
-    let kick_notes = vec![1., 4., 5., 8., 9., 12., 13., 16.];
-    let open_hihat_notes = vec![3., 7., 11., 15.];
-    let mut last_scheduled_tick = -1.;
-    schedule_audio(
-        &closed_hihat_notes,
-        &snare_notes,
-        &kick_notes,
-        &open_hihat_notes,
-        &mut manager,
-        &clock,
-        last_scheduled_tick,
-        0.,
-    );
-    let mut last_beat = -1;
+    let snare_notes = vec![1., 3., 6., 8., 10., 13., 15.]
+        .into_iter()
+        .map(|x| x - 1.)
+        .collect();
+    let kick_notes: Vec<f64> = vec![1., 4., 5., 8., 9., 12., 13., 16.]
+        .into_iter()
+        .map(|x| x - 1.)
+        .collect();
+    let open_hihat_note: Vec<f64> = vec![3., 7., 11., 15.].into_iter().map(|x| x - 1.).collect();
 
+    let mut last_scheduled_tick = -1.;
+    let mut last_beat = -1;
     loop {
         clear_background(LIGHTGRAY);
 
@@ -71,14 +64,37 @@ async fn main() {
             let tick_to_schedule = current_clock_tick + TICK_SCHEDULE_AHEAD;
             schedule_audio(
                 &closed_hihat_notes,
-                &snare_notes,
-                &kick_notes,
-                &open_hihat_notes,
+                "closed-hihat",
                 &mut manager,
                 &clock,
                 last_scheduled_tick,
                 tick_to_schedule,
             );
+            schedule_audio(
+                &snare_notes,
+                "snare",
+                &mut manager,
+                &clock,
+                last_scheduled_tick,
+                tick_to_schedule,
+            );
+            schedule_audio(
+                &kick_notes,
+                "kick",
+                &mut manager,
+                &clock,
+                last_scheduled_tick,
+                tick_to_schedule,
+            );
+            schedule_audio(
+                &open_hihat_note,
+                "open-hihat",
+                &mut manager,
+                &clock,
+                last_scheduled_tick,
+                tick_to_schedule,
+            );
+
             last_scheduled_tick = tick_to_schedule;
         }
 
@@ -164,10 +180,8 @@ async fn main() {
 }
 
 fn schedule_audio(
-    closed_hihat_notes: &Vec<f64>,
-    snare_notes: &Vec<f64>,
-    kick_notes: &Vec<f64>,
-    open_hihat_notes: &Vec<f64>,
+    notes: &Vec<f64>,
+    instrument_name: &str,
     manager: &mut AudioManager,
     clock: &ClockHandle,
     last_scheduled_tick: f64,
@@ -175,32 +189,44 @@ fn schedule_audio(
 ) {
     let prev_beat = last_scheduled_tick % BEATS_PER_LOOP;
     let next_beat = tick_to_schedule % BEATS_PER_LOOP;
-    info!("Scheduling from {} to {}", prev_beat, next_beat);
+    info!(
+        "Scheduling {} from {} to {}",
+        instrument_name, prev_beat, next_beat
+    );
     let loop_num = (last_scheduled_tick / BEATS_PER_LOOP) as i32; // floor
-    for note in closed_hihat_notes.iter() {
+    for note in notes.iter() {
         if note > &prev_beat && note <= &next_beat {
-            schedule_note(note, loop_num, clock, manager);
+            schedule_note(note, loop_num, clock, manager, instrument_name);
         };
 
         // handle wrap-around case
         if next_beat < prev_beat {
             // from prev_beat to end of loop
             if *note > prev_beat && *note <= BEATS_PER_LOOP as f64 {
-                schedule_note(note, loop_num, clock, manager);
+                schedule_note(note, loop_num, clock, manager, instrument_name);
             }
             // from start of loop to next beat
             if *note >= 0. && *note <= next_beat {
-                schedule_note(note, loop_num + 1, clock, manager);
+                schedule_note(note, loop_num + 1, clock, manager, instrument_name);
             }
         }
     }
 }
 
-fn schedule_note(note: &f64, loop_num: i32, clock: &ClockHandle, manager: &mut AudioManager) {
+fn schedule_note(
+    note: &f64,
+    loop_num: i32,
+    clock: &ClockHandle,
+    manager: &mut AudioManager,
+    instrument_name: &str,
+) {
     let note_tick = (*note + (loop_num as f64) * BEATS_PER_LOOP) as u64;
-    info!("\tScheduling closed hihat ({}) at {}", note, note_tick);
+    info!(
+        "\tScheduling {} ({}) at {}",
+        instrument_name, note, note_tick
+    );
     let sound = StaticSoundData::from_file(
-        "res/closed-hihat.wav",
+        format!("res/{}.wav", instrument_name),
         StaticSoundSettings::new().start_time(ClockTime {
             clock: clock.id(),
             ticks: note_tick,
