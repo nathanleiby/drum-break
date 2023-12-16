@@ -17,6 +17,13 @@ fn window_conf() -> Conf {
     }
 }
 
+// enum instrument_name {
+//     Hihat = "closed-hihat",
+//     Snare = "snare",
+//     Kick = "kick",
+//     OpenHihat = "open-hihat",
+// }
+
 const BEATS_PER_LOOP: f64 = 16.;
 
 const BEAT_WIDTH_PX: f64 = 64.0;
@@ -25,7 +32,7 @@ const BEAT_PADDING: f64 = 4.;
 const GRID_WIDTH: f64 = BEAT_WIDTH_PX * 16.;
 const ROW_HEIGHT: f64 = BEAT_WIDTH_PX;
 
-const GRID_LEFT_X: f64 = 32.;
+const GRID_LEFT_X: f64 = 64.;
 const GRID_TOP_Y: f64 = 64.;
 
 const TICK_SCHEDULE_AHEAD: f64 = 4.;
@@ -39,19 +46,22 @@ async fn main() {
         .add_clock(ClockSpeed::TicksPerMinute(bpm as f64))
         .unwrap();
 
+    // let lambda = |x: f64| (x - 1.) / 2.; // 8 quarter note beats per loop
+    let lambda = |x: f64| (x - 1.);
     let closed_hihat_notes = vec![1., 3., 4., 5., 7., 8., 9., 11., 12., 13., 15., 16.]
         .into_iter()
-        .map(|x| x - 1.)
+        .map(lambda)
         .collect();
     let snare_notes = vec![1., 3., 6., 8., 10., 13., 15.]
         .into_iter()
-        .map(|x| x - 1.)
+        .map(lambda)
         .collect();
     let kick_notes: Vec<f64> = vec![1., 4., 5., 8., 9., 12., 13., 16.]
         .into_iter()
-        .map(|x| x - 1.)
+        .map(lambda)
         .collect();
-    let open_hihat_note: Vec<f64> = vec![3., 7., 11., 15.].into_iter().map(|x| x - 1.).collect();
+    let open_hihat_note: Vec<f64> = vec![3., 7., 11., 15.].into_iter().map(lambda).collect();
+    let metronome_notes: Vec<f64> = (0..16).into_iter().map(|x| x as f64).collect();
 
     let mut last_scheduled_tick = -1.;
     let mut last_beat = -1;
@@ -62,51 +72,45 @@ async fn main() {
 
         if current_clock_tick > last_scheduled_tick {
             let tick_to_schedule = current_clock_tick + TICK_SCHEDULE_AHEAD;
-            schedule_audio(
-                &closed_hihat_notes,
-                "closed-hihat",
-                &mut manager,
-                &clock,
-                last_scheduled_tick,
-                tick_to_schedule,
-            );
-            schedule_audio(
-                &snare_notes,
-                "snare",
-                &mut manager,
-                &clock,
-                last_scheduled_tick,
-                tick_to_schedule,
-            );
-            schedule_audio(
-                &kick_notes,
-                "kick",
-                &mut manager,
-                &clock,
-                last_scheduled_tick,
-                tick_to_schedule,
-            );
-            schedule_audio(
-                &open_hihat_note,
-                "open-hihat",
-                &mut manager,
-                &clock,
-                last_scheduled_tick,
-                tick_to_schedule,
-            );
 
+            for pair in [
+                (&metronome_notes, "click"),
+                (&closed_hihat_notes, "closed-hihat"),
+                (&snare_notes, "snare"),
+                (&kick_notes, "kick"),
+                (&open_hihat_note, "open-hihat"),
+            ] {
+                let (notes, instrument_name) = pair;
+                schedule_audio(
+                    &notes,
+                    &instrument_name,
+                    &mut manager,
+                    &clock,
+                    last_scheduled_tick,
+                    tick_to_schedule,
+                );
+            }
             last_scheduled_tick = tick_to_schedule;
         }
 
         if is_key_pressed(KeyCode::Space) {
             if clock.ticking() {
-                clock.stop().unwrap();
+                // clock.stop().unwrap();
+                clock.pause().unwrap();
             } else {
                 clock.start().unwrap();
             }
         }
 
+        // Improve UX here
+        // Check if down < 0.5s then go fast? (then can use same key incr.. "Up")
         if is_key_pressed(KeyCode::Up) {
+            bpm += 1.;
+            clock
+                .set_speed(ClockSpeed::TicksPerMinute(bpm), Tween::default())
+                .unwrap();
+        }
+        if is_key_down(KeyCode::Right) {
             bpm += 1.;
             clock
                 .set_speed(ClockSpeed::TicksPerMinute(bpm), Tween::default())
@@ -119,62 +123,58 @@ async fn main() {
                 .set_speed(ClockSpeed::TicksPerMinute(bpm), Tween::default())
                 .unwrap();
         }
-
-        if is_key_down(KeyCode::Down) {
+        if is_key_down(KeyCode::Left) {
+            // Check if down < 0.5s then go fast?
             bpm -= 1.;
             clock
                 .set_speed(ClockSpeed::TicksPerMinute(bpm), Tween::default())
                 .unwrap();
         }
 
+        if is_key_pressed(KeyCode::M) {
+            if clock.ticking() {
+                // clock.stop().unwrap();
+                clock.pause().unwrap();
+            } else {
+                clock.start().unwrap();
+            }
+        }
+
         draw_beat_grid();
 
         // Get current beat (from 0 to BEATS_PER_LOOP)
         let current_beat = current_clock_tick % BEATS_PER_LOOP;
-        // TODO: loop it
         draw_position_line(current_beat);
         if (current_beat as i32) > last_beat {
-            info!("Beat: {}", current_beat as i32);
+            debug!("Beat: {}", current_beat as i32);
             last_beat = current_beat as i32;
         }
 
-        draw_text(format!("BPM: {bpm}").as_str(), 20.0, 20.0, 30.0, DARKGRAY);
+        draw_text(
+            format!("BPM: {bpm}").as_str(),
+            (GRID_LEFT_X + BEAT_WIDTH_PX) as f32,
+            20.0,
+            30.0,
+            DARKGRAY,
+        );
         draw_text(
             format!("Current Beat: {:.1}", current_beat).as_str(),
-            20.0,
+            (GRID_LEFT_X + BEAT_WIDTH_PX) as f32,
             40.0,
             30.0,
             DARKGRAY,
         );
 
-        draw_text(
-            "Hihat",
-            20.0,
-            (GRID_TOP_Y + ROW_HEIGHT * 0.5) as f32,
-            30.0,
-            DARKGRAY,
-        );
-        draw_text(
-            "Snare",
-            20.0,
-            (GRID_TOP_Y + ROW_HEIGHT * 1.5) as f32,
-            30.0,
-            DARKGRAY,
-        );
-        draw_text(
-            "Kick",
-            20.0,
-            (GRID_TOP_Y + ROW_HEIGHT * 2.5) as f32,
-            30.0,
-            DARKGRAY,
-        );
-        draw_text(
-            "Open hi-hat",
-            20.0,
-            (GRID_TOP_Y + ROW_HEIGHT * 3.5) as f32,
-            30.0,
-            DARKGRAY,
-        );
+        for (idx, name) in ["Hihat", "Snare", "Kick", "Open hi-hat"].iter().enumerate() {
+            draw_text(
+                name,
+                20.0,
+                (GRID_TOP_Y + ROW_HEIGHT * (idx as f64 + 0.5)) as f32,
+                20.0,
+                DARKGRAY,
+            );
+        }
+
         next_frame().await
     }
 }
@@ -189,7 +189,7 @@ fn schedule_audio(
 ) {
     let prev_beat = last_scheduled_tick % BEATS_PER_LOOP;
     let next_beat = tick_to_schedule % BEATS_PER_LOOP;
-    info!(
+    debug!(
         "Scheduling {} from {} to {}",
         instrument_name, prev_beat, next_beat
     );
@@ -221,7 +221,7 @@ fn schedule_note(
     instrument_name: &str,
 ) {
     let note_tick = (*note + (loop_num as f64) * BEATS_PER_LOOP) as u64;
-    info!(
+    debug!(
         "\tScheduling {} ({}) at {}",
         instrument_name, note, note_tick
     );
