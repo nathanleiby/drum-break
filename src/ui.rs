@@ -1,6 +1,6 @@
 use crate::{audio::Audio, consts::*, Voices};
 
-use macroquad::{audio, prelude::*};
+use macroquad::prelude::*;
 
 pub struct UI {}
 
