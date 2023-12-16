@@ -1,8 +1,8 @@
 # TODO
 
 - [ ] loop editing
-  - [ ] clicking to add remove notes via UI, and properly scheduling audio for that
-  - [ ] having it work while playing, not just paused
+  - [x] clicking to add remove notes via UI, and properly scheduling audio for that
+  - [x] having it work while playing, not just paused
 - [ ] read loop data from file (e.g. TOML)
 - [ ] capture and display user timing input for beat
 - [ ] use a midi library for input
