@@ -7,15 +7,11 @@ use macroquad::prelude::*;
 
 use crate::{
     consts::{BEATS_PER_LOOP, TICK_SCHEDULE_AHEAD},
-    current_clock_tick,
+    current_clock_tick, Voices,
 };
 
 pub fn audio(
-    metronome_notes: &Vec<f64>,
-    closed_hihat_notes: &Vec<f64>,
-    snare_notes: &Vec<f64>,
-    kick_notes: &Vec<f64>,
-    open_hihat_note: &Vec<f64>,
+    voices: &Voices,
     mut manager: &mut AudioManager,
     clock: &ClockHandle,
     last_scheduled_tick: f64,
@@ -25,15 +21,15 @@ pub fn audio(
         let tick_to_schedule = current + TICK_SCHEDULE_AHEAD;
 
         for pair in [
-            (&metronome_notes, "click"),
-            (&closed_hihat_notes, "closed-hihat"),
-            (&snare_notes, "snare"),
-            (&kick_notes, "kick"),
-            (&open_hihat_note, "open-hihat"),
+            (&voices.metronome, "click"),
+            (&voices.closed_hihat, "closed-hihat"),
+            (&voices.snare, "snare"),
+            (&voices.kick, "kick"),
+            (&voices.open_hihat, "open-hihat"),
         ] {
-            let (notes, instrument_name) = pair;
+            let (voice, instrument_name) = pair;
             schedule_audio(
-                &notes,
+                &voice,
                 &instrument_name,
                 &mut manager,
                 &clock,

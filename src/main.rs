@@ -26,8 +26,56 @@ fn window_conf() -> Conf {
     }
 }
 
+/// Voices represents the notes to be played on each instrument.
+pub struct Voices {
+    metronome: Vec<f64>,
+    closed_hihat: Vec<f64>,
+    snare: Vec<f64>,
+    kick: Vec<f64>,
+    open_hihat: Vec<f64>,
+}
+
+impl Voices {
+    fn new() -> Self {
+        Self {
+            metronome: vec![],
+            closed_hihat: vec![],
+            snare: vec![],
+            kick: vec![],
+            open_hihat: vec![],
+        }
+    }
+
+    fn samba() -> Self {
+        // let lambda = |x: f64| (x - 1.) / 2.; // 8 quarter note beats per loop
+        let lambda = |x: f64| (x - 1.);
+        let closed_hihat_notes = vec![1., 3., 4., 5., 7., 8., 9., 11., 12., 13., 15., 16.]
+            .into_iter()
+            .map(lambda)
+            .collect();
+        let snare_notes = vec![1., 3., 6., 8., 10., 13., 15.]
+            .into_iter()
+            .map(lambda)
+            .collect();
+        let kick_notes: Vec<f64> = vec![1., 4., 5., 8., 9., 12., 13., 16.]
+            .into_iter()
+            .map(lambda)
+            .collect();
+        let open_hihat_notes: Vec<f64> = vec![3., 7., 11., 15.].into_iter().map(lambda).collect();
+        let metronome_notes: Vec<f64> = (0..16).into_iter().map(|x| x as f64).collect();
+        Self {
+            metronome: metronome_notes,
+            closed_hihat: closed_hihat_notes,
+            snare: snare_notes,
+            kick: kick_notes,
+            open_hihat: open_hihat_notes,
+        }
+    }
+}
+
 #[macroquad::main(window_conf)]
 async fn main() {
+    // Setup global game state
     let mut bpm: f64 = 120.0;
 
     let mut manager = AudioManager::<DefaultBackend>::new(AudioManagerSettings::default()).unwrap();
@@ -35,41 +83,16 @@ async fn main() {
         .add_clock(ClockSpeed::TicksPerMinute(bpm * 2. as f64))
         .unwrap();
 
-    // samba beat!
-    // let lambda = |x: f64| (x - 1.) / 2.; // 8 quarter note beats per loop
-    let lambda = |x: f64| (x - 1.);
-    let mut closed_hihat_notes = vec![1., 3., 4., 5., 7., 8., 9., 11., 12., 13., 15., 16.]
-        .into_iter()
-        .map(lambda)
-        .collect();
-    let mut snare_notes = vec![1., 3., 6., 8., 10., 13., 15.]
-        .into_iter()
-        .map(lambda)
-        .collect();
-    let mut kick_notes: Vec<f64> = vec![1., 4., 5., 8., 9., 12., 13., 16.]
-        .into_iter()
-        .map(lambda)
-        .collect();
-    let mut open_hihat_note: Vec<f64> = vec![3., 7., 11., 15.].into_iter().map(lambda).collect();
-    let metronome_notes: Vec<f64> = (0..16).into_iter().map(|x| x as f64).collect();
-
     let mut last_scheduled_tick = -1.;
     let mut last_beat = -1;
+
+    let mut voices = Voices::samba();
 
     loop {
         ////////////////////////////
         // Schedule audio
         ////////////////////////////
-        last_scheduled_tick = audio(
-            &metronome_notes,
-            &closed_hihat_notes,
-            &snare_notes,
-            &kick_notes,
-            &open_hihat_note,
-            &mut manager,
-            &clock,
-            last_scheduled_tick,
-        );
+        last_scheduled_tick = audio(&voices, &mut manager, &clock, last_scheduled_tick);
 
         ////////////////////////////
         // Handle User Input
@@ -133,28 +156,28 @@ async fn main() {
             if beat >= 0. && beat < BEATS_PER_LOOP && row >= 0. && row < NUM_ROWS_IN_GRID {
                 debug!("Clicked on row={}, beat={}", row, beat);
                 if row == 0. {
-                    if let Some(pos) = closed_hihat_notes.iter().position(|x| *x == beat) {
-                        closed_hihat_notes.remove(pos);
+                    if let Some(pos) = voices.closed_hihat.iter().position(|x| *x == beat) {
+                        voices.closed_hihat.remove(pos);
                     } else {
-                        closed_hihat_notes.push(beat);
+                        voices.closed_hihat.push(beat);
                     }
                 } else if row == 1. {
-                    if let Some(pos) = snare_notes.iter().position(|x| *x == beat) {
-                        snare_notes.remove(pos);
+                    if let Some(pos) = voices.snare.iter().position(|x| *x == beat) {
+                        voices.snare.remove(pos);
                     } else {
-                        snare_notes.push(beat);
+                        voices.snare.push(beat);
                     }
                 } else if row == 2. {
-                    if let Some(pos) = kick_notes.iter().position(|x| *x == beat) {
-                        kick_notes.remove(pos);
+                    if let Some(pos) = voices.kick.iter().position(|x| *x == beat) {
+                        voices.kick.remove(pos);
                     } else {
-                        kick_notes.push(beat);
+                        voices.kick.push(beat);
                     }
                 } else if row == 3. {
-                    if let Some(pos) = open_hihat_note.iter().position(|x| *x == beat) {
-                        open_hihat_note.remove(pos);
+                    if let Some(pos) = voices.open_hihat.iter().position(|x| *x == beat) {
+                        voices.open_hihat.remove(pos);
                     } else {
-                        open_hihat_note.push(beat);
+                        voices.open_hihat.push(beat);
                     }
                 }
             }
@@ -169,16 +192,12 @@ async fn main() {
             debug!("Beat: {}", current_beat as i32);
             last_beat = current_beat as i32;
         }
-        render_ui(
-            &closed_hihat_notes,
-            &snare_notes,
-            &kick_notes,
-            &open_hihat_note,
-            bpm,
-            &clock,
-            current_beat,
-        );
 
+        render_ui(&voices, bpm, current_beat);
+
+        ////////////////////////////
+        // Game Loop -- next frame
+        ////////////////////////////
         next_frame().await
     }
 }

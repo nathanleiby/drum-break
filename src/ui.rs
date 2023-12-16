@@ -1,25 +1,11 @@
-use crate::consts::*;
+use crate::{consts::*, Voices};
 
 use kira::clock::ClockHandle;
 use macroquad::prelude::*;
 
-pub fn render_ui(
-    closed_hihat_notes: &Vec<f64>,
-    snare_notes: &Vec<f64>,
-    kick_notes: &Vec<f64>,
-    open_hihat_note: &Vec<f64>,
-    bpm: f64,
-    clock: &ClockHandle,
-    current_beat: f64,
-) {
+pub fn render_ui(voices: &Voices, bpm: f64, current_beat: f64) {
     clear_background(LIGHTGRAY);
-    draw_beat_grid(
-        &closed_hihat_notes,
-        &snare_notes,
-        &kick_notes,
-        &open_hihat_note,
-    );
-
+    draw_beat_grid(voices);
     draw_position_line(current_beat);
     draw_status(bpm, current_beat / 2.);
 }
@@ -40,12 +26,12 @@ pub fn draw_status(bpm: f64, current_beat: f64) {
         DARKGRAY,
     );
 }
-pub fn draw_beat_grid(
-    closed_hihat_notes: &Vec<f64>,
-    snare_notes: &Vec<f64>,
-    kick_notes: &Vec<f64>,
-    open_hihat_notes: &Vec<f64>,
-) {
+pub fn draw_beat_grid(voices: &Voices) {
+    let closed_hihat_notes = &voices.closed_hihat;
+    let snare_notes = &voices.snare;
+    let kick_notes = &voices.kick;
+    let open_hihat_notes = &voices.open_hihat;
+
     // Labels in top-left of grid
     for (idx, name) in ["Hihat", "Snare", "Kick", "Open hi-hat"].iter().enumerate() {
         draw_text(
