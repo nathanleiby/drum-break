@@ -2,6 +2,8 @@ mod audio;
 mod consts;
 mod ui;
 
+use std::process;
+
 use crate::audio::*;
 use crate::consts::*;
 use crate::ui::*;
@@ -116,6 +118,10 @@ async fn main() {
 
         if is_key_pressed(KeyCode::M) {
             // TODO: pause metronome click sound
+        }
+
+        if is_key_pressed(KeyCode::Q) {
+            process::exit(0);
         }
 
         if is_mouse_button_pressed(MouseButton::Left) {
