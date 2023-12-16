@@ -32,7 +32,7 @@ async fn main() {
 
     let mut manager = AudioManager::<DefaultBackend>::new(AudioManagerSettings::default()).unwrap();
     let clock = manager
-        .add_clock(ClockSpeed::TicksPerMinute(bpm as f64))
+        .add_clock(ClockSpeed::TicksPerMinute(bpm * 2. as f64))
         .unwrap();
 
     // samba beat!
@@ -89,14 +89,14 @@ async fn main() {
             bpm += 1.;
             bpm = bpm.max(MIN_BPM).min(MAX_BPM);
             clock
-                .set_speed(ClockSpeed::TicksPerMinute(bpm), Tween::default())
+                .set_speed(ClockSpeed::TicksPerMinute(bpm * 2.), Tween::default())
                 .unwrap();
         }
         if is_key_down(KeyCode::Right) {
             bpm += 1.;
             bpm = bpm.max(MIN_BPM).min(MAX_BPM);
             clock
-                .set_speed(ClockSpeed::TicksPerMinute(bpm), Tween::default())
+                .set_speed(ClockSpeed::TicksPerMinute(bpm * 2.), Tween::default())
                 .unwrap();
         }
 
@@ -104,7 +104,7 @@ async fn main() {
             bpm -= 1.;
             bpm = bpm.max(MIN_BPM).min(MAX_BPM);
             clock
-                .set_speed(ClockSpeed::TicksPerMinute(bpm), Tween::default())
+                .set_speed(ClockSpeed::TicksPerMinute(bpm * 2.), Tween::default())
                 .unwrap();
         }
         if is_key_down(KeyCode::Left) {
@@ -112,7 +112,7 @@ async fn main() {
             bpm -= 1.;
             bpm = bpm.max(MIN_BPM).min(MAX_BPM);
             clock
-                .set_speed(ClockSpeed::TicksPerMinute(bpm), Tween::default())
+                .set_speed(ClockSpeed::TicksPerMinute(bpm * 2.), Tween::default())
                 .unwrap();
         }
 
@@ -178,7 +178,7 @@ async fn main() {
             last_beat = current_beat as i32;
         }
 
-        draw_status(bpm, current_beat);
+        draw_status(bpm, current_beat / 2.);
 
         next_frame().await
     }
