@@ -1,6 +1,5 @@
 use crate::{consts::*, Voices};
 
-use kira::clock::ClockHandle;
 use macroquad::prelude::*;
 
 pub fn render_ui(voices: &Voices, bpm: f64, current_beat: f64) {

@@ -1,23 +1,50 @@
 use kira::{
-    clock::{ClockHandle, ClockTime},
-    manager::AudioManager,
+    clock::{ClockHandle, ClockSpeed, ClockTime},
+    manager::{backend::DefaultBackend, AudioManager, AudioManagerSettings},
     sound::static_sound::{StaticSoundData, StaticSoundSettings},
+    tween::Tween,
 };
+
 use macroquad::prelude::*;
 
 use crate::{
     consts::{BEATS_PER_LOOP, TICK_SCHEDULE_AHEAD},
-    current_clock_tick, Voices,
+    Voices,
 };
 
-pub fn audio(
-    voices: &Voices,
-    mut manager: &mut AudioManager,
-    clock: &ClockHandle,
+pub struct Audio {
+    manager: AudioManager<DefaultBackend>,
+    clock: ClockHandle,
     last_scheduled_tick: f64,
-) -> f64 {
-    let current = current_clock_tick(clock);
-    if current > last_scheduled_tick {
+    bpm: f64,
+}
+
+const DEFAULT_BPM: f64 = 120.;
+
+impl Audio {
+    pub fn new() -> Self {
+        let mut manager =
+            AudioManager::<DefaultBackend>::new(AudioManagerSettings::default()).unwrap();
+        let clock = manager
+            // TODO: investigate bpm * 2 stuff
+            .add_clock(ClockSpeed::TicksPerMinute(DEFAULT_BPM * 2. as f64))
+            .unwrap();
+
+        Self {
+            manager,
+            clock,
+            last_scheduled_tick: -1.,
+            bpm: DEFAULT_BPM,
+        }
+    }
+
+    /// schedule should be run within each game tick to schedule the audio
+    pub fn schedule(self: &mut Self, voices: &Voices) {
+        let current = self.current_clock_tick();
+        if current <= self.last_scheduled_tick {
+            return;
+        }
+
         let tick_to_schedule = current + TICK_SCHEDULE_AHEAD;
 
         for pair in [
@@ -31,17 +58,38 @@ pub fn audio(
             schedule_audio(
                 &voice,
                 &instrument_name,
-                &mut manager,
-                &clock,
-                last_scheduled_tick,
+                &mut self.manager,
+                &self.clock,
+                self.last_scheduled_tick,
                 tick_to_schedule,
             );
         }
 
-        return tick_to_schedule;
+        self.last_scheduled_tick = tick_to_schedule
     }
 
-    last_scheduled_tick
+    pub fn current_clock_tick(self: &Self) -> f64 {
+        self.clock.time().ticks as f64 + self.clock.fractional_position()
+    }
+
+    pub fn get_bpm(self: &Self) -> f64 {
+        self.bpm
+    }
+
+    pub fn set_bpm(self: &mut Self, bpm: f64) {
+        self.bpm = bpm;
+        self.clock
+            .set_speed(ClockSpeed::TicksPerMinute(bpm * 2.), Tween::default())
+            .unwrap();
+    }
+
+    pub fn toggle_pause(self: &Self) {
+        if self.clock.ticking() {
+            self.clock.pause().unwrap();
+        } else {
+            self.clock.start().unwrap();
+        }
+    }
 }
 
 fn schedule_audio(

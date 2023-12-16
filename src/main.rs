@@ -10,11 +10,7 @@ use crate::ui::*;
 
 use macroquad::prelude::*;
 
-use kira::{
-    clock::{ClockHandle, ClockSpeed},
-    manager::{backend::DefaultBackend, AudioManager, AudioManagerSettings},
-    tween::Tween,
-};
+use kira::{clock::ClockSpeed, tween::Tween};
 
 fn window_conf() -> Conf {
     Conf {
@@ -77,71 +73,45 @@ impl Voices {
 async fn main() {
     // Setup global game state
     let mut bpm: f64 = 120.0;
-
-    let mut manager = AudioManager::<DefaultBackend>::new(AudioManagerSettings::default()).unwrap();
-    let clock = manager
-        .add_clock(ClockSpeed::TicksPerMinute(bpm * 2. as f64))
-        .unwrap();
-
-    let mut last_scheduled_tick = -1.;
     let mut last_beat = -1;
 
     let mut voices = Voices::samba();
+    let mut audio = Audio::new();
 
     loop {
         ////////////////////////////
         // Schedule audio
         ////////////////////////////
-        last_scheduled_tick = audio(&voices, &mut manager, &clock, last_scheduled_tick);
+        audio.schedule(&voices);
 
-        ////////////////////////////
-        // Handle User Input
-        ////////////////////////////
+        // ////////////////////////////
+        // // Handle User Input
+        // ////////////////////////////
 
         if is_key_pressed(KeyCode::Space) {
-            if clock.ticking() {
-                clock.pause().unwrap();
-            } else {
-                clock.start().unwrap();
-            }
+            audio.toggle_pause();
         }
 
         // Improve UX here
         // Check if down < 0.5s then go fast? (then can use same key incr.. "Up")
         if is_key_pressed(KeyCode::Up) {
-            bpm += 1.;
-            bpm = bpm.max(MIN_BPM).min(MAX_BPM);
-            clock
-                .set_speed(ClockSpeed::TicksPerMinute(bpm * 2.), Tween::default())
-                .unwrap();
+            audio.set_bpm(audio.get_bpm() + 1.);
         }
         if is_key_down(KeyCode::Right) {
-            bpm += 1.;
-            bpm = bpm.max(MIN_BPM).min(MAX_BPM);
-            clock
-                .set_speed(ClockSpeed::TicksPerMinute(bpm * 2.), Tween::default())
-                .unwrap();
+            audio.set_bpm(audio.get_bpm() + 1.);
         }
 
         if is_key_pressed(KeyCode::Down) {
-            bpm -= 1.;
-            bpm = bpm.max(MIN_BPM).min(MAX_BPM);
-            clock
-                .set_speed(ClockSpeed::TicksPerMinute(bpm * 2.), Tween::default())
-                .unwrap();
-        }
-        if is_key_down(KeyCode::Left) {
-            // Check if down < 0.5s then go fast?
-            bpm -= 1.;
-            bpm = bpm.max(MIN_BPM).min(MAX_BPM);
-            clock
-                .set_speed(ClockSpeed::TicksPerMinute(bpm * 2.), Tween::default())
-                .unwrap();
+            audio.set_bpm(audio.get_bpm() - 1.);
         }
 
-        if is_key_pressed(KeyCode::M) {
-            // TODO: pause metronome click sound
+        if is_key_down(KeyCode::Left) {
+            audio.set_bpm(audio.get_bpm() - 1.);
         }
+
+        // if is_key_pressed(KeyCode::M) {
+        //     // TODO: pause metronome click sound
+        // }
 
         if is_key_pressed(KeyCode::Q) {
             process::exit(0);
@@ -155,31 +125,6 @@ async fn main() {
             let row = ((mouse_y as f64 - GRID_TOP_Y) / ROW_HEIGHT).floor();
             if beat >= 0. && beat < BEATS_PER_LOOP && row >= 0. && row < NUM_ROWS_IN_GRID {
                 debug!("Clicked on row={}, beat={}", row, beat);
-                if row == 0. {
-                    if let Some(pos) = voices.closed_hihat.iter().position(|x| *x == beat) {
-                        voices.closed_hihat.remove(pos);
-                    } else {
-                        voices.closed_hihat.push(beat);
-                    }
-                } else if row == 1. {
-                    if let Some(pos) = voices.snare.iter().position(|x| *x == beat) {
-                        voices.snare.remove(pos);
-                    } else {
-                        voices.snare.push(beat);
-                    }
-                } else if row == 2. {
-                    if let Some(pos) = voices.kick.iter().position(|x| *x == beat) {
-                        voices.kick.remove(pos);
-                    } else {
-                        voices.kick.push(beat);
-                    }
-                } else if row == 3. {
-                    if let Some(pos) = voices.open_hihat.iter().position(|x| *x == beat) {
-                        voices.open_hihat.remove(pos);
-                    } else {
-                        voices.open_hihat.push(beat);
-                    }
-                }
             }
         }
 
@@ -187,7 +132,7 @@ async fn main() {
         // Render UI
         ////////////////////////////
         // Get current beat (from 0 to BEATS_PER_LOOP)
-        let current_beat = current_clock_tick(&clock) % BEATS_PER_LOOP;
+        let current_beat = audio.current_clock_tick() % BEATS_PER_LOOP;
         if (current_beat as i32) > last_beat {
             debug!("Beat: {}", current_beat as i32);
             last_beat = current_beat as i32;
@@ -200,8 +145,4 @@ async fn main() {
         ////////////////////////////
         next_frame().await
     }
-}
-
-fn current_clock_tick(clock: &ClockHandle) -> f64 {
-    clock.time().ticks as f64 + clock.fractional_position() as f64
 }
