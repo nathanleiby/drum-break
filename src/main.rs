@@ -9,20 +9,13 @@ use kira::{
 
 fn window_conf() -> Conf {
     Conf {
-        window_title: "Window Conf".to_owned(),
+        window_title: "Macroix".to_owned(),
         // fullscreen: true,
         window_width: 1280,
         window_height: 720,
         ..Default::default()
     }
 }
-
-// enum instrument_name {
-//     Hihat = "closed-hihat",
-//     Snare = "snare",
-//     Kick = "kick",
-//     OpenHihat = "open-hihat",
-// }
 
 const BEATS_PER_LOOP: f64 = 16.;
 
@@ -32,7 +25,7 @@ const BEAT_PADDING: f64 = 4.;
 const GRID_WIDTH: f64 = BEAT_WIDTH_PX * 16.;
 const ROW_HEIGHT: f64 = BEAT_WIDTH_PX;
 
-const GRID_LEFT_X: f64 = 64.;
+const GRID_LEFT_X: f64 = 128.;
 const GRID_TOP_Y: f64 = 64.;
 
 const TICK_SCHEDULE_AHEAD: f64 = 4.;
@@ -46,6 +39,7 @@ async fn main() {
         .add_clock(ClockSpeed::TicksPerMinute(bpm as f64))
         .unwrap();
 
+    // samba beat!
     // let lambda = |x: f64| (x - 1.) / 2.; // 8 quarter note beats per loop
     let lambda = |x: f64| (x - 1.);
     let closed_hihat_notes = vec![1., 3., 4., 5., 7., 8., 9., 11., 12., 13., 15., 16.]
@@ -65,11 +59,12 @@ async fn main() {
 
     let mut last_scheduled_tick = -1.;
     let mut last_beat = -1;
+
     loop {
-        clear_background(LIGHTGRAY);
-
+        ////////////////////////////
+        // Schedule audio
+        ////////////////////////////
         let current_clock_tick = clock.time().ticks as f64 + clock.fractional_position() as f64;
-
         if current_clock_tick > last_scheduled_tick {
             let tick_to_schedule = current_clock_tick + TICK_SCHEDULE_AHEAD;
 
@@ -92,6 +87,10 @@ async fn main() {
             }
             last_scheduled_tick = tick_to_schedule;
         }
+
+        ////////////////////////////
+        // Handle User Input
+        ////////////////////////////
 
         if is_key_pressed(KeyCode::Space) {
             if clock.ticking() {
@@ -140,7 +139,30 @@ async fn main() {
             }
         }
 
-        draw_beat_grid();
+        if is_mouse_button_pressed(MouseButton::Left) {
+            let (mouse_x, mouse_y) = mouse_position();
+            let mouse_circ = Circle::new(mouse_x, mouse_y, 1.);
+            // is on a beat?
+            let beat = ((mouse_x as f64 - GRID_LEFT_X) / BEAT_WIDTH_PX).floor();
+            let row = ((mouse_y as f64 - GRID_TOP_Y) / ROW_HEIGHT).floor();
+            if beat < BEATS_PER_LOOP && row < NUM_ROWS_IN_GRID {
+                debug!("Clicked on beat: {}", beat);
+                debug!("Clicked on row: {}", row);
+                debug!("Clicked on mouse_circ: {:?}", mouse_circ);
+            }
+        }
+
+        ////////////////////////////
+        // Render UI
+        ////////////////////////////
+
+        clear_background(LIGHTGRAY);
+        draw_beat_grid(
+            &closed_hihat_notes,
+            &snare_notes,
+            &kick_notes,
+            &open_hihat_note,
+        );
 
         // Get current beat (from 0 to BEATS_PER_LOOP)
         let current_beat = current_clock_tick % BEATS_PER_LOOP;
@@ -152,14 +174,14 @@ async fn main() {
 
         draw_text(
             format!("BPM: {bpm}").as_str(),
-            (GRID_LEFT_X + BEAT_WIDTH_PX) as f32,
+            (GRID_LEFT_X) as f32,
             20.0,
             30.0,
             DARKGRAY,
         );
         draw_text(
             format!("Current Beat: {:.1}", current_beat).as_str(),
-            (GRID_LEFT_X + BEAT_WIDTH_PX) as f32,
+            (GRID_LEFT_X) as f32,
             40.0,
             30.0,
             DARKGRAY,
@@ -238,8 +260,13 @@ fn schedule_note(
 
 const NUM_ROWS_IN_GRID: f64 = 4.;
 
-fn draw_beat_grid() {
-    let start_x = GRID_LEFT_X + BEAT_WIDTH_PX;
+fn draw_beat_grid(
+    closed_hihat_notes: &Vec<f64>,
+    snare_notes: &Vec<f64>,
+    kick_notes: &Vec<f64>,
+    open_hihat_notes: &Vec<f64>,
+) {
+    let start_x = GRID_LEFT_X;
     let start_y = GRID_TOP_Y;
     for i in 0..=(NUM_ROWS_IN_GRID as usize) {
         let y = start_y + i as f64 * ROW_HEIGHT;
@@ -258,32 +285,27 @@ fn draw_beat_grid() {
             BLACK,
         );
     }
-    // samba beat!
-    let hihat_notes = [1., 3., 4., 5., 7., 8., 9., 11., 12., 13., 15., 16.];
-    for note in hihat_notes.iter() {
+    for note in closed_hihat_notes.iter() {
         draw_note(*note, 0);
     }
 
-    let snare_notes = [1., 3., 6., 8., 10., 13., 15.];
     for note in snare_notes.iter() {
         draw_note(*note, 1);
     }
 
     // same kick notes but with a lead up to each note
-    let kick_notes = [1., 4., 5., 8., 9., 12., 13., 16.];
     for note in kick_notes.iter() {
         draw_note(*note, 2);
     }
 
     // same kick notes but with a lead up to each note
-    let open_hihat_notes = [3., 7., 11., 15.];
     for note in open_hihat_notes.iter() {
         draw_note(*note, 3);
     }
 }
 
 fn draw_position_line(current_beat: f64) {
-    let start_x = GRID_LEFT_X + BEAT_WIDTH_PX;
+    let start_x = GRID_LEFT_X;
     let start_y = GRID_TOP_Y;
 
     // draw a vertical line at the current positonj
