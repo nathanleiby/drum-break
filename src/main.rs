@@ -1,10 +1,13 @@
+use std::thread::current;
+
 use macroquad::prelude::*;
 
 use kira::{
-    clock::{ClockHandle, ClockSpeed},
+    clock::{ClockHandle, ClockSpeed, ClockTime},
     manager::{backend::DefaultBackend, AudioManager, AudioManagerSettings},
     sound::static_sound::{StaticSoundData, StaticSoundSettings},
     tween::Tween,
+    StartTime,
 };
 
 fn window_conf() -> Conf {
@@ -28,35 +31,61 @@ const ROW_HEIGHT: f64 = BEAT_WIDTH_PX;
 const GRID_LEFT_X: f64 = 32.;
 const GRID_TOP_Y: f64 = 64.;
 
+const TICK_SCHEDULE_AHEAD: f64 = 4.;
+
 #[macroquad::main(window_conf)]
 async fn main() {
-    let mut bpm: f64 = 240.0;
+    let mut bpm: f64 = 120.0;
 
     let mut manager = AudioManager::<DefaultBackend>::new(AudioManagerSettings::default()).unwrap();
     let clock = manager
         .add_clock(ClockSpeed::TicksPerMinute(bpm as f64))
         .unwrap();
 
-    let closed_hihat_notes = vec![1., 3., 4., 5., 7., 8., 9., 11., 12., 13., 15., 16.];
+    let closed_hihat_notes = vec![1., 3., 4., 5., 7., 8., 9., 11., 12., 13., 15., 16.]
+        .into_iter()
+        .map(|x| x - 1.)
+        .collect();
     let snare_notes = vec![1., 3., 6., 8., 10., 13., 15.];
     let kick_notes = vec![1., 4., 5., 8., 9., 12., 13., 16.];
     let open_hihat_notes = vec![3., 7., 11., 15.];
+    let mut last_scheduled_tick = -1.;
+    schedule_audio(
+        &closed_hihat_notes,
+        &snare_notes,
+        &kick_notes,
+        &open_hihat_notes,
+        &mut manager,
+        &clock,
+        last_scheduled_tick,
+        0.,
+    );
+    let mut last_beat = -1;
 
     loop {
         clear_background(LIGHTGRAY);
+
+        let current_clock_tick = clock.time().ticks as f64 + clock.fractional_position() as f64;
+
+        if current_clock_tick > last_scheduled_tick {
+            let tick_to_schedule = current_clock_tick + TICK_SCHEDULE_AHEAD;
+            schedule_audio(
+                &closed_hihat_notes,
+                &snare_notes,
+                &kick_notes,
+                &open_hihat_notes,
+                &mut manager,
+                &clock,
+                last_scheduled_tick,
+                tick_to_schedule,
+            );
+            last_scheduled_tick = tick_to_schedule;
+        }
 
         if is_key_pressed(KeyCode::Space) {
             if clock.ticking() {
                 clock.stop().unwrap();
             } else {
-                schedule_audio(
-                    &closed_hihat_notes,
-                    &snare_notes,
-                    &kick_notes,
-                    &open_hihat_notes,
-                    &mut manager,
-                    &clock,
-                );
                 clock.start().unwrap();
             }
         }
@@ -85,8 +114,13 @@ async fn main() {
         draw_beat_grid();
 
         // Get current beat (from 0 to BEATS_PER_LOOP)
-        let current_beat = clock.time().ticks as f64 + clock.fractional_position() as f64 - 1.;
+        let current_beat = current_clock_tick % BEATS_PER_LOOP;
+        // TODO: loop it
         draw_position_line(current_beat);
+        if (current_beat as i32) > last_beat {
+            info!("Beat: {}", current_beat as i32);
+            last_beat = current_beat as i32;
+        }
 
         draw_text(format!("BPM: {bpm}").as_str(), 20.0, 20.0, 30.0, DARKGRAY);
         draw_text(
@@ -130,48 +164,50 @@ async fn main() {
 }
 
 fn schedule_audio(
-    cloesd_hihat_notes: &Vec<f64>,
+    closed_hihat_notes: &Vec<f64>,
     snare_notes: &Vec<f64>,
     kick_notes: &Vec<f64>,
     open_hihat_notes: &Vec<f64>,
     manager: &mut AudioManager,
     clock: &ClockHandle,
+    last_scheduled_tick: f64,
+    tick_to_schedule: f64,
 ) {
-    for note in cloesd_hihat_notes.iter() {
-        let sound = StaticSoundData::from_file(
-            "res/closed-hihat.wav",
-            StaticSoundSettings::new().start_time(clock.time() + *note as u64),
-        )
-        .unwrap();
-        manager.play(sound).unwrap();
-    }
+    let prev_beat = last_scheduled_tick % BEATS_PER_LOOP;
+    let next_beat = tick_to_schedule % BEATS_PER_LOOP;
+    info!("Scheduling from {} to {}", prev_beat, next_beat);
+    let loop_num = (last_scheduled_tick / BEATS_PER_LOOP) as i32; // floor
+    for note in closed_hihat_notes.iter() {
+        if note > &prev_beat && note <= &next_beat {
+            schedule_note(note, loop_num, clock, manager);
+        };
 
-    for note in snare_notes.iter() {
-        let sound = StaticSoundData::from_file(
-            "res/snare.wav",
-            StaticSoundSettings::new().start_time(clock.time() + *note as u64),
-        )
-        .unwrap();
-        manager.play(sound).unwrap();
+        // handle wrap-around case
+        if next_beat < prev_beat {
+            // from prev_beat to end of loop
+            if *note > prev_beat && *note <= BEATS_PER_LOOP as f64 {
+                schedule_note(note, loop_num, clock, manager);
+            }
+            // from start of loop to next beat
+            if *note >= 0. && *note <= next_beat {
+                schedule_note(note, loop_num + 1, clock, manager);
+            }
+        }
     }
+}
 
-    for note in kick_notes.iter() {
-        let sound = StaticSoundData::from_file(
-            "res/kick.wav",
-            StaticSoundSettings::new().start_time(clock.time() + *note as u64),
-        )
-        .unwrap();
-        manager.play(sound).unwrap();
-    }
-
-    for note in open_hihat_notes.iter() {
-        let sound = StaticSoundData::from_file(
-            "res/open-hihat.wav",
-            StaticSoundSettings::new().start_time(clock.time() + *note as u64),
-        )
-        .unwrap();
-        manager.play(sound).unwrap();
-    }
+fn schedule_note(note: &f64, loop_num: i32, clock: &ClockHandle, manager: &mut AudioManager) {
+    let note_tick = (*note + (loop_num as f64) * BEATS_PER_LOOP) as u64;
+    info!("\tScheduling closed hihat ({}) at {}", note, note_tick);
+    let sound = StaticSoundData::from_file(
+        "res/closed-hihat.wav",
+        StaticSoundSettings::new().start_time(ClockTime {
+            clock: clock.id(),
+            ticks: note_tick,
+        }),
+    )
+    .unwrap();
+    manager.play(sound).unwrap();
 }
 
 const NUM_ROWS_IN_GRID: f64 = 4.;

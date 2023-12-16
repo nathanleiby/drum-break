@@ -9,7 +9,12 @@
     - [x] adjust BPM while playing
     - [x] play two sounds aligned
     - [ ] explore improving Kira's interface around the clock and looping to support my sequencer like use-case
-      - [ ] idea: looping behavior.. https://github.com/nathanleiby/kira/blob/main/crates/kira/src/clock.rs#L190-L197)
+      - [..] idea: looping behavior.. https://github.com/nathanleiby/kira/blob/main/crates/kira/src/clock.rs#L190-L197)
+      - [x] check existing behavior: scheduling on 0 works? -> yes
       - [ ] idea: editing clock while it's playing
+      - [..] idea: schedule just in time
+- [ ] read loop data from file (e.g. TOML)
+- [ ] loop editing / saving via UI
+- [ ] loop editing while it's playing
 - [ ] use a midi library for input
 - [ ] akai mini working as input
