@@ -345,7 +345,12 @@ fn draw_note(beats_offset: f64, row: usize) {
         y + BEAT_PADDING / 2.,
         BEAT_WIDTH_PX * beat_duration - BEAT_PADDING,
         BEAT_WIDTH_PX - BEAT_PADDING,
-        ORANGE,
+        Color {
+            r: 1.0,
+            g: 0.63 + row as f32 * 0.1,
+            b: 0.0 + row as f32 * 0.1,
+            a: 1.0,
+        },
     );
 }
 
