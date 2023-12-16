@@ -17,6 +17,9 @@ pub struct Audio {
     clock: ClockHandle,
     last_scheduled_tick: f64,
     bpm: f64,
+
+    // debug only
+    last_beat: i32,
 }
 
 const DEFAULT_BPM: f64 = 120.;
@@ -35,11 +38,23 @@ impl Audio {
             clock,
             last_scheduled_tick: -1.,
             bpm: DEFAULT_BPM,
+            last_beat: -1,
+        }
+    }
+
+    pub fn print_if_new_beat(self: &mut Self) {
+        // For debugging, print when we pass an integer beat
+        let current_beat = self.get_current_beat();
+        if (current_beat as i32) > self.last_beat {
+            debug!("Beat: {}", current_beat as i32);
+            self.last_beat = current_beat as i32;
         }
     }
 
     /// schedule should be run within each game tick to schedule the audio
     pub fn schedule(self: &mut Self, voices: &Voices) {
+        self.print_if_new_beat();
+
         let current = self.current_clock_tick();
         if current <= self.last_scheduled_tick {
             return;
@@ -68,8 +83,12 @@ impl Audio {
         self.last_scheduled_tick = tick_to_schedule
     }
 
-    pub fn current_clock_tick(self: &Self) -> f64 {
+    fn current_clock_tick(self: &Self) -> f64 {
         self.clock.time().ticks as f64 + self.clock.fractional_position()
+    }
+
+    pub fn get_current_beat(self: &Self) -> f64 {
+        self.current_clock_tick() % BEATS_PER_LOOP
     }
 
     pub fn get_bpm(self: &Self) -> f64 {

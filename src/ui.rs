@@ -1,6 +1,6 @@
-use crate::{consts::*, Voices};
+use crate::{audio::Audio, consts::*, Voices};
 
-use macroquad::prelude::*;
+use macroquad::{audio, prelude::*};
 
 pub struct UI {}
 
@@ -9,7 +9,10 @@ impl UI {
         Self {}
     }
 
-    pub fn render(self: &Self, voices: &Voices, bpm: f64, current_beat: f64) {
+    pub fn render(self: &Self, voices: &Voices, audio: &Audio) {
+        let current_beat = audio.get_current_beat();
+        let bpm = audio.get_bpm();
+
         clear_background(LIGHTGRAY);
         draw_beat_grid(voices);
         draw_position_line(current_beat);
