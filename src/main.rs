@@ -163,23 +163,21 @@ async fn main() {
         ////////////////////////////
         // Render UI
         ////////////////////////////
-        clear_background(LIGHTGRAY);
-        draw_beat_grid(
-            &closed_hihat_notes,
-            &snare_notes,
-            &kick_notes,
-            &open_hihat_note,
-        );
-
         // Get current beat (from 0 to BEATS_PER_LOOP)
         let current_beat = current_clock_tick(&clock) % BEATS_PER_LOOP;
-        draw_position_line(current_beat);
         if (current_beat as i32) > last_beat {
             debug!("Beat: {}", current_beat as i32);
             last_beat = current_beat as i32;
         }
-
-        draw_status(bpm, current_beat / 2.);
+        render_ui(
+            &closed_hihat_notes,
+            &snare_notes,
+            &kick_notes,
+            &open_hihat_note,
+            bpm,
+            &clock,
+            current_beat,
+        );
 
         next_frame().await
     }

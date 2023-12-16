@@ -1,6 +1,28 @@
 use crate::consts::*;
 
+use kira::clock::ClockHandle;
 use macroquad::prelude::*;
+
+pub fn render_ui(
+    closed_hihat_notes: &Vec<f64>,
+    snare_notes: &Vec<f64>,
+    kick_notes: &Vec<f64>,
+    open_hihat_note: &Vec<f64>,
+    bpm: f64,
+    clock: &ClockHandle,
+    current_beat: f64,
+) {
+    clear_background(LIGHTGRAY);
+    draw_beat_grid(
+        &closed_hihat_notes,
+        &snare_notes,
+        &kick_notes,
+        &open_hihat_note,
+    );
+
+    draw_position_line(current_beat);
+    draw_status(bpm, current_beat / 2.);
+}
 
 pub fn draw_status(bpm: f64, current_beat: f64) {
     draw_text(
