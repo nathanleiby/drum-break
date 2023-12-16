@@ -1,14 +1,16 @@
+mod audio;
 mod consts;
 mod ui;
 
+use crate::audio::*;
 use crate::consts::*;
 use crate::ui::*;
+
 use macroquad::prelude::*;
 
 use kira::{
-    clock::{ClockHandle, ClockSpeed, ClockTime},
+    clock::{ClockHandle, ClockSpeed},
     manager::{backend::DefaultBackend, AudioManager, AudioManagerSettings},
-    sound::static_sound::{StaticSoundData, StaticSoundSettings},
     tween::Tween,
 };
 
@@ -56,29 +58,16 @@ async fn main() {
         ////////////////////////////
         // Schedule audio
         ////////////////////////////
-        let current_clock_tick = clock.time().ticks as f64 + clock.fractional_position() as f64;
-        if current_clock_tick > last_scheduled_tick {
-            let tick_to_schedule = current_clock_tick + TICK_SCHEDULE_AHEAD;
-
-            for pair in [
-                (&metronome_notes, "click"),
-                (&closed_hihat_notes, "closed-hihat"),
-                (&snare_notes, "snare"),
-                (&kick_notes, "kick"),
-                (&open_hihat_note, "open-hihat"),
-            ] {
-                let (notes, instrument_name) = pair;
-                schedule_audio(
-                    &notes,
-                    &instrument_name,
-                    &mut manager,
-                    &clock,
-                    last_scheduled_tick,
-                    tick_to_schedule,
-                );
-            }
-            last_scheduled_tick = tick_to_schedule;
-        }
+        last_scheduled_tick = audio(
+            &metronome_notes,
+            &closed_hihat_notes,
+            &snare_notes,
+            &kick_notes,
+            &open_hihat_note,
+            &mut manager,
+            &clock,
+            last_scheduled_tick,
+        );
 
         ////////////////////////////
         // Handle User Input
@@ -176,7 +165,7 @@ async fn main() {
         );
 
         // Get current beat (from 0 to BEATS_PER_LOOP)
-        let current_beat = current_clock_tick % BEATS_PER_LOOP;
+        let current_beat = current_clock_tick(&clock) % BEATS_PER_LOOP;
         draw_position_line(current_beat);
         if (current_beat as i32) > last_beat {
             debug!("Beat: {}", current_beat as i32);
@@ -189,59 +178,6 @@ async fn main() {
     }
 }
 
-fn schedule_audio(
-    notes: &Vec<f64>,
-    instrument_name: &str,
-    manager: &mut AudioManager,
-    clock: &ClockHandle,
-    last_scheduled_tick: f64,
-    tick_to_schedule: f64,
-) {
-    let prev_beat = last_scheduled_tick % BEATS_PER_LOOP;
-    let next_beat = tick_to_schedule % BEATS_PER_LOOP;
-    debug!(
-        "Scheduling {} from {} to {}",
-        instrument_name, prev_beat, next_beat
-    );
-    let loop_num = (last_scheduled_tick / BEATS_PER_LOOP) as i32; // floor
-    for note in notes.iter() {
-        if note > &prev_beat && note <= &next_beat {
-            schedule_note(note, loop_num, clock, manager, instrument_name);
-        };
-
-        // handle wrap-around case
-        if next_beat < prev_beat {
-            // from prev_beat to end of loop
-            if *note > prev_beat && *note <= BEATS_PER_LOOP as f64 {
-                schedule_note(note, loop_num, clock, manager, instrument_name);
-            }
-            // from start of loop to next beat
-            if *note >= 0. && *note <= next_beat {
-                schedule_note(note, loop_num + 1, clock, manager, instrument_name);
-            }
-        }
-    }
-}
-
-fn schedule_note(
-    note: &f64,
-    loop_num: i32,
-    clock: &ClockHandle,
-    manager: &mut AudioManager,
-    instrument_name: &str,
-) {
-    let note_tick = (*note + (loop_num as f64) * BEATS_PER_LOOP) as u64;
-    debug!(
-        "\tScheduling {} ({}) at {}",
-        instrument_name, note, note_tick
-    );
-    let sound = StaticSoundData::from_file(
-        format!("res/{}.wav", instrument_name),
-        StaticSoundSettings::new().start_time(ClockTime {
-            clock: clock.id(),
-            ticks: note_tick,
-        }),
-    )
-    .unwrap();
-    manager.play(sound).unwrap();
+fn current_clock_tick(clock: &ClockHandle) -> f64 {
+    clock.time().ticks as f64 + clock.fractional_position() as f64
 }
