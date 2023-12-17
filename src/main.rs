@@ -29,7 +29,7 @@ fn window_conf() -> Conf {
 #[macroquad::main(window_conf)]
 async fn main() -> Result<(), Box<dyn Error>> {
     // Setup global game state
-    let l = "res/loops/bulls_on_parade_1.json";
+    let l = "res/loops/bulls_on_parade_1b.json";
     // let l = "res/loops/samba.json";
     let mut voices = Voices::new_from_file(l)?;
 

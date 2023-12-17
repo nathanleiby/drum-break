@@ -63,11 +63,11 @@ impl Audio {
         let tick_to_schedule = current + TICK_SCHEDULE_AHEAD;
 
         for pair in [
-            (&voices.metronome, "click"),
-            (&voices.closed_hihat, "closed-hihat"),
-            (&voices.snare, "snare"),
-            (&voices.kick, "kick"),
-            (&voices.open_hihat, "open-hihat"),
+            (&voices.metronome, "res/sounds/click.wav"),
+            (&voices.closed_hihat, "res/sounds/closed-hihat.wav"),
+            (&voices.snare, "res/sounds/snare.wav"),
+            (&voices.kick, "res/sounds/kick.wav"),
+            (&voices.open_hihat, "res/sounds/open-hihat.wav"),
         ] {
             let (voice, instrument_name) = pair;
             schedule_audio(
@@ -113,7 +113,7 @@ impl Audio {
 
 fn schedule_audio(
     notes: &Vec<f64>,
-    instrument_name: &str,
+    sound_path: &str,
     manager: &mut AudioManager,
     clock: &ClockHandle,
     last_scheduled_tick: f64,
@@ -123,23 +123,23 @@ fn schedule_audio(
     let next_beat = tick_to_schedule % BEATS_PER_LOOP;
     debug!(
         "Scheduling {} from {} to {}",
-        instrument_name, prev_beat, next_beat
+        sound_path, prev_beat, next_beat
     );
     let loop_num = (last_scheduled_tick / BEATS_PER_LOOP) as i32; // floor
     for note in notes.iter() {
         if note > &prev_beat && note <= &next_beat {
-            schedule_note(note, loop_num, clock, manager, instrument_name);
+            schedule_note(note, loop_num, clock, manager, sound_path);
         };
 
         // handle wrap-around case
         if next_beat < prev_beat {
             // from prev_beat to end of loop
             if *note > prev_beat && *note <= BEATS_PER_LOOP as f64 {
-                schedule_note(note, loop_num, clock, manager, instrument_name);
+                schedule_note(note, loop_num, clock, manager, sound_path);
             }
             // from start of loop to next beat
             if *note >= 0. && *note <= next_beat {
-                schedule_note(note, loop_num + 1, clock, manager, instrument_name);
+                schedule_note(note, loop_num + 1, clock, manager, sound_path);
             }
         }
     }
@@ -150,15 +150,12 @@ fn schedule_note(
     loop_num: i32,
     clock: &ClockHandle,
     manager: &mut AudioManager,
-    instrument_name: &str,
+    sound_path: &str,
 ) {
     let note_tick = (*note + (loop_num as f64) * BEATS_PER_LOOP) as u64;
-    debug!(
-        "\tScheduling {} ({}) at {}",
-        instrument_name, note, note_tick
-    );
+    debug!("\tScheduling {} ({}) at {}", sound_path, note, note_tick);
     let sound = StaticSoundData::from_file(
-        format!("res/{}.wav", instrument_name),
+        sound_path,
         StaticSoundSettings::new().start_time(ClockTime {
             clock: clock.id(),
             ticks: note_tick,
