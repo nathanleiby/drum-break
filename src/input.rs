@@ -1,10 +1,15 @@
-use std::process;
+use std::{
+    error::Error,
+    fs::File,
+    io::{BufWriter, Write},
+    process,
+};
 
 use macroquad::prelude::*;
 
 use crate::{audio::Audio, consts::*, Voices};
 
-pub fn handle_user_input(voices: &mut Voices, audio: &mut Audio) {
+pub fn handle_user_input(voices: &mut Voices, audio: &mut Audio) -> Result<(), Box<dyn Error>> {
     if is_key_pressed(KeyCode::Space) {
         audio.toggle_pause();
     }
@@ -34,6 +39,14 @@ pub fn handle_user_input(voices: &mut Voices, audio: &mut Audio) {
         process::exit(0);
     }
 
+    if is_key_pressed(KeyCode::S) {
+        // write serialized JSON output to a file
+        let file = File::create(format!("res/loops/voices-{}.json", get_time()))?;
+        let mut writer = BufWriter::new(file);
+        serde_json::to_writer(&mut writer, &voices)?;
+        writer.flush()?;
+    }
+
     if is_mouse_button_pressed(MouseButton::Left) {
         // TODO: doesn't work on initial window load.. but if i alt-tab away and back it does work?!
         let (mouse_x, mouse_y) = mouse_position();
@@ -45,4 +58,6 @@ pub fn handle_user_input(voices: &mut Voices, audio: &mut Audio) {
             voices.toggle_beat(row, beat);
         }
     }
+
+    Ok(())
 }

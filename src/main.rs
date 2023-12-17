@@ -4,6 +4,11 @@ mod input;
 mod ui;
 mod voices;
 
+use std::error::Error;
+use std::fs::File;
+use std::io::BufWriter;
+use std::io::Write;
+
 use crate::audio::*;
 use crate::input::*;
 use crate::ui::*;
@@ -22,15 +27,18 @@ fn window_conf() -> Conf {
 }
 
 #[macroquad::main(window_conf)]
-async fn main() {
+async fn main() -> Result<(), Box<dyn Error>> {
     // Setup global game state
-    let mut voices = Voices::new_samba();
+    let l = "res/loops/bulls_on_parade_1.json";
+    // let l = "res/loops/samba.json";
+    let mut voices = Voices::new_from_file(l)?;
+
     let mut audio = Audio::new();
     let ui = UI::new(); // Consider passing in audio and voices here?
 
     loop {
         audio.schedule(&voices);
-        handle_user_input(&mut voices, &mut audio);
+        handle_user_input(&mut voices, &mut audio)?;
         ui.render(&voices, &audio);
 
         // wait for next frame from game engine

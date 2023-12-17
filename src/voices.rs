@@ -1,4 +1,9 @@
+use std::{error::Error, fs::File, io::BufReader};
+
+use serde::{Deserialize, Serialize};
+
 /// Voices represents the notes to be played on each instrument.
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Voices {
     pub metronome: Vec<f64>,
     pub closed_hihat: Vec<f64>,
@@ -8,30 +13,11 @@ pub struct Voices {
 }
 
 impl Voices {
-    pub fn new_samba() -> Self {
-        // let lambda = |x: f64| (x - 1.) / 2.; // 8 quarter note beats per loop
-        let lambda = |x: f64| (x - 1.);
-        let closed_hihat_notes = vec![1., 3., 4., 5., 7., 8., 9., 11., 12., 13., 15., 16.]
-            .into_iter()
-            .map(lambda)
-            .collect();
-        let snare_notes = vec![1., 3., 6., 8., 10., 13., 15.]
-            .into_iter()
-            .map(lambda)
-            .collect();
-        let kick_notes: Vec<f64> = vec![1., 4., 5., 8., 9., 12., 13., 16.]
-            .into_iter()
-            .map(lambda)
-            .collect();
-        let open_hihat_notes: Vec<f64> = vec![3., 7., 11., 15.].into_iter().map(lambda).collect();
-        let metronome_notes: Vec<f64> = (0..16).into_iter().map(|x| x as f64).collect();
-        Self {
-            metronome: metronome_notes,
-            closed_hihat: closed_hihat_notes,
-            snare: snare_notes,
-            kick: kick_notes,
-            open_hihat: open_hihat_notes,
-        }
+    pub fn new_from_file(path: &str) -> Result<Self, Box<dyn Error>> {
+        let file = File::open(path)?;
+        let reader = BufReader::new(file);
+        let out: Self = serde_json::from_reader(reader)?;
+        Ok(out)
     }
 
     // TODO: new from file
