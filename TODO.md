@@ -1,6 +1,6 @@
 # TODO
 
-- [ ] capture and display user timing input for beat -- see `input.rs` (will want a new data model for user activity, e.g. note/timing/velocity data)
+- [..] capture and display user timing input for beat -- see `input.rs` (will want a new data model for user activity, e.g. note/timing/velocity data)
   - [..] handle audio sync / delay
     - [..] hard-coded calibration (for me: speakers (0.02), bluetooth headphones (0.180))
     - [..] calibration step

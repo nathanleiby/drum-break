@@ -2,6 +2,14 @@ use std::{error::Error, fs::File, io::BufReader};
 
 use serde::{Deserialize, Serialize};
 
+pub enum Instrument {
+    Metronome,
+    ClosedHihat,
+    Snare,
+    Kick,
+    OpenHihat,
+}
+
 /// Voices represents the notes to be played on each instrument.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Voices {
@@ -25,6 +33,16 @@ pub struct Voices {
 //     ]
 
 impl Voices {
+    pub fn new() -> Self {
+        Self {
+            metronome: vec![],
+            closed_hihat: vec![],
+            snare: vec![],
+            kick: vec![],
+            open_hihat: vec![],
+        }
+    }
+
     pub fn new_from_file(path: &str) -> Result<Self, Box<dyn Error>> {
         let file = File::open(path)?;
         let reader = BufReader::new(file);

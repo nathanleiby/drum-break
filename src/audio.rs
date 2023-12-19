@@ -11,6 +11,7 @@ use macroquad::prelude::*;
 
 use crate::{
     consts::{BEATS_PER_LOOP, TICK_SCHEDULE_AHEAD},
+    voices::Instrument,
     Voices,
 };
 
@@ -20,7 +21,7 @@ pub struct Audio {
     last_scheduled_tick: f64,
     bpm: f64,
 
-    captured_input: Vec<f64>,
+    pub user_hits: Voices,
     calibration_input: VecDeque<f64>,
     configured_audio_latency_seconds: f64,
 
@@ -46,7 +47,7 @@ impl Audio {
             last_scheduled_tick: -1.,
             bpm: DEFAULT_BPM,
 
-            captured_input: vec![],
+            user_hits: Voices::new(),
             calibration_input: VecDeque::new(),
             configured_audio_latency_seconds: 0.,
 
@@ -135,18 +136,24 @@ impl Audio {
         }
     }
 
-    pub fn capture(self: &mut Self) {
-        self.captured_input.push(self.current_beat());
+    pub fn track_user_hit(self: &mut Self, instrument: Instrument) {
+        match instrument {
+            Instrument::ClosedHihat => self.user_hits.closed_hihat.push(self.current_beat()),
+            Instrument::Snare => self.user_hits.snare.push(self.current_beat()),
+            Instrument::Kick => self.user_hits.kick.push(self.current_beat()),
+            Instrument::OpenHihat => self.user_hits.open_hihat.push(self.current_beat()),
+            Instrument::Metronome => self.user_hits.metronome.push(self.current_beat()),
+        }
 
-        // play sound effect
-        let sound = StaticSoundData::from_file(
-            "res/sounds/metronome.ogg",
-            StaticSoundSettings::new().start_time(ClockTime {
-                clock: self.clock.id(),
-                ticks: self.current_clock_tick() as u64,
-            }),
-        );
-        self.manager.play(sound.unwrap()).unwrap();
+        // // play sound effect
+        // let sound = StaticSoundData::from_file(
+        //     "res/sounds/metronome.ogg",
+        //     StaticSoundSettings::new().start_time(ClockTime {
+        //         clock: self.clock.id(),
+        //         ticks: self.current_clock_tick() as u64,
+        //     }),
+        // );
+        // self.manager.play(sound.unwrap()).unwrap();
 
         debug!(
             "Capture at beat = {}, clock = {}",
@@ -155,7 +162,7 @@ impl Audio {
         );
     }
 
-    pub fn capture_and_calibrate(self: &mut Self) {
+    pub fn track_for_calibration(self: &mut Self) {
         self.calibration_input.push_back(self.current_beat());
 
         // play sound effect

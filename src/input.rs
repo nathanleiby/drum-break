@@ -7,21 +7,33 @@ use std::{
 
 use macroquad::prelude::*;
 
-use crate::{audio::Audio, consts::*, Voices};
+use crate::{audio::Audio, consts::*, voices::Instrument, Voices};
 
 pub fn handle_user_input(voices: &mut Voices, audio: &mut Audio) -> Result<(), Box<dyn Error>> {
+    // Playing the drums //
+    if is_key_pressed(KeyCode::Z) {
+        audio.track_user_hit(Instrument::ClosedHihat);
+    }
+
+    if is_key_pressed(KeyCode::X) {
+        audio.track_user_hit(Instrument::Snare);
+    }
+
+    if is_key_pressed(KeyCode::C) {
+        audio.track_user_hit(Instrument::Kick);
+    }
+
+    if is_key_pressed(KeyCode::V) {
+        audio.track_user_hit(Instrument::OpenHihat);
+    }
+
     if is_key_pressed(KeyCode::Space) {
         audio.toggle_pause();
     }
 
     if is_key_pressed(KeyCode::Equal) {
         // capture note timing data
-        audio.capture_and_calibrate();
-    }
-
-    if is_key_pressed(KeyCode::Equal) {
-        // capture note timing data
-        audio.capture();
+        audio.track_for_calibration();
     }
 
     if is_key_pressed(KeyCode::LeftBracket) {

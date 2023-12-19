@@ -16,6 +16,7 @@ impl UI {
 
         clear_background(LIGHTGRAY);
         draw_beat_grid(voices);
+        draw_user_hits(&audio.user_hits);
         draw_position_line(current_beat + audio_latency);
         draw_status(bpm, current_beat / 2., audio_latency);
 
@@ -103,6 +104,62 @@ fn draw_beat_grid(voices: &Voices) {
     }
 }
 
+fn draw_user_hits(voices: &Voices) {
+    let closed_hihat_notes = &voices.closed_hihat;
+    let snare_notes = &voices.snare;
+    let kick_notes = &voices.kick;
+    let open_hihat_notes = &voices.open_hihat;
+
+    // // Labels in top-left of grid
+    // for (idx, name) in ["Hihat", "Snare", "Kick", "Open hi-hat"].iter().enumerate() {
+    //     draw_text(
+    //         name,
+    //         20.0,
+    //         (GRID_TOP_Y + ROW_HEIGHT * (idx as f64 + 0.5)) as f32,
+    //         20.0,
+    //         DARKGRAY,
+    //     );
+    // }
+
+    // let start_x = GRID_LEFT_X;
+    // let start_y = GRID_TOP_Y;
+    // for i in 0..=(NUM_ROWS_IN_GRID as usize) {
+    //     let y = start_y + i as f64 * ROW_HEIGHT;
+    //     draw_line_f64(start_x, y, start_x + GRID_WIDTH, y, 4.0, BLACK);
+    // }
+
+    // // draw vertical lines every 4 beats
+    // for i in 0..=(BEATS_PER_LOOP as i32) {
+    //     let x = start_x + i as f64 * BEAT_WIDTH_PX;
+    //     draw_line_f64(
+    //         x,
+    //         start_y,
+    //         x,
+    //         start_y + ROW_HEIGHT * NUM_ROWS_IN_GRID,
+    //         4.0,
+    //         BLACK,
+    //     );
+    // }
+
+    for note in closed_hihat_notes.iter() {
+        draw_user_hit(*note, 0);
+    }
+
+    for note in snare_notes.iter() {
+        draw_user_hit(*note, 1);
+    }
+
+    // same kick notes but with a lead up to each note
+    for note in kick_notes.iter() {
+        draw_user_hit(*note, 2);
+    }
+
+    // same kick notes but with a lead up to each note
+    for note in open_hihat_notes.iter() {
+        draw_user_hit(*note, 3);
+    }
+}
+
 fn draw_position_line(current_beat: f64) {
     let start_x = GRID_LEFT_X;
     let start_y = GRID_TOP_Y;
@@ -123,6 +180,25 @@ fn draw_note(beats_offset: f64, row: usize) {
         BEAT_WIDTH_PX - BEAT_PADDING,
         Color {
             r: 1.0,
+            g: 0.63 + row as f32 * 0.1,
+            b: 0.0 + row as f32 * 0.1,
+            a: 1.0,
+        },
+    );
+}
+
+fn draw_user_hit(beats_offset: f64, row: usize) {
+    // let beat_duration = 1 as f64;
+    let beat_duration = 0.1 as f64; // make it thin for easier overlap, for now
+    let x = GRID_LEFT_X + beats_offset * BEAT_WIDTH_PX;
+    let y = GRID_TOP_Y + row as f64 * ROW_HEIGHT;
+    draw_rectangle_f64(
+        x + BEAT_PADDING / 2.,
+        y + BEAT_PADDING / 2.,
+        BEAT_WIDTH_PX * beat_duration - BEAT_PADDING,
+        BEAT_WIDTH_PX - BEAT_PADDING,
+        Color {
+            r: 0.0,
             g: 0.63 + row as f32 * 0.1,
             b: 0.0 + row as f32 * 0.1,
             a: 1.0,
@@ -152,7 +228,7 @@ fn draw_pulse_beat(current_beat: f64) {
         let scale = (0.1 - dist) * 10.;
         draw_circle(
             screen_width() / 2.,
-            screen_height() / 2.,
+            screen_height() / 2. + 100.,
             r * scale as f32,
             RED,
         );
