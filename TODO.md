@@ -2,17 +2,28 @@
 
 - [..] capture and display user timing input for beat -- see `input.rs` (will want a new data model for user activity, e.g. note/timing/velocity data)
   - [..] handle audio sync / delay
-    - [..] hard-coded calibration (for me: speakers (0.02), bluetooth headphones (0.180))
+    - [..] hard-coded calibration (for me: speakers (-0.1), bluetooth headphones (-0.5))
     - [..] calibration step
       - [ ] inspiration: https://ddrkirbyisq.medium.com/rhythm-quest-devlog-10-latency-calibration-fb6f1a56395c
         https://rhythmquestgame.com/devlog/devlog.html
       - [ ] https://exceed7.com/native-audio/rhythm-game-crash-course/index.html
       - [ ] watch: https://www.youtube.com/watch?v=JTuZvRF-OgE&t=41s
   - [ ] save user timing data to a file (e.g. start with flatfile, someday a DB)
+  - [x] consider audio latency when displaying user input
 - [ ] use a midi library for input -- see `input.rs`
 - [ ] akai mini working as input
 
 # TODO (future)
+
+- [ ] bundle so it can be shared
+  - [ ] as DMG?
+  - [ ] include loops JSON data, or fetch them remotely (e.g. from public GH link)
+  - [ ] sign code for easier local running without security override on Mac
+- [ ] quality
+  - [ ] add unit tests
+  - [ ] run build + tests in Github CI
+- [ ] shipping artifacts
+  - [ ] on git tag, ship a release in Github CI
 - [ ] Make "voices" data model more generic.
   - [ ] support more drum sounds (not just kick, snare, hat, clap)
   - [ ] support different numbers of voices (not just 4, as today)
