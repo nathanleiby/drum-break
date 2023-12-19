@@ -12,6 +12,18 @@ pub struct Voices {
     pub open_hihat: Vec<f64>,
 }
 
+// name
+// bpm
+// beats_total:
+// beats_per_measure: # optional, will draw lines if so
+
+// voices: # TODO: instruments?
+//     [
+//         sound: required
+//         override_name: # optional:
+//         notes: [] # a series of numbers, 0 indexes, corresponding to the beats to play on.
+//     ]
+
 impl Voices {
     pub fn new_from_file(path: &str) -> Result<Self, Box<dyn Error>> {
         let file = File::open(path)?;

@@ -14,6 +14,36 @@ pub fn handle_user_input(voices: &mut Voices, audio: &mut Audio) -> Result<(), B
         audio.toggle_pause();
     }
 
+    if is_key_pressed(KeyCode::Equal) {
+        // capture note timing data
+        audio.capture_and_calibrate();
+    }
+
+    if is_key_pressed(KeyCode::Equal) {
+        // capture note timing data
+        audio.capture();
+    }
+
+    if is_key_pressed(KeyCode::LeftBracket) {
+        let mut multiplier = 1.;
+        if is_key_down(KeyCode::LeftShift) || is_key_down(KeyCode::RightShift) {
+            multiplier = 100.;
+        }
+        audio.set_configured_audio_latency_seconds(
+            audio.get_configured_audio_latency_seconds() - (0.001 * multiplier),
+        );
+    }
+
+    if is_key_pressed(KeyCode::RightBracket) {
+        let mut multiplier = 1.;
+        if is_key_down(KeyCode::LeftShift) || is_key_down(KeyCode::RightShift) {
+            multiplier = 100.;
+        }
+        audio.set_configured_audio_latency_seconds(
+            audio.get_configured_audio_latency_seconds() + (0.001 * multiplier),
+        );
+    }
+
     // Improve UX here
     // Check if down < 0.5s then go fast? (then can use same key incr.. "Up")
     if is_key_pressed(KeyCode::Up) {

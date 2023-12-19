@@ -1,6 +1,6 @@
 use crate::{audio::Audio, consts::*, Voices};
 
-use macroquad::prelude::*;
+use macroquad::{audio, prelude::*};
 
 pub struct UI {}
 
@@ -10,17 +10,20 @@ impl UI {
     }
 
     pub fn render(self: &Self, voices: &Voices, audio: &Audio) {
-        let current_beat = audio.get_current_beat();
+        let current_beat = audio.current_beat();
+        let audio_latency = audio.get_configured_audio_latency_seconds();
         let bpm = audio.get_bpm();
 
         clear_background(LIGHTGRAY);
         draw_beat_grid(voices);
-        draw_position_line(current_beat);
-        draw_status(bpm, current_beat / 2.);
+        draw_position_line(current_beat + audio_latency);
+        draw_status(bpm, current_beat / 2., audio_latency);
+
+        draw_pulse_beat(current_beat + audio_latency);
     }
 }
 
-fn draw_status(bpm: f64, current_beat: f64) {
+fn draw_status(bpm: f64, current_beat: f64, audio_latency: f64) {
     draw_text(
         format!("BPM: {bpm}").as_str(),
         (GRID_LEFT_X) as f32,
@@ -32,6 +35,13 @@ fn draw_status(bpm: f64, current_beat: f64) {
         format!("Current Beat: {:.1}", current_beat).as_str(),
         (GRID_LEFT_X) as f32,
         40.0,
+        30.0,
+        DARKGRAY,
+    );
+    draw_text(
+        format!("Calibrated Latency: {:.3} seconds", audio_latency).as_str(),
+        (GRID_LEFT_X) as f32,
+        60.0,
         30.0,
         DARKGRAY,
     );
@@ -73,6 +83,7 @@ fn draw_beat_grid(voices: &Voices) {
             BLACK,
         );
     }
+
     for note in closed_hihat_notes.iter() {
         draw_note(*note, 0);
     }
@@ -125,4 +136,25 @@ fn draw_rectangle_f64(x: f64, y: f64, width: f64, height: f64, color: Color) {
 
 fn draw_line_f64(x1: f64, y1: f64, x2: f64, y2: f64, thickness: f32, color: Color) {
     draw_line(x1 as f32, y1 as f32, x2 as f32, y2 as f32, thickness, color);
+}
+
+fn draw_pulse_beat(current_beat: f64) {
+    // every other beat
+    if current_beat.floor() % 2. == 0. {
+        return;
+    }
+
+    // get the distance from the current beat center
+    let dist = (1. - current_beat % 1.).abs();
+
+    let r = 100.;
+    if dist < 0.05 {
+        let scale = (0.1 - dist) * 10.;
+        draw_circle(
+            screen_width() / 2.,
+            screen_height() / 2.,
+            r * scale as f32,
+            RED,
+        );
+    }
 }

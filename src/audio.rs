@@ -1,3 +1,5 @@
+use std::collections::VecDeque;
+
 use kira::{
     clock::{ClockHandle, ClockSpeed, ClockTime},
     manager::{backend::DefaultBackend, AudioManager, AudioManagerSettings},
@@ -18,11 +20,16 @@ pub struct Audio {
     last_scheduled_tick: f64,
     bpm: f64,
 
+    captured_input: Vec<f64>,
+    calibration_input: VecDeque<f64>,
+    configured_audio_latency_seconds: f64,
+
     // debug only
     last_beat: i32,
 }
 
-const DEFAULT_BPM: f64 = 120.;
+// const DEFAULT_BPM: f64 = 120.;
+const DEFAULT_BPM: f64 = 60.;
 
 impl Audio {
     pub fn new() -> Self {
@@ -38,13 +45,27 @@ impl Audio {
             clock,
             last_scheduled_tick: -1.,
             bpm: DEFAULT_BPM,
+
+            captured_input: vec![],
+            calibration_input: VecDeque::new(),
+            configured_audio_latency_seconds: 0.,
+
             last_beat: -1,
         }
     }
 
-    pub fn print_if_new_beat(self: &mut Self) {
+    // audio latency
+    pub fn get_configured_audio_latency_seconds(self: &Self) -> f64 {
+        self.configured_audio_latency_seconds
+    }
+
+    pub fn set_configured_audio_latency_seconds(self: &mut Self, latency: f64) {
+        self.configured_audio_latency_seconds = latency;
+    }
+
+    fn print_if_new_beat(self: &mut Self) {
         // For debugging, print when we pass an integer beat
-        let current_beat = self.get_current_beat();
+        let current_beat = self.current_beat();
         if (current_beat as i32) > self.last_beat {
             debug!("Beat: {}", current_beat as i32);
             self.last_beat = current_beat as i32;
@@ -62,6 +83,10 @@ impl Audio {
 
         let tick_to_schedule = current + TICK_SCHEDULE_AHEAD;
 
+        debug!(
+            "Scheduling from {} to {}",
+            self.last_scheduled_tick, tick_to_schedule
+        );
         for pair in [
             (&voices.metronome, "res/sounds/click.wav"),
             (&voices.closed_hihat, "res/sounds/closed-hihat.wav"),
@@ -87,7 +112,7 @@ impl Audio {
         self.clock.time().ticks as f64 + self.clock.fractional_position()
     }
 
-    pub fn get_current_beat(self: &Self) -> f64 {
+    pub fn current_beat(self: &Self) -> f64 {
         self.current_clock_tick() % BEATS_PER_LOOP
     }
 
@@ -109,6 +134,58 @@ impl Audio {
             self.clock.start().unwrap();
         }
     }
+
+    pub fn capture(self: &mut Self) {
+        self.captured_input.push(self.current_beat());
+
+        // play sound effect
+        let sound = StaticSoundData::from_file(
+            "res/sounds/metronome.ogg",
+            StaticSoundSettings::new().start_time(ClockTime {
+                clock: self.clock.id(),
+                ticks: self.current_clock_tick() as u64,
+            }),
+        );
+        self.manager.play(sound.unwrap()).unwrap();
+
+        debug!(
+            "Capture at beat = {}, clock = {}",
+            self.current_beat(),
+            self.current_clock_tick()
+        );
+    }
+
+    pub fn capture_and_calibrate(self: &mut Self) {
+        self.calibration_input.push_back(self.current_beat());
+
+        // play sound effect
+        // let sound = StaticSoundData::from_file(
+        //     "res/sounds/metronome.ogg",
+        //     StaticSoundSettings::new().start_time(ClockTime {
+        //         clock: self.clock.id(),
+        //         ticks: self.current_clock_tick() as u64,
+        //     }),
+        // );
+        // self.manager.play(sound.unwrap()).unwrap();
+
+        debug!(
+            "Capture + calibrate at beat = {}, clock = {}",
+            self.current_beat(),
+            self.current_clock_tick()
+        );
+        // compute average distance from integer beats
+        let dists = self.calibration_input.iter().map(|x| x - x.round());
+        let sum = dists.clone().sum::<f64>();
+        let avg_dist = sum / dists.len() as f64;
+        if self.calibration_input.len() > 5 {
+            self.calibration_input.pop_front();
+        }
+        debug!(
+            "Average distance from integer beats: {} beats ({} seconds)",
+            avg_dist,
+            avg_dist / self.bpm * 60.
+        );
+    }
 }
 
 fn schedule_audio(
@@ -121,10 +198,6 @@ fn schedule_audio(
 ) {
     let prev_beat = last_scheduled_tick % BEATS_PER_LOOP;
     let next_beat = tick_to_schedule % BEATS_PER_LOOP;
-    debug!(
-        "Scheduling {} from {} to {}",
-        sound_path, prev_beat, next_beat
-    );
     let loop_num = (last_scheduled_tick / BEATS_PER_LOOP) as i32; // floor
     for note in notes.iter() {
         if note > &prev_beat && note <= &next_beat {

@@ -12,7 +12,7 @@ pub const ROW_HEIGHT: f64 = BEAT_WIDTH_PX;
 pub const GRID_LEFT_X: f64 = 128.;
 pub const GRID_TOP_Y: f64 = 64.;
 
-pub const TICK_SCHEDULE_AHEAD: f64 = 1.; // schedule audio this many (N) ticks ahead of time (i.e. N seconds ahead if at 60bpm)
+pub const TICK_SCHEDULE_AHEAD: f64 = 2.; // schedule audio this many (N) ticks ahead of time (i.e. N seconds ahead if at 60bpm)
 
 pub const MIN_BPM: f64 = 30.;
 pub const MAX_BPM: f64 = 300.;
