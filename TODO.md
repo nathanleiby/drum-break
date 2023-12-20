@@ -5,13 +5,20 @@
 - [..] capture and display user timing input for beat -- see `input.rs` (will want a new data model for user activity, e.g. note/timing/velocity data)
   - [ ] save user timing data to a file (e.g. start with flatfile, someday a DB)
 - [ ] use a midi library for input -- see `input.rs`
-- [ ] akai mini working as input
+  - [ ] https://www.youtube.com/watch?v=Nog1qAY0eG0&ab_channel=Tantan
+    - [ ] need input thread vs main thread - https://github.com/TanTanDev/midi_game
+- [x] akai mini working as input
 - [ ] make it shareable
   - [ ] decouple loops data (look in local directory, or fetch them remotely.. e.g. from public GH link)
 - [ ] add UI to save / open a loop file from your machine
 
 ## future
 
+- [ ] explore Rust GUI options
+  - [ ] egui https://www.egui.rs/ .. https://github.com/optozorax/egui-macroquad
+- [ ] Explore macroquad featureset, including [experimental](https://docs.rs/macroquad/latest/macroquad/experimental/index.html) like state machine and scenes
+  - [ ] Also explore community extension https://github.com/ozkriff/awesome-quads
+  - [ ] tune config w cvars approach? https://github.com/martin-t/cvars
 - [ ] Explore similar existing offerings
   - [ ] Drum specific..
     - [ ] https://www.mutedrums.com/ / https://www.playdrumsonline.com/ (https://www.playdrumsonline.com/songs/create)
@@ -21,6 +28,8 @@
 - [ ] Explore deployment options
   - [..] deploy to web / WASM (possible? latency??)
     - [ ] KIRA example https://github.com/Moxinilian/kira-web-demo/tree/main
+    - [ ] `confy` for config may not work out of the box https://github.com/search?q=repo%3Adirs-dev%2Fdirs-rs+wasm&type=code -- can't save?
+    - [ ] maybe some of these? https://github.com/ozkriff/awesome-quads?tab=readme-ov-file#libraries-plugins
   - [ ] build with Tauri https://tauri.app
 - [ ] toggle metronome on/off
 - [ ] volume control

@@ -7,23 +7,29 @@ use std::{
 
 use macroquad::prelude::*;
 
-use crate::{audio::Audio, config::AppConfig, consts::*, voices::Instrument, Voices};
+use crate::{
+    audio::Audio, config::AppConfig, consts::*, midi::MidiInput, voices::Instrument, Voices,
+};
 
-pub fn handle_user_input(voices: &mut Voices, audio: &mut Audio) -> Result<(), Box<dyn Error>> {
+pub fn handle_user_input(
+    voices: &mut Voices,
+    audio: &mut Audio,
+    midi: &MidiInput,
+) -> Result<(), Box<dyn Error>> {
     // Playing the drums //
-    if is_key_pressed(KeyCode::Z) {
+    if is_key_pressed(KeyCode::Z) || midi.is_button_pressed(48) {
         audio.track_user_hit(Instrument::ClosedHihat);
     }
 
-    if is_key_pressed(KeyCode::X) {
+    if is_key_pressed(KeyCode::X) || midi.is_button_pressed(49) {
         audio.track_user_hit(Instrument::Snare);
     }
 
-    if is_key_pressed(KeyCode::C) {
+    if is_key_pressed(KeyCode::C) || midi.is_button_pressed(50) {
         audio.track_user_hit(Instrument::Kick);
     }
 
-    if is_key_pressed(KeyCode::V) {
+    if is_key_pressed(KeyCode::V) || midi.is_button_pressed(51) {
         audio.track_user_hit(Instrument::OpenHihat);
     }
 
@@ -39,7 +45,7 @@ pub fn handle_user_input(voices: &mut Voices, audio: &mut Audio) -> Result<(), B
         let cfg = AppConfig {
             audio_latency_seconds: updated_val,
         };
-        cfg.save();
+        cfg.save()?;
     }
 
     if is_key_pressed(KeyCode::LeftBracket) {
@@ -54,7 +60,7 @@ pub fn handle_user_input(voices: &mut Voices, audio: &mut Audio) -> Result<(), B
         let cfg = AppConfig {
             audio_latency_seconds: updated_val,
         };
-        cfg.save();
+        cfg.save()?;
     }
 
     if is_key_pressed(KeyCode::RightBracket) {
@@ -69,7 +75,7 @@ pub fn handle_user_input(voices: &mut Voices, audio: &mut Audio) -> Result<(), B
         let cfg = AppConfig {
             audio_latency_seconds: updated_val,
         };
-        cfg.save();
+        cfg.save()?;
     }
 
     // Improve UX here

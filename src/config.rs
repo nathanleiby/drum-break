@@ -19,3 +19,14 @@ impl AppConfig {
         Ok(())
     }
 }
+
+// TODO: support user configurable input mapping
+// have defaults for various devices (perhaps Midi standards)
+// allow multiple input values for same hit (e.g. if you want various triggers on a midi drum, like a fancy cymbal with regions, to trigger the same logical hit)
+// impl InputMapping {
+// Midi
+// Keyboard
+// etc
+
+// snareHit: 48,
+// }
