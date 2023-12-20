@@ -13,12 +13,20 @@ To run it, you can either:
   - clone this repo
   - run it: `cargo run`
 - download a [release](https://github.com/nathanleiby/macroix/releases) from Github
-    - make it executable: `chmod +x macroix`
-    - run it: `./macroix`
-      - you will likely need to open your security settings in Mac (roughly: https://www.macworld.com/article/672947/how-to-open-a-mac-app-from-an-unidentified-developer.html) and allow it to run
+  - make it executable: `chmod +x macroix`
+  - run it: `./macroix`
+    - you will likely need to open your security settings in Mac (roughly: https://www.macworld.com/article/672947/how-to-open-a-mac-app-from-an-unidentified-developer.html) and allow it to run
 
 Testing goals:
+
 - does it run?
 - can you calibrate the audio latency?
 - does it work with you midi input device (e.g. Akai MPK Mini, Alesis Nitro, TD17)?
 
+---
+
+Creating a release:
+
+- `cargo build --release`
+- `gh release create <RELEASE_VERSION> ./target/release/macroix`
+  - versioning scheme is semver with leading `v`, e.g. `v0.0.1`
