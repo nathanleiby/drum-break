@@ -10,6 +10,7 @@ use kira::{
 use macroquad::prelude::*;
 
 use crate::{
+    config::AppConfig,
     consts::{BEATS_PER_LOOP, TICK_SCHEDULE_AHEAD},
     voices::Instrument,
     Voices,
@@ -33,7 +34,7 @@ pub struct Audio {
 const DEFAULT_BPM: f64 = 60.;
 
 impl Audio {
-    pub fn new() -> Self {
+    pub fn new(conf: &AppConfig) -> Self {
         let mut manager =
             AudioManager::<DefaultBackend>::new(AudioManagerSettings::default()).unwrap();
         let clock = manager
@@ -49,7 +50,7 @@ impl Audio {
 
             user_hits: Voices::new(),
             calibration_input: VecDeque::new(),
-            configured_audio_latency_seconds: 0.,
+            configured_audio_latency_seconds: conf.audio_latency_seconds,
 
             last_beat: -1,
         }
@@ -162,7 +163,7 @@ impl Audio {
         );
     }
 
-    pub fn track_for_calibration(self: &mut Self) {
+    pub fn track_for_calibration(self: &mut Self) -> f64 {
         self.calibration_input.push_back(self.current_beat());
 
         // play sound effect
@@ -192,6 +193,7 @@ impl Audio {
             avg_dist,
             avg_dist / self.bpm * 60.
         );
+        avg_dist
     }
 }
 

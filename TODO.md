@@ -10,11 +10,26 @@
       - [ ] watch: https://www.youtube.com/watch?v=JTuZvRF-OgE&t=41s
   - [ ] save user timing data to a file (e.g. start with flatfile, someday a DB)
   - [x] consider audio latency when displaying user input
+  - [x] save calibration data to disk, so it exists on next run -> saves to `$HOME/Library/Application\ Support/rs.macroix/AppConfig.toml` on mac .. see: https://github.com/rust-cli/confy/issues/89 .. https://github.com/dirs-dev/directories-rs#basedirs
 - [ ] use a midi library for input -- see `input.rs`
 - [ ] akai mini working as input
+- [ ] make it shareable
+  - [ ] decouple loops data (look in local directory, or fetch them remotely.. e.g. from public GH link)
+- [ ] add UI to save / open a loop file from your machine
+- [ ] Explore similar existin offerings
+  - [ ] Drum specific..
+    - [ ] https://www.mutedrums.com/ / https://www.playdrumsonline.com/ (https://www.playdrumsonline.com/songs/create)
+    - [ ] Melodics
+    - [ ] Clone Hero
+  - [ ] Rhythm games
 
 # TODO (future)
 
+- [ ] deploy to web (possible? latency??)
+- [ ] toggle metronome on/off
+- [ ] volume control
+  - [ ] global
+  - [ ] per voice (inl metronome)
 - [ ] bundle so it can be shared
   - [ ] as DMG?
   - [ ] include loops JSON data, or fetch them remotely (e.g. from public GH link)

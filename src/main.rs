@@ -1,4 +1,5 @@
 mod audio;
+mod config;
 mod consts;
 mod input;
 mod ui;
@@ -10,6 +11,7 @@ use std::io::BufWriter;
 use std::io::Write;
 
 use crate::audio::*;
+use crate::config::AppConfig;
 use crate::input::*;
 use crate::ui::*;
 use crate::voices::Voices;
@@ -28,12 +30,17 @@ fn window_conf() -> Conf {
 
 #[macroquad::main(window_conf)]
 async fn main() -> Result<(), Box<dyn Error>> {
+    let conf = AppConfig::new()?;
+    dbg!(&conf);
+
     // Setup global game state
     let l = "res/loops/bulls_on_parade_1b.json";
+
     // let l = "res/loops/samba.json";
     let mut voices = Voices::new_from_file(l)?;
 
-    let mut audio = Audio::new();
+    let mut audio = Audio::new(&conf);
+
     let ui = UI::new(); // Consider passing in audio and voices here?
 
     loop {

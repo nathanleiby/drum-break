@@ -7,7 +7,7 @@ use std::{
 
 use macroquad::prelude::*;
 
-use crate::{audio::Audio, consts::*, voices::Instrument, Voices};
+use crate::{audio::Audio, config::AppConfig, consts::*, voices::Instrument, Voices};
 
 pub fn handle_user_input(voices: &mut Voices, audio: &mut Audio) -> Result<(), Box<dyn Error>> {
     // Playing the drums //
@@ -33,7 +33,13 @@ pub fn handle_user_input(voices: &mut Voices, audio: &mut Audio) -> Result<(), B
 
     if is_key_pressed(KeyCode::Equal) {
         // capture note timing data
-        audio.track_for_calibration();
+        let updated_val = audio.track_for_calibration();
+        audio.set_configured_audio_latency_seconds(updated_val);
+
+        let cfg = AppConfig {
+            audio_latency_seconds: updated_val,
+        };
+        cfg.save();
     }
 
     if is_key_pressed(KeyCode::LeftBracket) {
@@ -41,9 +47,14 @@ pub fn handle_user_input(voices: &mut Voices, audio: &mut Audio) -> Result<(), B
         if is_key_down(KeyCode::LeftShift) || is_key_down(KeyCode::RightShift) {
             multiplier = 100.;
         }
-        audio.set_configured_audio_latency_seconds(
-            audio.get_configured_audio_latency_seconds() - (0.001 * multiplier),
-        );
+
+        let updated_val = audio.get_configured_audio_latency_seconds() - (0.001 * multiplier);
+        audio.set_configured_audio_latency_seconds(updated_val);
+
+        let cfg = AppConfig {
+            audio_latency_seconds: updated_val,
+        };
+        cfg.save();
     }
 
     if is_key_pressed(KeyCode::RightBracket) {
@@ -51,9 +62,14 @@ pub fn handle_user_input(voices: &mut Voices, audio: &mut Audio) -> Result<(), B
         if is_key_down(KeyCode::LeftShift) || is_key_down(KeyCode::RightShift) {
             multiplier = 100.;
         }
-        audio.set_configured_audio_latency_seconds(
-            audio.get_configured_audio_latency_seconds() + (0.001 * multiplier),
-        );
+
+        let updated_val = audio.get_configured_audio_latency_seconds() + (0.001 * multiplier);
+        audio.set_configured_audio_latency_seconds(updated_val);
+
+        let cfg = AppConfig {
+            audio_latency_seconds: updated_val,
+        };
+        cfg.save();
     }
 
     // Improve UX here
