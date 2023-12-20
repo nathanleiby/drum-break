@@ -1,4 +1,4 @@
-use std::collections::VecDeque;
+use std::{collections::VecDeque, error::Error, io::Cursor};
 
 use kira::{
     clock::{ClockHandle, ClockSpeed, ClockTime},
@@ -75,12 +75,12 @@ impl Audio {
     }
 
     /// schedule should be run within each game tick to schedule the audio
-    pub fn schedule(self: &mut Self, voices: &Voices) {
+    pub async fn schedule(self: &mut Self, voices: &Voices) -> Result<(), Box<dyn Error>> {
         self.print_if_new_beat();
 
         let current = self.current_clock_tick();
         if current <= self.last_scheduled_tick {
-            return;
+            return Ok(());
         }
 
         let tick_to_schedule = current + TICK_SCHEDULE_AHEAD;
@@ -104,10 +104,13 @@ impl Audio {
                 &self.clock,
                 self.last_scheduled_tick,
                 tick_to_schedule,
-            );
+            )
+            .await?;
         }
 
-        self.last_scheduled_tick = tick_to_schedule
+        self.last_scheduled_tick = tick_to_schedule;
+
+        Ok(())
     }
 
     fn current_clock_tick(self: &Self) -> f64 {
@@ -197,52 +200,58 @@ impl Audio {
     }
 }
 
-fn schedule_audio(
+async fn schedule_audio(
     notes: &Vec<f64>,
     sound_path: &str,
     manager: &mut AudioManager,
     clock: &ClockHandle,
     last_scheduled_tick: f64,
     tick_to_schedule: f64,
-) {
+) -> Result<(), Box<dyn Error>> {
     let prev_beat = last_scheduled_tick % BEATS_PER_LOOP;
     let next_beat = tick_to_schedule % BEATS_PER_LOOP;
     let loop_num = (last_scheduled_tick / BEATS_PER_LOOP) as i32; // floor
     for note in notes.iter() {
         if note > &prev_beat && note <= &next_beat {
-            schedule_note(note, loop_num, clock, manager, sound_path);
+            schedule_note(note, loop_num, clock, manager, sound_path).await?;
         };
 
         // handle wrap-around case
         if next_beat < prev_beat {
             // from prev_beat to end of loop
             if *note > prev_beat && *note <= BEATS_PER_LOOP as f64 {
-                schedule_note(note, loop_num, clock, manager, sound_path);
+                schedule_note(note, loop_num, clock, manager, sound_path).await?;
             }
             // from start of loop to next beat
             if *note >= 0. && *note <= next_beat {
-                schedule_note(note, loop_num + 1, clock, manager, sound_path);
+                schedule_note(note, loop_num + 1, clock, manager, sound_path).await?;
             }
         }
     }
+
+    Ok(())
 }
 
-fn schedule_note(
+async fn schedule_note(
     note: &f64,
     loop_num: i32,
     clock: &ClockHandle,
     manager: &mut AudioManager,
     sound_path: &str,
-) {
+) -> Result<(), Box<dyn Error>> {
     let note_tick = (*note + (loop_num as f64) * BEATS_PER_LOOP) as u64;
     debug!("\tScheduling {} ({}) at {}", sound_path, note, note_tick);
-    let sound = StaticSoundData::from_file(
-        sound_path,
+    let f = load_file(sound_path).await?;
+    let sound = StaticSoundData::from_cursor(
+        Cursor::new(f),
         StaticSoundSettings::new().start_time(ClockTime {
             clock: clock.id(),
             ticks: note_tick,
         }),
-    )
-    .unwrap();
-    manager.play(sound).unwrap();
+    );
+    if let Ok(sound) = sound {
+        manager.play(sound).unwrap();
+    }
+
+    Ok(())
 }

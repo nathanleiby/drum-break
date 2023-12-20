@@ -1,5 +1,7 @@
 # TODO
 
+## soon
+
 - [..] capture and display user timing input for beat -- see `input.rs` (will want a new data model for user activity, e.g. note/timing/velocity data)
   - [ ] save user timing data to a file (e.g. start with flatfile, someday a DB)
 - [ ] use a midi library for input -- see `input.rs`
@@ -8,8 +10,7 @@
   - [ ] decouple loops data (look in local directory, or fetch them remotely.. e.g. from public GH link)
 - [ ] add UI to save / open a loop file from your machine
 
-
-# TODO (future)
+## future
 
 - [ ] Explore similar existing offerings
   - [ ] Drum specific..
@@ -17,7 +18,10 @@
     - [ ] Melodics
     - [ ] Clone Hero
   - [ ] Rhythm games
-- [ ] deploy to web (possible? latency??)
+- [ ] Explore deployment options
+  - [..] deploy to web / WASM (possible? latency??)
+    - [ ] KIRA example https://github.com/Moxinilian/kira-web-demo/tree/main
+  - [ ] build with Tauri https://tauri.app
 - [ ] toggle metronome on/off
 - [ ] volume control
   - [ ] global

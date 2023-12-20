@@ -1,5 +1,6 @@
-use std::{error::Error, fs::File, io::BufReader};
+use std::error::Error;
 
+use macroquad::file::load_file;
 use serde::{Deserialize, Serialize};
 
 pub enum Instrument {
@@ -43,10 +44,11 @@ impl Voices {
         }
     }
 
-    pub fn new_from_file(path: &str) -> Result<Self, Box<dyn Error>> {
-        let file = File::open(path)?;
-        let reader = BufReader::new(file);
-        let out: Self = serde_json::from_reader(reader)?;
+    pub async fn new_from_file(path: &str) -> Result<Self, Box<dyn Error>> {
+        let f = load_file(path).await?;
+        // let file = File::open(path)?;
+        // let reader = BufReader::new(f);
+        let out: Self = serde_json::from_reader(&*f)?;
         Ok(out)
     }
 
