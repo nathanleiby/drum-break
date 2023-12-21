@@ -8,7 +8,6 @@ mod score;
 mod ui;
 mod voices;
 
-use std::collections::VecDeque;
 use std::error::Error;
 
 use crate::audio::*;
@@ -44,7 +43,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let mut audio = Audio::new(&conf);
 
-    let ui = UI::new(); // Consider passing in audio and voices here?
+    let mut ui = UI::new(); // Consider passing in audio and voices here?
 
     let mut fps_tracker = FPS::new();
 

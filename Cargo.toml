@@ -7,8 +7,9 @@ edition = "2021"
 
 [dependencies]
 confy = "0.5.1"
+# egui-macroquad = { version = "0.15.0", default_features = false }
 kira = "0.8.5"
-macroquad = { version = "0.4.4" }
+macroquad = { version = "0.4.4", default_features = false }
 midir = "0.9.1"
 serde = { version = "1.0.193", features = ["derive"] }
 serde_json = "1.0.108"

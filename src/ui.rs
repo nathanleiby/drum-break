@@ -1,31 +1,56 @@
 use crate::{
     audio::Audio,
     consts::*,
-    score::{compute_accuracy, Accuracy, MISS_MARGIN},
+    score::{compute_accuracy, Accuracy},
     Voices,
 };
 
-use macroquad::{audio, color::ORANGE, prelude::*};
+use macroquad::{
+    prelude::*,
+    ui::{widgets::Group, *},
+};
 
-pub struct UI {}
+pub struct UI {
+    path_to_loop: String,
+}
 
 impl UI {
     pub fn new() -> Self {
-        Self {}
+        Self {
+            path_to_loop: String::new(),
+        }
     }
 
-    pub fn render(self: &Self, voices: &Voices, audio: &Audio) {
+    pub fn render(self: &mut Self, voices: &Voices, audio: &Audio) {
         let current_beat = audio.current_beat();
         let audio_latency = audio.get_configured_audio_latency_seconds();
         let bpm = audio.get_bpm();
 
-        clear_background(LIGHTGRAY);
+        clear_background(Color {
+            r: 0.9,
+            g: 0.9,
+            b: 0.9,
+            a: 1.0,
+        });
         draw_beat_grid(voices);
         draw_user_hits(&audio.user_hits, &voices, audio_latency);
         draw_position_line(current_beat + audio_latency);
         draw_status(bpm, current_beat / 2., audio_latency);
 
         draw_pulse_beat(current_beat + audio_latency);
+
+        //// TODO: resolve issue with: assertion failed: !QUAD_CONTEXT.is_null()
+        // egui_macroquad::ui(|egui_ctx| {
+        //     egui::Window::new("egui ❤ macroquad").show(egui_ctx, |ui| {
+        //         ui.label("Test");
+        //     });
+        // });
+
+        // // Draw things before egui
+
+        // egui_macroquad::draw();
+
+        draw_ui(&mut self.path_to_loop);
     }
 }
 
@@ -205,4 +230,24 @@ fn draw_pulse_beat(current_beat: f64) {
     if dist < 0.05 {
         draw_circle(screen_width() / 2., screen_height() / 2. + 100., 100., RED);
     }
+}
+
+const UI_TOP_LEFT: Vec2 = vec2(100., 400.);
+
+// maybe macroquad built in UI is somewhat useful
+// https://docs.rs/macroquad/latest/macroquad/ui/index.html
+// https://github.com/not-fl3/macroquad/blob/master/examples/ui.rs
+fn draw_ui(path_to_loop: &mut String) {
+    widgets::Window::new(hash!(), UI_TOP_LEFT, vec2(320., 200.))
+        .label("Shop")
+        .titlebar(true)
+        .ui(&mut *root_ui(), |ui| {
+            for i in 0..30 {
+                Group::new(hash!("shop", i), Vec2::new(300., 80.)).ui(ui, |ui| {
+                    ui.label(Vec2::new(10., 10.), &format!("Item N {}", i));
+                    ui.label(Vec2::new(260., 40.), "10/10");
+                    ui.label(Vec2::new(200., 58.), &format!("{} kr", 800));
+                });
+            }
+        });
 }

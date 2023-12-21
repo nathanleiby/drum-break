@@ -28,6 +28,7 @@
   - [ ] https://computermusicresource.com/MIDI.Commands.html
 - [ ] explore Rust GUI options
   - [ ] egui https://www.egui.rs/ .. https://github.com/optozorax/egui-macroquad
+    - had trouble getting egui-macroquad to build due to audio lib issues. version outdated? tried to pull in file and build locally, but had trouble with that too b/c of macroquad/miniquad version mismatch
 - [ ] Explore macroquad featureset, including [experimental](https://docs.rs/macroquad/latest/macroquad/experimental/index.html) like state machine and scenes
   - [ ] Also explore community extension https://github.com/ozkriff/awesome-quads
   - [ ] tune config w cvars approach? https://github.com/martin-t/cvars

@@ -36,7 +36,7 @@ impl FPS {
             8.,
             24.,
             32.,
-            WHITE,
+            GRAY,
         );
     }
 }
