@@ -64,12 +64,20 @@ impl Score {
 
 pub fn compute_accuracy(user_beat_with_latency: f64, desired_hits: &Vec<f64>) -> Accuracy {
     // find the nearest desired_hit
-    let mut target_beat = 1000.; // should always be a miss
+    let mut target_beat = None; // should always be a miss
     for desired in desired_hits.iter() {
-        let prev_dist = target_beat - desired;
-        let dist = user_beat_with_latency - desired;
-        if dist.abs() < prev_dist.abs() {
-            target_beat = *desired;
+        // if there's no target_beat yet, set it to the first desired hit
+        match target_beat {
+            None => {
+                target_beat = Some((*desired, user_beat_with_latency - desired));
+                continue;
+            }
+            Some((b, prev_dist)) => {
+                let new_dist = user_beat_with_latency - desired;
+                if new_dist.abs() < prev_dist.abs() {
+                    target_beat = Some((*desired, new_dist));
+                }
+            }
         }
     }
 
@@ -85,19 +93,28 @@ pub fn compute_accuracy(user_beat_with_latency: f64, desired_hits: &Vec<f64>) ->
     //     }
     // }
 
-    let distance = user_beat_with_latency - target_beat;
-    let acc = match distance {
-        d if d.abs() > MISS_MARGIN => Accuracy::Miss,
-        d if d < -CORRECT_MARGIN => Accuracy::Early,
-        d if d > CORRECT_MARGIN => Accuracy::Late,
-        _ => Accuracy::Correct,
-    };
+    match target_beat {
+        None => {
+            info!("No target beat found, returning Miss");
+            return Accuracy::Miss;
+        }
+        Some((b, _)) => {
+            info!("Target beat found: {:?}", b);
+            let distance = user_beat_with_latency - b;
+            let acc = match distance {
+                d if d.abs() > MISS_MARGIN => Accuracy::Miss,
+                d if d < -CORRECT_MARGIN => Accuracy::Early,
+                d if d > CORRECT_MARGIN => Accuracy::Late,
+                _ => Accuracy::Correct,
+            };
 
-    info!(
-        "Accuracy: {:?} .. user_input_beat = {:?} .. target_beat = {:?} .. distance = {:?}",
-        acc, user_beat_with_latency, target_beat, distance
-    );
-    acc
+            info!(
+                "Accuracy: {:?} .. user_input_beat = {:?} .. target_beat = {:?} .. distance = {:?}",
+                acc, user_beat_with_latency, target_beat, distance
+            );
+            acc
+        }
+    }
 }
 
 #[cfg(test)]
@@ -107,7 +124,7 @@ mod tests {
     use crate::score::{compute_accuracy, Accuracy, CORRECT_MARGIN, MISS_MARGIN};
 
     #[test]
-    fn it_computes_accuracy() {
+    fn it_computes_accuracy_against_one_note() {
         // exactly correct
         let result = compute_accuracy(0.0, &vec![0.0]);
         assert_eq!(result, Accuracy::Correct);
@@ -142,5 +159,12 @@ mod tests {
 
         let result = compute_accuracy(-miss, &vec![0.0]);
         assert_eq!(result, Accuracy::Miss);
+    }
+
+    #[test]
+    fn it_computes_accuracy_against_correct_target_note_from_many() {
+        // should check if it's closer to the nearest note: 0.0, not 1.0
+        let result = compute_accuracy(CORRECT_MARGIN, &vec![0.0, 1.0]);
+        assert_eq!(result, Accuracy::Correct);
     }
 }
