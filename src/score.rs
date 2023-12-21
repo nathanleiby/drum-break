@@ -17,6 +17,9 @@ pub enum Accuracy {
 // - if it's a hit (non-Miss), register it and update the target_beat
 // - it it's a miss, register it but DO NOT update the target_beat
 
+// TODO: consider using Decimal type for exact math on beats.
+// - Floating point math has comparison/equality challenges
+// - Can't hash pointing point numbers out of the gate
 pub const CORRECT_MARGIN: f64 = 0.1;
 pub const MISS_MARGIN: f64 = 0.3;
 
@@ -72,7 +75,7 @@ pub fn compute_accuracy(user_beat_with_latency: f64, desired_hits: &Vec<f64>) ->
                 target_beat = Some((*desired, user_beat_with_latency - desired));
                 continue;
             }
-            Some((b, prev_dist)) => {
+            Some((_, prev_dist)) => {
                 let new_dist = user_beat_with_latency - desired;
                 if new_dist.abs() < prev_dist.abs() {
                     target_beat = Some((*desired, new_dist));
@@ -82,16 +85,21 @@ pub fn compute_accuracy(user_beat_with_latency: f64, desired_hits: &Vec<f64>) ->
     }
 
     // handle end of loop wrap-around case
-    // if desired_hits.contains(&0.) {
-    //     let desired = 0. + BEATS_PER_LOOP;
-
-    //     let prev_dist = target_beat - desired;
-    //     let dist = user_beat_with_latency - desired;
-
-    //     if dist.abs() < prev_dist.abs() {
-    //         target_beat = desired;
-    //     }
-    // }
+    if desired_hits.contains(&0.) {
+        let desired = 0. + BEATS_PER_LOOP;
+        // if there's no target_beat yet, set it to the first desired hit
+        match target_beat {
+            None => {
+                target_beat = Some((desired, user_beat_with_latency - desired));
+            }
+            Some((_, prev_dist)) => {
+                let new_dist = user_beat_with_latency - desired;
+                if new_dist.abs() < prev_dist.abs() {
+                    target_beat = Some((desired, new_dist));
+                }
+            }
+        }
+    }
 
     match target_beat {
         None => {
@@ -121,7 +129,10 @@ pub fn compute_accuracy(user_beat_with_latency: f64, desired_hits: &Vec<f64>) ->
 mod tests {
     use std::f64::EPSILON;
 
-    use crate::score::{compute_accuracy, Accuracy, CORRECT_MARGIN, MISS_MARGIN};
+    use crate::{
+        consts::BEATS_PER_LOOP,
+        score::{compute_accuracy, Accuracy, CORRECT_MARGIN, MISS_MARGIN},
+    };
 
     #[test]
     fn it_computes_accuracy_against_one_note() {
@@ -166,5 +177,15 @@ mod tests {
         // should check if it's closer to the nearest note: 0.0, not 1.0
         let result = compute_accuracy(CORRECT_MARGIN, &vec![0.0, 1.0]);
         assert_eq!(result, Accuracy::Correct);
+
+        // handle wrap-around case
+        let result = compute_accuracy(BEATS_PER_LOOP - CORRECT_MARGIN, &vec![0.0, 1.0]);
+        assert_eq!(result, Accuracy::Correct);
+
+        let result = compute_accuracy(BEATS_PER_LOOP - 2. * CORRECT_MARGIN, &vec![0.0, 1.0]);
+        assert_eq!(result, Accuracy::Early);
+
+        let result = compute_accuracy(BEATS_PER_LOOP - MISS_MARGIN, &vec![0.0, 1.0]);
+        assert_eq!(result, Accuracy::Miss);
     }
 }
