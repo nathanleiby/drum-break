@@ -1,6 +1,11 @@
-use crate::{audio::Audio, consts::*, Voices};
+use crate::{
+    audio::Audio,
+    consts::*,
+    score::{compute_accuracy, Accuracy, MISS_MARGIN},
+    Voices,
+};
 
-use macroquad::{audio, prelude::*};
+use macroquad::{audio, color::ORANGE, prelude::*};
 
 pub struct UI {}
 
@@ -16,7 +21,7 @@ impl UI {
 
         clear_background(LIGHTGRAY);
         draw_beat_grid(voices);
-        draw_user_hits(&audio.user_hits, audio_latency);
+        draw_user_hits(&audio.user_hits, &voices, audio_latency);
         draw_position_line(current_beat + audio_latency);
         draw_status(bpm, current_beat / 2., audio_latency);
 
@@ -104,28 +109,28 @@ fn draw_beat_grid(voices: &Voices) {
     }
 }
 
-fn draw_user_hits(voices: &Voices, audio_latency: f64) {
-    let closed_hihat_notes = &voices.closed_hihat;
-    let snare_notes = &voices.snare;
-    let kick_notes = &voices.kick;
-    let open_hihat_notes = &voices.open_hihat;
+fn draw_user_hits(user_hits: &Voices, desired_hits: &Voices, audio_latency: f64) {
+    let closed_hihat_notes = &user_hits.closed_hihat;
+    let snare_notes = &user_hits.snare;
+    let kick_notes = &user_hits.kick;
+    let open_hihat_notes = &user_hits.open_hihat;
 
     for note in closed_hihat_notes.iter() {
-        draw_user_hit(*note, 0, audio_latency);
+        draw_user_hit(*note, 0, audio_latency, &desired_hits.closed_hihat);
     }
 
     for note in snare_notes.iter() {
-        draw_user_hit(*note, 1, audio_latency);
+        draw_user_hit(*note, 1, audio_latency, &desired_hits.snare);
     }
 
     // same kick notes but with a lead up to each note
     for note in kick_notes.iter() {
-        draw_user_hit(*note, 2, audio_latency);
+        draw_user_hit(*note, 2, audio_latency, &desired_hits.kick);
     }
 
     // same kick notes but with a lead up to each note
     for note in open_hihat_notes.iter() {
-        draw_user_hit(*note, 3, audio_latency);
+        draw_user_hit(*note, 3, audio_latency, &desired_hits.open_hihat);
     }
 }
 
@@ -156,39 +161,27 @@ fn draw_note(beats_offset: f64, row: usize) {
     );
 }
 
-fn draw_user_hit(beats_offset: f64, row: usize, audio_latency: f64) {
-    // let beat_duration = 1 as f64;
-    let beat_duration = 0.1 as f64; // make it thin for easier overlap, for now
-    let x = GRID_LEFT_X + beats_offset * BEAT_WIDTH_PX;
-    let y = GRID_TOP_Y + row as f64 * ROW_HEIGHT;
+fn draw_user_hit(user_beat: f64, row: usize, audio_latency: f64, desired_hits: &Vec<f64>) {
+    let user_beat_with_latency = user_beat + audio_latency;
 
-    // without audio latency
-    // draw_rectangle_f64(
-    //     x + BEAT_PADDING / 2.,
-    //     y + BEAT_PADDING / 2.,
-    //     BEAT_WIDTH_PX * beat_duration - BEAT_PADDING,
-    //     BEAT_WIDTH_PX - BEAT_PADDING,
-    //     Color {
-    //         r: 0.0,
-    //         g: 0.63 + row as f32 * 0.1,
-    //         b: 0.0 + row as f32 * 0.1,
-    //         a: 1.0,
-    //     },
-    // );
+    let acc = compute_accuracy(user_beat_with_latency, desired_hits);
+
+    let beat_duration = 0.2 as f64; // make it thin for easier overlap, for now
 
     // with audio latency
-    let x2 = x + audio_latency * BEAT_WIDTH_PX;
+    let x = GRID_LEFT_X + user_beat_with_latency * BEAT_WIDTH_PX;
+    let y = GRID_TOP_Y + row as f64 * ROW_HEIGHT;
+
     draw_rectangle_f64(
-        x2 + BEAT_PADDING / 2.,
+        x + BEAT_PADDING / 2.,
         y + BEAT_PADDING / 2.,
         BEAT_WIDTH_PX * beat_duration - BEAT_PADDING,
         BEAT_WIDTH_PX - BEAT_PADDING,
-        Color {
-            // purple-ish
-            r: 0.8,
-            g: 0.0 + row as f32 * 0.1,
-            b: 0.8,
-            a: 1.0,
+        match acc {
+            Accuracy::Early => ORANGE,
+            Accuracy::Late => PURPLE,
+            Accuracy::Correct => GREEN,
+            Accuracy::Miss => RED,
         },
     );
 }

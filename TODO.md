@@ -4,16 +4,28 @@
 
 - [..] capture and display user timing input for beat -- see `input.rs` (will want a new data model for user activity, e.g. note/timing/velocity data)
   - [ ] save user timing data to a file (e.g. start with flatfile, someday a DB)
-- [ ] use a midi library for input -- see `input.rs`
-  - [ ] https://www.youtube.com/watch?v=Nog1qAY0eG0&ab_channel=Tantan
-    - [ ] need input thread vs main thread - https://github.com/TanTanDev/midi_game
-- [x] akai mini working as input
+- measure your accuracy
+
+  - [x] show correctness (in the current loop)
+  - [ ] visualize correctness across multiple attempts of the loop
+  - [ ] idea: box and whisker for each note
+  - [ ] idea: color for each note (e.g. red for bad, green for good .. could also have a color to indicate early/late/miss trends)
+  - [ ] since you started (press a button to reset)
+  - [ ] all time
+
 - [ ] make it shareable
   - [ ] decouple loops data (look in local directory, or fetch them remotely.. e.g. from public GH link)
+- [ ] set keybindings (midi bindings) for each drum
+- [ ]
 - [ ] add UI to save / open a loop file from your machine
 
 ## future
 
+- accuracy
+  - [ ] figure out how to allow first beat to get measured correct. since space starts clock right away... need a click in or empty space before the notes
+  - [ ] Allow tuning margin for correctness in FE, until it feels dialied in. (see `score.rs`)
+- midi - how does it work?
+  - [ ] https://computermusicresource.com/MIDI.Commands.html
 - [ ] explore Rust GUI options
   - [ ] egui https://www.egui.rs/ .. https://github.com/optozorax/egui-macroquad
 - [ ] Explore macroquad featureset, including [experimental](https://docs.rs/macroquad/latest/macroquad/experimental/index.html) like state machine and scenes

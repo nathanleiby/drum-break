@@ -3,6 +3,7 @@ mod config;
 mod consts;
 mod input;
 mod midi;
+mod score;
 mod ui;
 mod voices;
 
@@ -11,6 +12,7 @@ use std::error::Error;
 use crate::audio::*;
 use crate::config::AppConfig;
 use crate::input::*;
+use crate::score::Score;
 use crate::ui::*;
 use crate::voices::Voices;
 
@@ -42,9 +44,12 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let ui = UI::new(); // Consider passing in audio and voices here?
 
+    // let mut score = Score::new(4);
+
     loop {
         audio.schedule(&voices).await?;
         handle_user_input(&mut voices, &mut audio, &midi)?;
+
         ui.render(&voices, &audio);
         midi.flush();
 
