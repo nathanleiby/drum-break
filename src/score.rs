@@ -2,7 +2,7 @@ use macroquad::miniquad::info;
 
 use crate::consts::BEATS_PER_LOOP;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Accuracy {
     Correct,
     Early,
@@ -18,7 +18,7 @@ pub enum Accuracy {
 // - it it's a miss, register it but DO NOT update the target_beat
 
 pub const CORRECT_MARGIN: f64 = 0.1;
-pub const MISS_MARGIN: f64 = 0.2;
+pub const MISS_MARGIN: f64 = 0.3;
 
 pub struct Score {
     // input_by_voice: Vec<Vec<f64>>,
@@ -64,24 +64,26 @@ impl Score {
 
 pub fn compute_accuracy(user_beat_with_latency: f64, desired_hits: &Vec<f64>) -> Accuracy {
     // find the nearest desired_hit
-    let mut target_beat = -MISS_MARGIN - 1.; // always a miss
+    let mut target_beat = 1000.; // should always be a miss
     for desired in desired_hits.iter() {
-        let prev_dist = (target_beat - desired).abs();
-        let dist = (user_beat_with_latency - desired).abs();
-        if dist < prev_dist {
+        let prev_dist = target_beat - desired;
+        let dist = user_beat_with_latency - desired;
+        if dist.abs() < prev_dist.abs() {
             target_beat = *desired;
         }
     }
 
     // handle end of loop wrap-around case
-    if desired_hits.contains(&0.) {
-        let desired = 0. + BEATS_PER_LOOP;
-        let prev_dist = (target_beat - desired).abs();
-        let dist = (user_beat_with_latency - desired).abs();
-        if dist < prev_dist {
-            target_beat = desired;
-        }
-    }
+    // if desired_hits.contains(&0.) {
+    //     let desired = 0. + BEATS_PER_LOOP;
+
+    //     let prev_dist = target_beat - desired;
+    //     let dist = user_beat_with_latency - desired;
+
+    //     if dist.abs() < prev_dist.abs() {
+    //         target_beat = desired;
+    //     }
+    // }
 
     let distance = user_beat_with_latency - target_beat;
     let acc = match distance {
@@ -90,9 +92,55 @@ pub fn compute_accuracy(user_beat_with_latency: f64, desired_hits: &Vec<f64>) ->
         d if d > CORRECT_MARGIN => Accuracy::Late,
         _ => Accuracy::Correct,
     };
+
     info!(
-        "Accuracy: {:?} .. user_input_beat = {:?} .. target_beat = {:?}",
-        acc, user_beat_with_latency, target_beat
+        "Accuracy: {:?} .. user_input_beat = {:?} .. target_beat = {:?} .. distance = {:?}",
+        acc, user_beat_with_latency, target_beat, distance
     );
     acc
+}
+
+#[cfg(test)]
+mod tests {
+    use std::f64::EPSILON;
+
+    use crate::score::{compute_accuracy, Accuracy, CORRECT_MARGIN, MISS_MARGIN};
+
+    #[test]
+    fn it_computes_accuracy() {
+        // exactly correct
+        let result = compute_accuracy(0.0, &vec![0.0]);
+        assert_eq!(result, Accuracy::Correct);
+
+        // within (at) the correct margin
+        let result = compute_accuracy(CORRECT_MARGIN, &vec![0.0]);
+        assert_eq!(result, Accuracy::Correct);
+
+        let result = compute_accuracy(-CORRECT_MARGIN, &vec![0.0]);
+        assert_eq!(result, Accuracy::Correct);
+
+        // between the correct margin and the miss margin
+        let late = CORRECT_MARGIN + (MISS_MARGIN - CORRECT_MARGIN) / 2.;
+        let result = compute_accuracy(late, &vec![0.0]);
+        assert_eq!(result, Accuracy::Late);
+
+        let result = compute_accuracy(-late, &vec![0.0]);
+        assert_eq!(result, Accuracy::Early);
+
+        // exactly at the mss margin
+        let almost_miss = MISS_MARGIN;
+        let result = compute_accuracy(almost_miss, &vec![0.0]);
+        assert_eq!(result, Accuracy::Late);
+
+        let result = compute_accuracy(-almost_miss, &vec![0.0]);
+        assert_eq!(result, Accuracy::Early);
+
+        // beyond the miss margin
+        let miss = MISS_MARGIN + EPSILON;
+        let result = compute_accuracy(miss, &vec![0.0]);
+        assert_eq!(result, Accuracy::Miss);
+
+        let result = compute_accuracy(-miss, &vec![0.0]);
+        assert_eq!(result, Accuracy::Miss);
+    }
 }

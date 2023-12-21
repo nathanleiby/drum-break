@@ -52,7 +52,7 @@
   - [ ] include loops JSON data, or fetch them remotely (e.g. from public GH link)
   - [ ] sign code for easier local running without security override on Mac
 - [ ] quality
-  - [ ] add unit tests
+  - [..] add unit tests
   - [ ] run build + tests in Github CI
 - [ ] shipping artifacts
   - [ ] on git tag, ship a release in Github CI
