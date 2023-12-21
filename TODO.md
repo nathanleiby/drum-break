@@ -2,28 +2,28 @@
 
 ## soon
 
-- [..] capture and display user timing input for beat -- see `input.rs` (will want a new data model for user activity, e.g. note/timing/velocity data)
-  - [ ] save user timing data to a file (e.g. start with flatfile, someday a DB)
-- measure your accuracy
-
-  - [x] show correctness (in the current loop)
-  - [ ] visualize correctness across multiple attempts of the loop
-  - [ ] idea: box and whisker for each note
-  - [ ] idea: color for each note (e.g. red for bad, green for good .. could also have a color to indicate early/late/miss trends)
-  - [ ] since you started (press a button to reset)
-  - [ ] all time
-
 - [ ] make it shareable
   - [ ] decouple loops data (look in local directory, or fetch them remotely.. e.g. from public GH link)
-- [ ] set keybindings (midi bindings) for each drum
-- [ ]
+  - [ ] set keybindings (midi bindings) for each drum
+  - [ ] windows build? or bring a mac downstairs to drums
+- [ ] attach to my drumkit and test
 - [ ] add UI to save / open a loop file from your machine
+- [..] capture and display user timing input for beat -- see `input.rs` (will want a new data model for user activity, e.g. note/timing/velocity data)
+  - [ ] save user timing data to a file (e.g. start with flatfile, someday a DB)
 
 ## future
 
 - accuracy
   - [ ] figure out how to allow first beat to get measured correct. since space starts clock right away... need a click in or empty space before the notes
   - [ ] Allow tuning margin for correctness in FE, until it feels dialied in. (see `score.rs`)
+  - [ ] visualize correctness across multiple attempts of the loop
+    - [ ] idea: box and whisker for each note
+    - [ ] idea: color for each note (e.g. red for bad, green for good .. could also have a color to indicate early/late/miss trends)
+  - [ ] since you started (press a button to reset)
+  - [ ] all time
+- high precision input https://github.com/not-fl3/macroquad/issues/1 vs per frame
+  - maybe could PR this? https://github.com/not-fl3/miniquad/issues/117
+  - maybe separate thread for midi is enough, if i capture timing .. I have `raw_input.timestamp` in `midi.rs` .. could compare that vs frame start time
 - midi - how does it work?
   - [ ] https://computermusicresource.com/MIDI.Commands.html
 - [ ] explore Rust GUI options
