@@ -4,6 +4,8 @@ Macroix is an experimental drum training tool.
 
 ![work in progress screenshot](./screenshot.png)
 
+![scoring hits](./scores.png)
+
 It is called Macroix based on "Macroquad" (rust game engine) + "LaCroix" (sparkling water).
 
 The tool is in a pre-alpha state.
