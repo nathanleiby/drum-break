@@ -3,7 +3,7 @@
 ## soon
 
 - [ ] make it shareable
-  - [ ] decouple loops data (look in local directory, or fetch them remotely.. e.g. from public GH link)
+  - [..] decouple loops data (look in local directory, or fetch them remotely.. e.g. from public GH link)
   - [ ] set keybindings (midi bindings) for each drum
   - [ ] windows build? or bring a mac downstairs to drums
 - [ ] attach to my drumkit and test
