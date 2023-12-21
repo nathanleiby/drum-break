@@ -1,6 +1,7 @@
 mod audio;
 mod config;
 mod consts;
+mod fps;
 mod input;
 mod midi;
 mod score;
@@ -12,6 +13,7 @@ use std::error::Error;
 
 use crate::audio::*;
 use crate::config::AppConfig;
+use crate::fps::FPS;
 use crate::input::*;
 use crate::ui::*;
 use crate::voices::Voices;
@@ -44,10 +46,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let ui = UI::new(); // Consider passing in audio and voices here?
 
-    // let mut score = Score::new(4);
-    let mut fps_tracker = VecDeque::<i32>::with_capacity(10);
-    let mut last_fps = 0;
-    let mut last_updated_fps_timestamp = get_time();
+    let mut fps_tracker = FPS::new();
 
     loop {
         audio.schedule(&voices).await?;
@@ -57,16 +56,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
         midi.flush();
 
         // debug
-        fps_tracker.push_front(get_fps());
-        if fps_tracker.len() > 10 {
-            fps_tracker.pop_back();
-        }
-        let avg_fps: i32 = fps_tracker.iter().sum::<i32>() / fps_tracker.len() as i32;
-        if get_time() - last_updated_fps_timestamp > 1. {
-            last_updated_fps_timestamp = get_time();
-            last_fps = avg_fps;
-        }
-        draw_text(format!("FPS: {}", last_fps).as_str(), 0., 16., 32., WHITE);
+        fps_tracker.update();
+        fps_tracker.render();
 
         // wait for next frame from game engine
         next_frame().await
