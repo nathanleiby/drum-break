@@ -202,15 +202,7 @@ fn draw_pulse_beat(current_beat: f64) {
 
     // get the distance from the current beat center
     let dist = (1. - current_beat % 1.).abs();
-
-    let r = 100.;
     if dist < 0.05 {
-        let scale = (0.1 - dist) * 10.;
-        draw_circle(
-            screen_width() / 2.,
-            screen_height() / 2. + 100.,
-            r * scale as f32,
-            RED,
-        );
+        draw_circle(screen_width() / 2., screen_height() / 2. + 100., 100., RED);
     }
 }
