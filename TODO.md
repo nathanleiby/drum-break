@@ -7,7 +7,8 @@
   - [ ] set keybindings (midi bindings) for each drum
   - [ ] windows build? or bring a mac downstairs to drums
 - [ ] attach to my drumkit and test
-- [ ] add UI to save / open a loop file from your machine
+- [ ] (bug) hard crash if no midi device is attached
+- [..] add UI to save / open a loop file from your machine
 - [..] capture and display user timing input for beat -- see `input.rs` (will want a new data model for user activity, e.g. note/timing/velocity data)
   - [ ] save user timing data to a file (e.g. start with flatfile, someday a DB)
 

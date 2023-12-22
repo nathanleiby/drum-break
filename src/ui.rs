@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::{
     audio::Audio,
     consts::*,
@@ -5,10 +7,7 @@ use crate::{
     Voices,
 };
 
-use macroquad::{
-    prelude::*,
-    ui::{widgets::Group, *},
-};
+use macroquad::{prelude::*, ui::*};
 
 pub struct UI {
     path_to_loop: String,
@@ -21,7 +20,7 @@ impl UI {
         }
     }
 
-    pub fn render(self: &mut Self, voices: &Voices, audio: &Audio) {
+    pub fn render(self: &mut Self, voices: &mut Voices, audio: &Audio) {
         let current_beat = audio.current_beat();
         let audio_latency = audio.get_configured_audio_latency_seconds();
         let bpm = audio.get_bpm();
@@ -50,7 +49,17 @@ impl UI {
 
         // egui_macroquad::draw();
 
-        draw_ui(&mut self.path_to_loop);
+        let mut voices_options: Vec<(String, Voices)> = Vec::new();
+
+        // TODO: bootstrap from file elsewhere
+        let mut bup1 = Voices::new();
+        bup1.kick.push(0.0);
+        let mut bup2 = Voices::new();
+        bup2.kick.push(4.0);
+        voices_options.push(("Bulls on Parade (1)".to_string(), bup1));
+        voices_options.push(("Bulls on Parade (2)".to_string(), bup2));
+
+        draw_ui(voices, &mut voices_options);
     }
 }
 
@@ -237,17 +246,36 @@ const UI_TOP_LEFT: Vec2 = vec2(100., 400.);
 // maybe macroquad built in UI is somewhat useful
 // https://docs.rs/macroquad/latest/macroquad/ui/index.html
 // https://github.com/not-fl3/macroquad/blob/master/examples/ui.rs
-fn draw_ui(path_to_loop: &mut String) {
+fn draw_ui<'a, 'b: 'a>(mut voices: &'a mut Voices, voices_options: &'b mut Vec<(String, Voices)>) {
     widgets::Window::new(hash!(), UI_TOP_LEFT, vec2(320., 200.))
-        .label("Shop")
+        .label("Loops")
         .titlebar(true)
         .ui(&mut *root_ui(), |ui| {
-            for i in 0..30 {
-                Group::new(hash!("shop", i), Vec2::new(300., 80.)).ui(ui, |ui| {
-                    ui.label(Vec2::new(10., 10.), &format!("Item N {}", i));
-                    ui.label(Vec2::new(260., 40.), "10/10");
-                    ui.label(Vec2::new(200., 58.), &format!("{} kr", 800));
-                });
-            }
+            // if ui.button(None, "Bulls on Parade (1)") {
+            //     *path_to_loop = "res/loops/bulls_on_parade_1.json".to_string();
+            // }
+
+            // iterate over voices options by sorted keys..
+            voices_options.iter().for_each(|(name, new_voices)| {
+                if ui.button(None, name.as_str()) {
+                    *voices = new_voices.clone();
+                    info!("Switched to {:?}", name);
+                }
+            });
+
+            // if ui.button(None, "Bulls on Parade (1b)") {
+            //     let path_to_loop = "res/loops/bulls_on_parade_1b.json".to_string();
+            //     if let Ok(default_voices) = Voices::new_from_file(&path_to_loop) {
+            //         voices = default_voices;
+            //     }
+            // }
+
+            // if ui.button(None, "Bulls on Parade (2)") {
+            //     *path_to_loop = "res/loops/bulls_on_parade_2.json".to_string();
+            // }
+
+            // if ui.button(None, "Samba") {
+            //         *path_to_loop = "res/loops/samba.json".to_string();
+            //     }
         });
 }

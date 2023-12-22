@@ -42,9 +42,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     // Allow voices file to be missing and still work
     let mut voices = Voices::new();
-    if let Ok(default_voices) = Voices::new_from_file(l).await {
-        voices = default_voices;
-    }
 
     let mut audio = Audio::new(&conf);
 
@@ -56,7 +53,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         audio.schedule(&voices).await?;
         handle_user_input(&mut voices, &mut audio, &midi)?;
 
-        ui.render(&voices, &audio);
+        ui.render(&mut voices, &audio);
         midi.flush();
 
         // debug
