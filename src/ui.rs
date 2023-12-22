@@ -20,7 +20,12 @@ impl UI {
         }
     }
 
-    pub fn render(self: &mut Self, voices: &mut Voices, audio: &Audio) {
+    pub fn render(
+        self: &mut Self,
+        voices: &mut Voices,
+        audio: &Audio,
+        mut loops: &mut Vec<(String, Voices)>,
+    ) {
         let current_beat = audio.current_beat();
         let audio_latency = audio.get_configured_audio_latency_seconds();
         let bpm = audio.get_bpm();
@@ -49,17 +54,7 @@ impl UI {
 
         // egui_macroquad::draw();
 
-        let mut voices_options: Vec<(String, Voices)> = Vec::new();
-
-        // TODO: bootstrap from file elsewhere
-        let mut bup1 = Voices::new();
-        bup1.kick.push(0.0);
-        let mut bup2 = Voices::new();
-        bup2.kick.push(4.0);
-        voices_options.push(("Bulls on Parade (1)".to_string(), bup1));
-        voices_options.push(("Bulls on Parade (2)".to_string(), bup2));
-
-        draw_ui(voices, &mut voices_options);
+        draw_ui(voices, &mut loops);
     }
 }
 

@@ -1,9 +1,31 @@
 # TODO
 
+## asap
+
+what's must-have to make it useful to me?
+
+- connecting to my actual drums
+
+  - hard code
+
+- tracking "perfect" vs "great" loops
+  - handle beat 0 edge case
+
 ## soon
 
+- input improvements
+  - support >1 midi value per voice
+  - allow easy rebinding within the app
+- save all input data
+  - on exit (click "x")
+  - on "save" (press "s" explicitly)
+  - e.g. dump to a JSON
+    - the loop voices itself
+    - the users's input data
+    - worry about visualizing and cleaning later.. this is first pass on session over session data
 - [ ] make it shareable
-  - [..] decouple loops data (look in local directory, or fetch them remotely.. e.g. from public GH link)
+  - [x] decouple loops data (look in local directory, or fetch them remotely.. e.g. from public GH link)
+    - [x] suggest passing a loops directory on boot -- OK if no loops found
   - [ ] set keybindings (midi bindings) for each drum
   - [ ] windows build? or bring a mac downstairs to drums
 - [ ] attach to my drumkit and test
