@@ -17,25 +17,24 @@ what's must-have to make it useful to me?
   - support >1 midi value per voice
   - allow easy rebinding within the app
 - save all input data
-  - on exit (click "x")
-  - on "save" (press "s" explicitly)
-  - e.g. dump to a JSON
-    - the loop voices itself
-    - the users's input data
-    - worry about visualizing and cleaning later.. this is first pass on session over session data
+  - when?
+    - on exit (click "x")
+    - on "save" (press "s" explicitly)
+  - save user timing data to a file (e.g. start with flatfile, someday a DB)
+    - e.g. dump to a JSON
+      1. the loop voices itself
+      1. the users's input data
+      1. worry about visualizing and cleaning later.. this is first pass on session over session data
 - [ ] make it shareable
-  - [x] decouple loops data (look in local directory, or fetch them remotely.. e.g. from public GH link)
-    - [x] suggest passing a loops directory on boot -- OK if no loops found
   - [ ] set keybindings (midi bindings) for each drum
   - [ ] windows build? or bring a mac downstairs to drums
 - [ ] attach to my drumkit and test
 - [ ] (bug) hard crash if no midi device is attached
-- [..] add UI to save / open a loop file from your machine
-- [..] capture and display user timing input for beat -- see `input.rs` (will want a new data model for user activity, e.g. note/timing/velocity data)
-  - [ ] save user timing data to a file (e.g. start with flatfile, someday a DB)
+- [x] add UI to save / open a loop file from your machine
 
 ## future
 
+- press ? to show help (e.g. see all key bindings)
 - accuracy
   - [ ] figure out how to allow first beat to get measured correct. since space starts clock right away... need a click in or empty space before the notes
   - [ ] Allow tuning margin for correctness in FE, until it feels dialied in. (see `score.rs`)

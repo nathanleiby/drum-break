@@ -52,8 +52,6 @@ impl Voices {
         Ok(out)
     }
 
-    // TODO: new from file
-
     pub fn toggle_beat(&mut self, row: f64, beat: f64) {
         if row == 0. {
             if let Some(pos) = self.closed_hihat.iter().position(|x| *x == beat) {

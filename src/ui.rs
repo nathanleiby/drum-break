@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use crate::{
     audio::Audio,
     consts::*,
@@ -9,22 +7,18 @@ use crate::{
 
 use macroquad::{prelude::*, ui::*};
 
-pub struct UI {
-    path_to_loop: String,
-}
+pub struct UI {}
 
 impl UI {
     pub fn new() -> Self {
-        Self {
-            path_to_loop: String::new(),
-        }
+        Self {}
     }
 
     pub fn render(
         self: &mut Self,
         voices: &mut Voices,
         audio: &Audio,
-        mut loops: &mut Vec<(String, Voices)>,
+        loops: &Vec<(String, Voices)>,
     ) {
         let current_beat = audio.current_beat();
         let audio_latency = audio.get_configured_audio_latency_seconds();
@@ -43,18 +37,7 @@ impl UI {
 
         draw_pulse_beat(current_beat + audio_latency);
 
-        //// TODO: resolve issue with: assertion failed: !QUAD_CONTEXT.is_null()
-        // egui_macroquad::ui(|egui_ctx| {
-        //     egui::Window::new("egui ❤ macroquad").show(egui_ctx, |ui| {
-        //         ui.label("Test");
-        //     });
-        // });
-
-        // // Draw things before egui
-
-        // egui_macroquad::draw();
-
-        draw_ui(voices, &mut loops);
+        draw_loop_choices(voices, &loops);
     }
 }
 
@@ -238,39 +221,19 @@ fn draw_pulse_beat(current_beat: f64) {
 
 const UI_TOP_LEFT: Vec2 = vec2(100., 400.);
 
-// maybe macroquad built in UI is somewhat useful
-// https://docs.rs/macroquad/latest/macroquad/ui/index.html
-// https://github.com/not-fl3/macroquad/blob/master/examples/ui.rs
-fn draw_ui<'a, 'b: 'a>(mut voices: &'a mut Voices, voices_options: &'b mut Vec<(String, Voices)>) {
+fn draw_loop_choices<'a, 'b: 'a>(
+    voices: &'a mut Voices,
+    voices_options: &'b Vec<(String, Voices)>,
+) {
     widgets::Window::new(hash!(), UI_TOP_LEFT, vec2(320., 200.))
         .label("Loops")
         .titlebar(true)
         .ui(&mut *root_ui(), |ui| {
-            // if ui.button(None, "Bulls on Parade (1)") {
-            //     *path_to_loop = "res/loops/bulls_on_parade_1.json".to_string();
-            // }
-
-            // iterate over voices options by sorted keys..
             voices_options.iter().for_each(|(name, new_voices)| {
                 if ui.button(None, name.as_str()) {
                     *voices = new_voices.clone();
                     info!("Switched to {:?}", name);
                 }
             });
-
-            // if ui.button(None, "Bulls on Parade (1b)") {
-            //     let path_to_loop = "res/loops/bulls_on_parade_1b.json".to_string();
-            //     if let Ok(default_voices) = Voices::new_from_file(&path_to_loop) {
-            //         voices = default_voices;
-            //     }
-            // }
-
-            // if ui.button(None, "Bulls on Parade (2)") {
-            //     *path_to_loop = "res/loops/bulls_on_parade_2.json".to_string();
-            // }
-
-            // if ui.button(None, "Samba") {
-            //         *path_to_loop = "res/loops/samba.json".to_string();
-            //     }
         });
 }

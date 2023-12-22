@@ -15,6 +15,7 @@ pub fn handle_user_input(
     voices: &mut Voices,
     audio: &mut Audio,
     midi: &MidiInput,
+    dir_name: &str,
 ) -> Result<(), Box<dyn Error>> {
     // Playing the drums //
     if is_key_pressed(KeyCode::Z) || midi.is_button_pressed(48) {
@@ -105,7 +106,8 @@ pub fn handle_user_input(
 
     if is_key_pressed(KeyCode::S) {
         // write serialized JSON output to a file
-        let file = File::create(format!("res/loops/voices-{}.json", get_time()))?;
+        let dir_name = dir_name.trim_end_matches('/');
+        let file = File::create(format!("{}/voices-{}.json", dir_name, get_time()))?;
         let mut writer = BufWriter::new(file);
         serde_json::to_writer(&mut writer, &voices)?;
         writer.flush()?;

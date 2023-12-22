@@ -38,8 +38,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
     // read loops
     let dir_name = process_cli_args();
     let mut loops: Vec<(String, Voices)> = Vec::new();
-
-    read_loops(dir_name).await?;
+    if let Ok(loops_from_dir) = read_loops(&dir_name).await {
+        loops = loops_from_dir;
+    } else {
+        warn!(
+            "warning: unable to read loops from given directory ({})",
+            &dir_name
+        )
+    }
 
     // init midi device
     let mut midi = midi::MidiInput::new();
@@ -57,9 +63,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     loop {
         audio.schedule(&voices).await?;
-        handle_user_input(&mut voices, &mut audio, &midi)?;
+        handle_user_input(&mut voices, &mut audio, &midi, &dir_name)?;
 
-        ui.render(&mut voices, &audio, &mut loops);
+        ui.render(&mut voices, &audio, &loops);
         midi.flush();
 
         // debug
@@ -81,7 +87,7 @@ fn process_cli_args() -> String {
     return dir_name;
 }
 
-async fn read_loops(dir_name: String) -> Result<Vec<(String, Voices)>, Box<dyn Error>> {
+async fn read_loops(dir_name: &str) -> Result<Vec<(String, Voices)>, Box<dyn Error>> {
     // get all file names from the dir
     let paths = std::fs::read_dir(dir_name)?
         .map(|res| res.map(|e| e.path()))
@@ -101,10 +107,13 @@ async fn read_loops(dir_name: String) -> Result<Vec<(String, Voices)>, Box<dyn E
             .expect("unable to convert OsStr to str");
 
         // remove the file extension
-        let n = n.split('.').next().expect("unable to split file name");
+        let n = n.split(".json").next().expect("unable to split file name");
 
         loops.push((n.to_string(), v));
     }
+
+    // sort loops by name
+    loops.sort_by(|a, b| a.0.cmp(&b.0));
 
     Ok(loops)
 }
