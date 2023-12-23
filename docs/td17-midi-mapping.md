@@ -40,7 +40,7 @@ CRASH 2 (EDGE) = 52
 
 RIDE (BOW) = 51
 
-RIDE (EDGE = 59
+RIDE (EDGE) = 59
 
 RIDE (BELL) = 53
 

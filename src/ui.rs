@@ -178,7 +178,7 @@ fn draw_user_hit(user_beat: f64, row: usize, audio_latency: f64, desired_hits: &
 
     let acc = compute_accuracy(user_beat_with_latency, desired_hits);
 
-    let beat_duration = 0.2 as f64; // make it thin for easier overlap, for now
+    let beat_duration = 0.1 as f64; // make it thin for easier overlap, for now
 
     // with audio latency
     let x = GRID_LEFT_X + user_beat_with_latency * BEAT_WIDTH_PX;

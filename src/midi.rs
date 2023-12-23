@@ -130,4 +130,8 @@ impl MidiInput {
                 .expect("can't connect to midi device"),
         );
     }
+
+    pub fn get_device_name(&self) -> &str {
+        &self.device_name
+    }
 }

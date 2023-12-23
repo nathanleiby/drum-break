@@ -26,6 +26,7 @@ what's must-have to make it useful to me?
       1. the loop voices itself
       1. the users's input data
       1. worry about visualizing and cleaning later.. this is first pass on session over session data
+- cleanup input UI, which quickly gets noisy -- e.g. hacky is a button to reset
 - [ ] make it shareable
   - [ ] set keybindings (midi bindings) for each drum
   - [ ] windows build? or bring a mac downstairs to drums

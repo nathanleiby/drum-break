@@ -9,7 +9,12 @@ use std::{
 use macroquad::prelude::*;
 
 use crate::{
-    audio::Audio, config::AppConfig, consts::*, midi::MidiInput, voices::Instrument, Voices,
+    audio::Audio,
+    config::{AppConfig, InputConfigMidi},
+    consts::*,
+    midi::MidiInput,
+    voices::Instrument,
+    Voices,
 };
 
 pub fn handle_user_input(
@@ -19,40 +24,47 @@ pub fn handle_user_input(
     dir_name: &str,
 ) -> Result<(), Box<dyn Error>> {
     // midi device: "MPK Mini Mk II"
-    // InputConfigMidi {
-    //     kick: HashSet::from_iter(vec![36]),
-    //     snare: HashSet::from_iter(vec![38]),
-    //     closed_hi_hat: HashSet::from_iter(vec![44,48]),
-    //     open_hi_hat: HashSet::from_iter(vec![46]),
-    // }
-
-    let closed_hi_hat_midi: HashSet<u8> = HashSet::from_iter(vec![48, 44]);
-    let snare_midi: HashSet<u8> = HashSet::from_iter(vec![49]);
-    let kick_midi: HashSet<u8> = HashSet::from_iter(vec![50]);
-    let open_hi_hat_midi: HashSet<u8> = HashSet::from_iter(vec![51]);
-
-    // // midi_device: TD-17
-    // let closed_hi_hat_midi: HashSet<u8> = HashSet::from_iter(vec![42, 22]);
-    // let snare_midi: HashSet<u8> = HashSet::from_iter(vec![49]);
-    // let kick_midi: HashSet<u8> = HashSet::from_iter(vec![50]);
-    // let open_hi_hat_midi: HashSet<u8> = HashSet::from_iter(vec![51]);
+    let mpk_mini_mk_ii = InputConfigMidi {
+        closed_hi_hat: HashSet::from_iter(vec![44, 48]),
+        snare: HashSet::from_iter(vec![45, 49]),
+        kick: HashSet::from_iter(vec![46, 50]),
+        open_hi_hat: HashSet::from_iter(vec![47, 51]),
+    };
+    let td17 = InputConfigMidi {
+        // HH CLOSED (BOW) = 42
+        // HH CLOSED (EDGE) = 22
+        closed_hi_hat: HashSet::from_iter(vec![42, 22]),
+        snare: HashSet::from_iter(vec![38]),
+        kick: HashSet::from_iter(vec![36]),
+        // HH OPEN (BOW) = 46
+        // HH OPEN (EDGE) = 26
+        open_hi_hat: HashSet::from_iter(vec![46, 26]),
+    };
+    let ic_midi = match midi.get_device_name() {
+        "MPK Mini Mk II" => mpk_mini_mk_ii,
+        "TD-17" => td17,
+        _ => {
+            warn!("warning: unknown midi device, using default");
+            td17
+        }
+    };
 
     let pressed_midi = HashSet::from_iter(midi.get_pressed_buttons());
 
     // Playing the drums //
-    if is_key_pressed(KeyCode::Z) || closed_hi_hat_midi.intersection(&pressed_midi).count() > 0 {
+    if is_key_pressed(KeyCode::Z) || ic_midi.closed_hi_hat.intersection(&pressed_midi).count() > 0 {
         audio.track_user_hit(Instrument::ClosedHihat);
     }
 
-    if is_key_pressed(KeyCode::X) || snare_midi.intersection(&pressed_midi).count() > 0 {
+    if is_key_pressed(KeyCode::X) || ic_midi.snare.intersection(&pressed_midi).count() > 0 {
         audio.track_user_hit(Instrument::Snare);
     }
 
-    if is_key_pressed(KeyCode::C) || kick_midi.intersection(&pressed_midi).count() > 0 {
+    if is_key_pressed(KeyCode::C) || ic_midi.kick.intersection(&pressed_midi).count() > 0 {
         audio.track_user_hit(Instrument::Kick);
     }
 
-    if is_key_pressed(KeyCode::V) || open_hi_hat_midi.intersection(&pressed_midi).count() > 0 {
+    if is_key_pressed(KeyCode::V) || ic_midi.open_hi_hat.intersection(&pressed_midi).count() > 0 {
         audio.track_user_hit(Instrument::OpenHihat);
     }
 
@@ -129,7 +141,7 @@ pub fn handle_user_input(
     if is_key_pressed(KeyCode::S) {
         // write serialized JSON output to a file
         let dir_name = dir_name.trim_end_matches('/');
-        let file = File::create(format!("{}/voices-{}.json", dir_name, get_time()))?;
+        let file = File::create(format!("{}/loop-{}.json", dir_name, get_time()))?;
         let mut writer = BufWriter::new(file);
         serde_json::to_writer(&mut writer, &voices)?;
         writer.flush()?;

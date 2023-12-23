@@ -21,10 +21,10 @@ impl AppConfig {
 }
 
 pub struct InputConfigMidi {
-    kick: HashSet<u8>,
-    snare: HashSet<u8>,
-    closed_hi_hat: HashSet<u8>,
-    open_hi_hat: HashSet<u8>,
+    pub kick: HashSet<u8>,
+    pub snare: HashSet<u8>,
+    pub closed_hi_hat: HashSet<u8>,
+    pub open_hi_hat: HashSet<u8>,
 }
 
 // impl InputConfigMidi {
