@@ -77,6 +77,17 @@ impl MidiInput {
         !self.is_button_pressed(id)
     }
 
+    pub fn get_pressed_buttons(&self) -> Vec<u8> {
+        let mut pressed = Vec::new();
+        let mut raw_inputs = self.raw_inputs.lock().unwrap();
+        for (id, raw_input) in raw_inputs.iter_mut() {
+            if raw_input.value == 127 {
+                pressed.push(*id);
+            }
+        }
+        pressed
+    }
+
     // clear all inputs, update previous values
     pub fn flush(&mut self) {
         let mut prev_raw_inputs = self.previous_raw_inputs.lock().unwrap();

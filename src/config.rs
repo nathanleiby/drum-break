@@ -1,4 +1,4 @@
-use std::error::Error;
+use std::{collections::HashSet, error::Error};
 
 use serde::{Deserialize, Serialize};
 
@@ -19,6 +19,26 @@ impl AppConfig {
         Ok(())
     }
 }
+
+pub struct InputConfigMidi {
+    kick: HashSet<u8>,
+    snare: HashSet<u8>,
+    closed_hi_hat: HashSet<u8>,
+    open_hi_hat: HashSet<u8>,
+}
+
+// impl InputConfigMidi {
+//     pub fn new() -> Result<Self, Box<dyn Error>> {
+//         // loads or initializes
+//         let cfg: InputConfigMidi = confy::load("macroix", "InputConfig")?;
+//         Ok(cfg)
+//     }
+
+//     pub fn save(&self) -> Result<(), Box<dyn Error>> {
+//         confy::store("macroix", "InputConfig", self)?;
+//         Ok(())
+//     }
+// }
 
 // TODO: support user configurable input mapping
 // have defaults for various devices (perhaps Midi standards)

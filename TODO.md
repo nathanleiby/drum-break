@@ -13,6 +13,7 @@ what's must-have to make it useful to me?
 
 ## soon
 
+- (bug) on changing loop, the voices aren't scheduled immediately. this means first few notes don't make sounds because of schedule ahead logic
 - input improvements
   - support >1 midi value per voice
   - allow easy rebinding within the app
@@ -82,7 +83,7 @@ what's must-have to make it useful to me?
 - [ ] Make "voices" data model more generic.
   - [ ] support more drum sounds (not just kick, snare, hat, clap)
   - [ ] support different numbers of voices (not just 4, as today)
-  - [ ] capture loop config like tempo, length, etc.
+  - [ ] capture loop config like tempo, length, etc. (++ for tempo ASAP)
 - [ ] show music as sheet music notation (e.g. https://github.com/jaredforth/lilypond-rs or various others)
 - [ ] explore improving Kira's interface around the clock and looping to support my sequencer like use-case
   - [ ] idea: editing clock while it's playing

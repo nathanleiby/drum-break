@@ -21,6 +21,12 @@ pub struct Voices {
     pub open_hihat: Vec<f64>,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Loop {
+    bpm: usize,
+    voices: Voices,
+}
+
 // name
 // bpm
 // beats_total:

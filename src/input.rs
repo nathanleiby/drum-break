@@ -1,4 +1,5 @@
 use std::{
+    collections::HashSet,
     error::Error,
     fs::File,
     io::{BufWriter, Write},
@@ -17,20 +18,41 @@ pub fn handle_user_input(
     midi: &MidiInput,
     dir_name: &str,
 ) -> Result<(), Box<dyn Error>> {
+    // midi device: "MPK Mini Mk II"
+    // InputConfigMidi {
+    //     kick: HashSet::from_iter(vec![36]),
+    //     snare: HashSet::from_iter(vec![38]),
+    //     closed_hi_hat: HashSet::from_iter(vec![44,48]),
+    //     open_hi_hat: HashSet::from_iter(vec![46]),
+    // }
+
+    let closed_hi_hat_midi: HashSet<u8> = HashSet::from_iter(vec![48, 44]);
+    let snare_midi: HashSet<u8> = HashSet::from_iter(vec![49]);
+    let kick_midi: HashSet<u8> = HashSet::from_iter(vec![50]);
+    let open_hi_hat_midi: HashSet<u8> = HashSet::from_iter(vec![51]);
+
+    // // midi_device: TD-17
+    // let closed_hi_hat_midi: HashSet<u8> = HashSet::from_iter(vec![42, 22]);
+    // let snare_midi: HashSet<u8> = HashSet::from_iter(vec![49]);
+    // let kick_midi: HashSet<u8> = HashSet::from_iter(vec![50]);
+    // let open_hi_hat_midi: HashSet<u8> = HashSet::from_iter(vec![51]);
+
+    let pressed_midi = HashSet::from_iter(midi.get_pressed_buttons());
+
     // Playing the drums //
-    if is_key_pressed(KeyCode::Z) || midi.is_button_pressed(48) {
+    if is_key_pressed(KeyCode::Z) || closed_hi_hat_midi.intersection(&pressed_midi).count() > 0 {
         audio.track_user_hit(Instrument::ClosedHihat);
     }
 
-    if is_key_pressed(KeyCode::X) || midi.is_button_pressed(49) {
+    if is_key_pressed(KeyCode::X) || snare_midi.intersection(&pressed_midi).count() > 0 {
         audio.track_user_hit(Instrument::Snare);
     }
 
-    if is_key_pressed(KeyCode::C) || midi.is_button_pressed(50) {
+    if is_key_pressed(KeyCode::C) || kick_midi.intersection(&pressed_midi).count() > 0 {
         audio.track_user_hit(Instrument::Kick);
     }
 
-    if is_key_pressed(KeyCode::V) || midi.is_button_pressed(51) {
+    if is_key_pressed(KeyCode::V) || open_hi_hat_midi.intersection(&pressed_midi).count() > 0 {
         audio.track_user_hit(Instrument::OpenHihat);
     }
 
