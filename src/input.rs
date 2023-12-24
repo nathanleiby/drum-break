@@ -12,19 +12,42 @@ use crate::{
     audio::Audio,
     config::{AppConfig, InputConfigMidi},
     consts::*,
-    midi::MidiInput,
+    midi::{self, MidiInput},
     voices::Instrument,
     Voices,
 };
 
 pub struct Input {
-    midi_input: MidiInput,
+    midi_input: Option<MidiInput>,
+}
+
+pub struct IsHit {
+    snare: bool,
+    kick: bool,
+    closed_hi_hat: bool,
+    open_hi_hat: bool,
+}
+
+impl IsHit {
+    pub fn new() -> Self {
+        Self {
+            snare: false,
+            kick: false,
+            closed_hi_hat: false,
+            open_hi_hat: false,
+        }
+    }
 }
 
 impl Input {
     pub fn new() -> Self {
         let mut midi_input = MidiInput::new();
-        midi_input.connect();
+        match midi_input {
+            Some(ref mut midi_input) => {
+                midi_input.connect();
+            }
+            None => warn!("warning: no midi input device found"),
+        }
 
         Self { midi_input }
     }
@@ -35,55 +58,29 @@ impl Input {
         audio: &mut Audio,
         dir_name: &str,
     ) -> Result<(), Box<dyn Error>> {
-        // midi device: "MPK Mini Mk II"
-        let mpk_mini_mk_ii = InputConfigMidi {
-            closed_hi_hat: HashSet::from_iter(vec![44, 48]),
-            snare: HashSet::from_iter(vec![45, 49]),
-            kick: HashSet::from_iter(vec![46, 50]),
-            open_hi_hat: HashSet::from_iter(vec![47, 51]),
-        };
-        let td17 = InputConfigMidi {
-            closed_hi_hat: HashSet::from_iter(vec![42, 22]),
-            snare: HashSet::from_iter(vec![38]),
-            kick: HashSet::from_iter(vec![36]),
-            open_hi_hat: HashSet::from_iter(vec![46, 26]),
-        };
-        let alesis_nitro = InputConfigMidi {
-            closed_hi_hat: HashSet::from_iter(vec![42]),
-            snare: HashSet::from_iter(vec![38]),
-            kick: HashSet::from_iter(vec![36]),
-            open_hi_hat: HashSet::from_iter(vec![46, 23]), // allow half-open (23)
-        };
-        let ic_midi = match self.midi_input.get_device_name() {
-            s if s == "MPK Mini Mk II" => mpk_mini_mk_ii,
-            s if s.contains("TD-17") => td17,
-            s if s.contains("Nitro") => alesis_nitro,
-            _ => {
-                warn!("warning: unknown midi device, using default of 'alesis nitro'");
-                alesis_nitro
+        let midi_hits = match &mut self.midi_input {
+            Some(midi_input) => {
+                let hits = get_pressed_midi(midi_input);
+                midi_input.flush();
+                hits
             }
+            None => IsHit::new(),
         };
-
-        let pressed_midi = HashSet::from_iter(self.midi_input.get_pressed_buttons());
-        self.midi_input.flush();
 
         // Playing the drums //
-        if is_key_pressed(KeyCode::Z)
-            || ic_midi.closed_hi_hat.intersection(&pressed_midi).count() > 0
-        {
+        if is_key_pressed(KeyCode::Z) || midi_hits.closed_hi_hat {
             audio.track_user_hit(Instrument::ClosedHihat);
         }
 
-        if is_key_pressed(KeyCode::X) || ic_midi.snare.intersection(&pressed_midi).count() > 0 {
+        if is_key_pressed(KeyCode::X) || midi_hits.snare {
             audio.track_user_hit(Instrument::Snare);
         }
 
-        if is_key_pressed(KeyCode::C) || ic_midi.kick.intersection(&pressed_midi).count() > 0 {
+        if is_key_pressed(KeyCode::C) || midi_hits.kick {
             audio.track_user_hit(Instrument::Kick);
         }
 
-        if is_key_pressed(KeyCode::V) || ic_midi.open_hi_hat.intersection(&pressed_midi).count() > 0
-        {
+        if is_key_pressed(KeyCode::V) || midi_hits.open_hi_hat {
             audio.track_user_hit(Instrument::OpenHihat);
         }
 
@@ -179,5 +176,46 @@ impl Input {
         }
 
         Ok(())
+    }
+}
+
+fn get_pressed_midi(midi_input: &mut MidiInput) -> IsHit {
+    // midi device: "MPK Mini Mk II"
+    let mpk_mini_mk_ii = InputConfigMidi {
+        closed_hi_hat: HashSet::from_iter(vec![44, 48]),
+        snare: HashSet::from_iter(vec![45, 49]),
+        kick: HashSet::from_iter(vec![46, 50]),
+        open_hi_hat: HashSet::from_iter(vec![47, 51]),
+    };
+    let td17 = InputConfigMidi {
+        closed_hi_hat: HashSet::from_iter(vec![42, 22]),
+        snare: HashSet::from_iter(vec![38]),
+        kick: HashSet::from_iter(vec![36]),
+        open_hi_hat: HashSet::from_iter(vec![46, 26]),
+    };
+    let alesis_nitro = InputConfigMidi {
+        closed_hi_hat: HashSet::from_iter(vec![42]),
+        snare: HashSet::from_iter(vec![38]),
+        kick: HashSet::from_iter(vec![36]),
+        open_hi_hat: HashSet::from_iter(vec![46, 23]), // allow half-open (23)
+    };
+
+    let ic_midi = match midi_input.get_device_name() {
+        s if s == "MPK Mini Mk II" => mpk_mini_mk_ii,
+        s if s.contains("TD-17") => td17,
+        s if s.contains("Nitro") => alesis_nitro,
+        _ => {
+            warn!("warning: unknown midi device, using default of 'alesis nitro'");
+            alesis_nitro
+        }
+    };
+
+    let pressed_midi = HashSet::from_iter(midi_input.get_pressed_buttons());
+
+    IsHit {
+        snare: ic_midi.snare.intersection(&pressed_midi).count() > 0,
+        kick: ic_midi.kick.intersection(&pressed_midi).count() > 0,
+        closed_hi_hat: ic_midi.closed_hi_hat.intersection(&pressed_midi).count() > 0,
+        open_hi_hat: ic_midi.open_hi_hat.intersection(&pressed_midi).count() > 0,
     }
 }

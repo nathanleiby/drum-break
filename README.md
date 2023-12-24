@@ -35,5 +35,5 @@ The tool is in a pre-alpha state.
 ### Creating a release
 
 - `cargo build --release`
-- `gh release create <RELEASE_VERSION> ./target/release/macroix`
+- `gh release create "$(cat VERSION)" ./target/release/macroix`
   - versioning scheme is semver with leading `v`, e.g. `v0.0.1`

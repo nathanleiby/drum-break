@@ -20,7 +20,7 @@ pub struct MidiInput {
 #[derive(Eq, Clone, Debug, Copy, PartialEq)]
 struct MidiInputDataRaw {
     timestamp: u64,
-    // https://www.logosfoundation.org/kursus/1.note_velocity == 127075.html
+    // https://www.logosfoundation.org/kursus/1075.html
     status: u8,
     note_velocity: u8,
 }
@@ -32,26 +32,26 @@ impl MidiInputDataRaw {
 }
 
 impl MidiInput {
-    pub fn new() -> Self {
+    pub fn new() -> Option<Self> {
         let midi_input = midir::MidiInput::new("Input device").unwrap();
         // grab first device
         let input_port = match midi_input.ports().into_iter().next() {
             Some(port) => port,
-            None => panic!("NO MIDI DEVICE FOUND!"),
+            None => return None,
         };
 
         let device_name = midi_input
             .port_name(&input_port)
             .expect("can't get name of port");
 
-        Self {
+        Some(Self {
             midi_input: Some(midi_input),
             input_port,
             device_name,
             connection: None,
             raw_inputs: Arc::new(Mutex::new(HashMap::with_capacity(16))),
             previous_raw_inputs: Arc::new(Mutex::new(HashMap::with_capacity(16))),
-        }
+        })
     }
 
     pub fn is_button_held(&self, id: u8) -> bool {
