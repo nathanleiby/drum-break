@@ -14,7 +14,9 @@ The tool is in a pre-alpha state.
 
 1. Download the latest [release-<version>.zip](https://github.com/nathanleiby/macroix/releases) from Github.
 2. Unzip it
-3. Run it: `./macroix` - you will likely need to open your security settings in Mac (roughly: https://www.macworld.com/article/672947/how-to-open-a-mac-app-from-an-unidentified-developer.html) and allow it to run
+3. `cd release/`
+4. Run `./macroix`.
+   - On Mac, ou will likely need to open your security settings (roughly: https://www.macworld.com/article/672947/how-to-open-a-mac-app-from-an-unidentified-developer.html) and allow it to run.
 
 ### Testing goals
 
