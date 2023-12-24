@@ -75,10 +75,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
 fn process_cli_args() -> String {
     // read commnand line arg as directory name
-    let dir_name = std::env::args().nth(1).unwrap_or_else(|| {
-        println!("Usage: macroix <path_to_loops_dir>");
-        process::exit(1);
-    });
+    let dir_name = std::env::args()
+        .nth(1)
+        .unwrap_or_else(|| return "res/loops/".to_string());
 
     return dir_name;
 }

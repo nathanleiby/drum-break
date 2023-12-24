@@ -1,3 +1,5 @@
 /target
+/release
+release*.zip
 
 .DS_Store

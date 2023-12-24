@@ -9,6 +9,10 @@ what's must-have to make it useful to me?
 
 ## soon
 
+- (bug) Downloaded binary doesn't work b/c can't find necessary sound files
+  ```
+  Error: FileError { kind: IOError(Os { code: 2, kind: NotFound, message: "No such file or directory" }), path: "res/sounds/snare.wav" }
+  ```
 - (bug) explore triggering
   - [ ] double triggering of some TD17 notes (e.g. 2x hihat hits or 2x open hihat hits, esp on hard hits?)
   - [ ] non triggering (hit too soft? event getting dropped?)

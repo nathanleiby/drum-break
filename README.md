@@ -12,11 +12,9 @@ The tool is in a pre-alpha state.
 
 ## Download
 
-1. Download the latest [release](https://github.com/nathanleiby/macroix/releases) from Github.
-
-2. make it executable: `chmod +x macroix`
-3. run it: `./macroix` - you will likely need to open your security settings in Mac (roughly: https://www.macworld.com/article/672947/how-to-open-a-mac-app-from-an-unidentified-developer.html) and allow it to run
-   Testing goals:
+1. Download the latest [release-<version>.zip](https://github.com/nathanleiby/macroix/releases) from Github.
+2. Unzip it
+3. Run it: `./macroix` - you will likely need to open your security settings in Mac (roughly: https://www.macworld.com/article/672947/how-to-open-a-mac-app-from-an-unidentified-developer.html) and allow it to run
 
 ### Testing goals
 
@@ -34,6 +32,7 @@ The tool is in a pre-alpha state.
 
 ### Creating a release
 
-- `cargo build --release`
-- `gh release create "$(cat VERSION)" ./target/release/macroix`
+- update the `VERSION` file
+- run `./release.sh`
+- `gh release create "$(cat VERSION)" release-$(cat VERSION).zip`
   - versioning scheme is semver with leading `v`, e.g. `v0.0.1`
