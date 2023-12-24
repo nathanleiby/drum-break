@@ -4,14 +4,14 @@
 
 what's must-have to make it useful to me?
 
-- [x] connecting to my actual drums
-  - [x] hard code midi values
-  - [x] try actuallyg connecting
 - tracking loop accuracy: "perfect" vs "great" vs etc
   - handle beat 0 edge case
 
 ## soon
 
+- (bug) explore triggering
+  - [ ] double triggering of some TD17 notes (e.g. 2x hihat hits or 2x open hihat hits, esp on hard hits?)
+  - [ ] non triggering (hit too soft? event getting dropped?)
 - (bug) on changing loop, the voices aren't scheduled immediately. this means first few notes don't make sounds because of schedule ahead logic
 - input improvements
   - support >1 midi value per voice
@@ -23,8 +23,8 @@ what's must-have to make it useful to me?
   - save user timing data to a file (e.g. start with flatfile, someday a DB)
     - e.g. dump to a JSON
       1. the loop voices itself
-      1. the users's input data
-      1. worry about visualizing and cleaning later.. this is first pass on session over session data
+      2. the users's input data
+      3. worry about visualizing and cleaning later.. this is first pass on session over session data
 - cleanup input UI, which quickly gets noisy -- e.g. hacky is a button to reset
 - [ ] make it shareable
   - [ ] set keybindings (midi bindings) for each drum
