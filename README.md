@@ -33,6 +33,5 @@ The tool is in a pre-alpha state.
 ### Creating a release
 
 - update the `VERSION` file
-- run `./release.sh`
-- `gh release create "$(cat VERSION)" release-$(cat VERSION).zip`
   - versioning scheme is semver with leading `v`, e.g. `v0.0.1`
+- run `./release.sh`
