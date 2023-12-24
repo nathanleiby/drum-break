@@ -47,14 +47,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
         )
     }
 
-    // init midi device
-    // TODO: refactor this Input{} setup
-    let mut midi = midi::MidiInput::new();
-    midi.connect();
-
     // Setup global game state
+    let mut input = Input::new();
     let mut voices = Voices::new();
-
     let mut audio = Audio::new(&conf);
 
     let mut ui = UI::new(); // Consider passing in audio and voices here?
@@ -65,7 +60,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     loop {
         audio.schedule(&voices).await?;
 
-        handle_user_input(&mut voices, &mut audio, &mut midi, &dir_name)?;
+        input.process(&mut voices, &mut audio, &dir_name)?;
 
         ui.render(&mut voices, &audio, &loops);
 
