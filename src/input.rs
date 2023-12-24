@@ -20,7 +20,7 @@ use crate::{
 pub fn handle_user_input(
     voices: &mut Voices,
     audio: &mut Audio,
-    midi: &MidiInput,
+    midi: &mut MidiInput,
     dir_name: &str,
 ) -> Result<(), Box<dyn Error>> {
     // midi device: "MPK Mini Mk II"
@@ -31,25 +31,29 @@ pub fn handle_user_input(
         open_hi_hat: HashSet::from_iter(vec![47, 51]),
     };
     let td17 = InputConfigMidi {
-        // HH CLOSED (BOW) = 42
-        // HH CLOSED (EDGE) = 22
         closed_hi_hat: HashSet::from_iter(vec![42, 22]),
         snare: HashSet::from_iter(vec![38]),
         kick: HashSet::from_iter(vec![36]),
-        // HH OPEN (BOW) = 46
-        // HH OPEN (EDGE) = 26
         open_hi_hat: HashSet::from_iter(vec![46, 26]),
     };
+    let alesis_nitro = InputConfigMidi {
+        closed_hi_hat: HashSet::from_iter(vec![42]),
+        snare: HashSet::from_iter(vec![38]),
+        kick: HashSet::from_iter(vec![36]),
+        open_hi_hat: HashSet::from_iter(vec![46, 23]), // allow half-open (23)
+    };
     let ic_midi = match midi.get_device_name() {
-        "MPK Mini Mk II" => mpk_mini_mk_ii,
-        "TD-17" => td17,
+        s if s == "MPK Mini Mk II" => mpk_mini_mk_ii,
+        s if s.contains("TD-17") => td17,
+        s if s.contains("Nitro") => alesis_nitro,
         _ => {
-            warn!("warning: unknown midi device, using default");
-            td17
+            warn!("warning: unknown midi device, using default of 'alesis nitro'");
+            alesis_nitro
         }
     };
 
     let pressed_midi = HashSet::from_iter(midi.get_pressed_buttons());
+    midi.flush();
 
     // Playing the drums //
     if is_key_pressed(KeyCode::Z) || ic_midi.closed_hi_hat.intersection(&pressed_midi).count() > 0 {

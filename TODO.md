@@ -4,11 +4,10 @@
 
 what's must-have to make it useful to me?
 
-- connecting to my actual drums
-
-  - hard code
-
-- tracking "perfect" vs "great" loops
+- [x] connecting to my actual drums
+  - [x] hard code midi values
+  - [x] try actuallyg connecting
+- tracking loop accuracy: "perfect" vs "great" vs etc
   - handle beat 0 edge case
 
 ## soon

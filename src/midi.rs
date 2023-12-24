@@ -20,7 +20,15 @@ pub struct MidiInput {
 #[derive(Eq, Clone, Debug, Copy, PartialEq)]
 struct MidiInputDataRaw {
     timestamp: u64,
-    value: u8,
+    // https://www.logosfoundation.org/kursus/1.note_velocity == 127075.html
+    status: u8,
+    note_velocity: u8,
+}
+
+impl MidiInputDataRaw {
+    pub fn is_note_on(&self) -> bool {
+        self.status >= 144 && self.status <= 159
+    }
 }
 
 impl MidiInput {
@@ -51,13 +59,13 @@ impl MidiInput {
         let mut previous_raw_inputs = self.previous_raw_inputs.lock().unwrap();
         if let Some(raw_input) = raw_inputs.get_mut(&id) {
             if let Some(previous_raw_input) = previous_raw_inputs.get_mut(&id) {
-                raw_input.value == 127 && previous_raw_input.value == 127
+                raw_input.is_note_on() && previous_raw_input.is_note_on()
             } else {
-                raw_input.value == 127
+                raw_input.is_note_on()
             }
         } else {
             if let Some(previous_raw_input) = previous_raw_inputs.get_mut(&id) {
-                previous_raw_input.value == 127
+                previous_raw_input.is_note_on()
             } else {
                 false
             }
@@ -67,7 +75,7 @@ impl MidiInput {
     pub fn is_button_pressed(&self, id: u8) -> bool {
         let mut raw_inputs = self.raw_inputs.lock().unwrap();
         if let Some(raw_input) = raw_inputs.get_mut(&id) {
-            raw_input.value == 127
+            raw_input.is_note_on()
         } else {
             false
         }
@@ -81,9 +89,12 @@ impl MidiInput {
         let mut pressed = Vec::new();
         let mut raw_inputs = self.raw_inputs.lock().unwrap();
         for (id, raw_input) in raw_inputs.iter_mut() {
-            if raw_input.value == 127 {
+            if raw_input.is_note_on() {
                 pressed.push(*id);
             }
+        }
+        if pressed.len() > 0 {
+            info!("Pressed midi: {:?}", pressed);
         }
         pressed
     }
@@ -114,14 +125,15 @@ impl MidiInput {
                     &self.input_port,
                     self.device_name.as_str(),
                     move |stamp, message, _| {
-                        // println!("{}: {:?} (len = {})", stamp, message, message.len());
+                        println!("{}: {:?} (len = {})", stamp, message, message.len());
                         let mut rw = raw_inputs.lock().unwrap();
-                        let identifier = message[1];
+                        let note_number = message[1];
                         rw.insert(
-                            identifier,
+                            note_number,
                             MidiInputDataRaw {
                                 timestamp: stamp,
-                                value: message[2],
+                                status: message[0],
+                                note_velocity: message[2],
                             },
                         );
                     },

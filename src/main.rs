@@ -48,6 +48,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     }
 
     // init midi device
+    // TODO: refactor this Input{} setup
     let mut midi = midi::MidiInput::new();
     midi.connect();
 
@@ -63,10 +64,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     loop {
         audio.schedule(&voices).await?;
-        handle_user_input(&mut voices, &mut audio, &midi, &dir_name)?;
+
+        handle_user_input(&mut voices, &mut audio, &mut midi, &dir_name)?;
 
         ui.render(&mut voices, &audio, &loops);
-        midi.flush();
 
         // debug
         fps_tracker.update();
