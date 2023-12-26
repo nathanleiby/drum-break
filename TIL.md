@@ -25,3 +25,17 @@ let b = Clone::clone(&a);
 ```
 
 Thanks, https://fasterthanli.me/articles/a-half-hour-to-learn-rust !
+
+--
+
+Building a universal binary for Mac:
+
+```
+rustup target add x86_64-apple-darwin
+cargo install universal2
+cargo universal2
+```
+
+This outputs a universal binary at `./target/universal2-apple-darwin/release/macroix`.
+
+For more info: https://github.com/randomairborne/cargo-universal2/blob/main/src/lib.rs
