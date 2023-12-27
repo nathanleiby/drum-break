@@ -105,7 +105,7 @@ impl MidiInput {
         let mut raw_inputs = self.raw_inputs.lock().unwrap();
         // store latests values as previous
         for (id, raw_input) in raw_inputs.iter_mut() {
-            if let Some(mut prev_raw) = prev_raw_inputs.get_mut(&id) {
+            if let Some(prev_raw) = prev_raw_inputs.get_mut(&id) {
                 *prev_raw = *raw_input;
             } else {
                 prev_raw_inputs.insert(*id, *raw_input);
