@@ -176,12 +176,17 @@ fn draw_note(beats_offset: f64, row: usize) {
 fn draw_user_hit(user_beat: f64, row: usize, audio_latency: f64, desired_hits: &Vec<f64>) {
     let user_beat_with_latency = user_beat + audio_latency;
 
-    let acc = compute_accuracy(user_beat_with_latency, desired_hits);
+    let (acc, is_next_loop) = compute_accuracy(user_beat_with_latency, desired_hits);
 
     let beat_duration = 0.1 as f64; // make it thin for easier overlap, for now
 
     // with audio latency
-    let x = GRID_LEFT_X + user_beat_with_latency * BEAT_WIDTH_PX;
+    let x = if is_next_loop {
+        GRID_LEFT_X + (user_beat_with_latency - BEATS_PER_LOOP) * BEAT_WIDTH_PX
+    } else {
+        GRID_LEFT_X + user_beat_with_latency * BEAT_WIDTH_PX
+    };
+
     let y = GRID_TOP_Y + row as f64 * ROW_HEIGHT;
 
     draw_rectangle_f64(

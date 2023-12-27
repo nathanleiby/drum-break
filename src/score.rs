@@ -16,7 +16,8 @@ pub enum Accuracy {
 pub const CORRECT_MARGIN: f64 = 0.1;
 pub const MISS_MARGIN: f64 = 0.3;
 
-pub fn compute_accuracy(user_beat_with_latency: f64, desired_hits: &Vec<f64>) -> Accuracy {
+/// returns a tuple of (accuracy rating, a bool of whether not this measurement is wrapping around to the _next_ loop)
+pub fn compute_accuracy(user_beat_with_latency: f64, desired_hits: &Vec<f64>) -> (Accuracy, bool) {
     // find the nearest desired_hit
     let mut target_beat = None; // should always be a miss
     for desired in desired_hits.iter() {
@@ -36,6 +37,7 @@ pub fn compute_accuracy(user_beat_with_latency: f64, desired_hits: &Vec<f64>) ->
     }
 
     // handle end of loop wrap-around case
+    let mut is_next_loop = false;
     if desired_hits.contains(&0.) {
         let desired = 0. + BEATS_PER_LOOP;
         // if there's no target_beat yet, set it to the first desired hit
@@ -46,6 +48,7 @@ pub fn compute_accuracy(user_beat_with_latency: f64, desired_hits: &Vec<f64>) ->
             Some((_, prev_dist)) => {
                 let new_dist = user_beat_with_latency - desired;
                 if new_dist.abs() < prev_dist.abs() {
+                    is_next_loop = true;
                     target_beat = Some((desired, new_dist));
                 }
             }
@@ -55,7 +58,7 @@ pub fn compute_accuracy(user_beat_with_latency: f64, desired_hits: &Vec<f64>) ->
     match target_beat {
         None => {
             info!("No target beat found, returning Miss");
-            return Accuracy::Miss;
+            return (Accuracy::Miss, false);
         }
         Some((b, _)) => {
             info!("Target beat found: {:?}", b);
@@ -68,10 +71,10 @@ pub fn compute_accuracy(user_beat_with_latency: f64, desired_hits: &Vec<f64>) ->
             };
 
             info!(
-                "Accuracy: {:?} .. user_input_beat = {:?} .. target_beat = {:?} .. distance = {:?}",
-                acc, user_beat_with_latency, target_beat, distance
+                "Accuracy: {:?} .. user_input_beat = {:?} .. target_beat = {:?} .. distance = {:?} .. is_next_loop = {:?}",
+                acc, user_beat_with_latency, target_beat, distance, is_next_loop
             );
-            acc
+            return (acc, is_next_loop);
         }
     }
 }
@@ -115,56 +118,73 @@ mod tests {
     };
     #[test]
     fn it_computes_accuracy_against_one_note() {
+        let compute_accuracy_legacy = |user_beat_with_latency: f64, desired_hits: &Vec<f64>| {
+            compute_accuracy(user_beat_with_latency, desired_hits).0
+        };
+
         // exactly correct
-        let result = compute_accuracy(0.0, &vec![0.0]);
+        let result = compute_accuracy_legacy(0.0, &vec![0.0]);
         assert_eq!(result, Accuracy::Correct);
 
         // within (at) the correct margin
-        let result = compute_accuracy(CORRECT_MARGIN, &vec![0.0]);
+        let result = compute_accuracy_legacy(CORRECT_MARGIN, &vec![0.0]);
         assert_eq!(result, Accuracy::Correct);
 
-        let result = compute_accuracy(-CORRECT_MARGIN, &vec![0.0]);
+        let result = compute_accuracy_legacy(-CORRECT_MARGIN, &vec![0.0]);
         assert_eq!(result, Accuracy::Correct);
 
         // between the correct margin and the miss margin
         let late = CORRECT_MARGIN + (MISS_MARGIN - CORRECT_MARGIN) / 2.;
-        let result = compute_accuracy(late, &vec![0.0]);
+        let result = compute_accuracy_legacy(late, &vec![0.0]);
         assert_eq!(result, Accuracy::Late);
 
-        let result = compute_accuracy(-late, &vec![0.0]);
+        let result = compute_accuracy_legacy(-late, &vec![0.0]);
         assert_eq!(result, Accuracy::Early);
 
         // exactly at the mss margin
         let almost_miss = MISS_MARGIN;
-        let result = compute_accuracy(almost_miss, &vec![0.0]);
+        let result = compute_accuracy_legacy(almost_miss, &vec![0.0]);
         assert_eq!(result, Accuracy::Late);
 
-        let result = compute_accuracy(-almost_miss, &vec![0.0]);
+        let result = compute_accuracy_legacy(-almost_miss, &vec![0.0]);
         assert_eq!(result, Accuracy::Early);
 
         // beyond the miss margin
         let miss = MISS_MARGIN + EPSILON;
-        let result = compute_accuracy(miss, &vec![0.0]);
+        let result = compute_accuracy_legacy(miss, &vec![0.0]);
         assert_eq!(result, Accuracy::Miss);
 
-        let result = compute_accuracy(-miss, &vec![0.0]);
+        let result = compute_accuracy_legacy(-miss, &vec![0.0]);
         assert_eq!(result, Accuracy::Miss);
     }
 
     #[test]
     fn it_computes_accuracy_against_correct_target_note_from_many() {
+        let compute_accuracy_legacy = |user_beat_with_latency: f64, desired_hits: &Vec<f64>| {
+            compute_accuracy(user_beat_with_latency, desired_hits).0
+        };
+
         // should check if it's closer to the nearest note: 0.0, not 1.0
-        let result = compute_accuracy(CORRECT_MARGIN, &vec![0.0, 1.0]);
+        let result = compute_accuracy_legacy(CORRECT_MARGIN, &vec![0.0, 1.0]);
         assert_eq!(result, Accuracy::Correct);
 
         // handle wrap-around case
-        let result = compute_accuracy(BEATS_PER_LOOP - CORRECT_MARGIN, &vec![0.0, 1.0]);
+        let result = compute_accuracy_legacy(BEATS_PER_LOOP - CORRECT_MARGIN, &vec![0.0, 1.0]);
         assert_eq!(result, Accuracy::Correct);
 
-        let result = compute_accuracy(BEATS_PER_LOOP - 2. * CORRECT_MARGIN, &vec![0.0, 1.0]);
+        let result = compute_accuracy_legacy(BEATS_PER_LOOP - 2. * CORRECT_MARGIN, &vec![0.0, 1.0]);
         assert_eq!(result, Accuracy::Early);
 
-        let result = compute_accuracy(BEATS_PER_LOOP - MISS_MARGIN, &vec![0.0, 1.0]);
+        let result = compute_accuracy_legacy(BEATS_PER_LOOP - MISS_MARGIN, &vec![0.0, 1.0]);
         assert_eq!(result, Accuracy::Miss);
+    }
+
+    #[test]
+    fn it_computes_accuracy_considering_is_next_loop() {
+        let result = compute_accuracy(BEATS_PER_LOOP - CORRECT_MARGIN, &vec![0.0]);
+        assert_eq!(result, (Accuracy::Correct, true));
+
+        let result = compute_accuracy(BEATS_PER_LOOP - 2. * CORRECT_MARGIN, &vec![0.0]);
+        assert_eq!(result, (Accuracy::Early, true));
     }
 }
