@@ -10,60 +10,11 @@ pub enum Accuracy {
     Miss,
 }
 
-// General approach:
-// - for each voice
-// - maintain a reference to the next target_beat
-//      - if the user provides input, compute the accuracy
-// - if it's a hit (non-Miss), register it and update the target_beat
-// - it it's a miss, register it but DO NOT update the target_beat
-
 // TODO: consider using Decimal type for exact math on beats.
 // - Floating point math has comparison/equality challenges
 // - Can't hash pointing point numbers out of the gate
 pub const CORRECT_MARGIN: f64 = 0.1;
 pub const MISS_MARGIN: f64 = 0.3;
-
-pub struct Score {
-    // input_by_voice: Vec<Vec<f64>>,
-    // target_beat_per_voice: Vec<f64>,
-    // hits_by_voice: Vec<HashMap<f64, Accuracy>>,
-    // misses_by_voice: Vec<HashMap<f64, Accuracy>>,
-}
-
-impl Score {
-    pub fn new(voices: usize) -> Self {
-        // let target_beat_per_voice = Vec::<f64>::with_capacity(voices);
-
-        // let mut hits_by_voice = Vec::<HashMap<f64, Accuracy>>::with_capacity(voices);
-        // for _ in 0..voices {
-        //     hits_by_voice.push(HashMap::<f64, Accuracy>::new());
-        // }
-
-        // let mut misses_by_voice = Vec::<HashMap<f64, Accuracy>>::with_capacity(voices);
-        // for _ in 0..voices {
-        //     misses_by_voice.push(HashMap::<f64, Accuracy>::new());
-        // }
-
-        // Self {
-        //     target_beat_per_voice,
-        //     hits_by_voice,
-        //     misses_by_voice,
-        // }
-        Self {}
-    }
-
-    pub fn register_hit(&mut self, voice_index: usize, beat: f64) {
-        // let target_beat = self.target_beat_per_voice[voice_index];
-        // let accuracy = compute_accuracy(target_beat, beat);
-        // self.hits_by_voice[voice_index].insert(beat, accuracy);
-        // self.target_beat_per_voice[voice_index] += 1.0;
-    }
-
-    pub fn register_miss(&mut self, voice_index: usize, beat: f64) {
-        // let accuracy = Accuracy::Miss;
-        // self.misses_by_voice[voice_index].insert(beat, accuracy);
-    }
-}
 
 pub fn compute_accuracy(user_beat_with_latency: f64, desired_hits: &Vec<f64>) -> Accuracy {
     // find the nearest desired_hit
@@ -125,6 +76,35 @@ pub fn compute_accuracy(user_beat_with_latency: f64, desired_hits: &Vec<f64>) ->
     }
 }
 
+// pub get_aced_loops_vs_total(hits: &Vec<f64>, desired_hits: &Vec<f64>) {
+//     let mut aced: usize = 0;
+//     let mut total: usize = 0;
+
+//     // // for each voice
+//     // for (voice_index, desired_hits) in desired_hits.iter().enumerate() {
+//     //     // for each desired hit
+//     //     for desired in desired_hits.iter() {
+//     //         // if there's no target_beat yet, set it to the first desired hit
+//     //         match target_beat {
+//     //             None => {
+//     //                 target_beat = Some((*desired, user_beat_with_latency - desired));
+//     //                 continue;
+//     //             }
+//     //             Some((_, prev_dist)) => {
+//     //                 let new_dist = user_beat_with_latency - desired;
+//     //                 if new_dist.abs() < prev_dist.abs() {
+//     //                     target_beat = Some((*desired, new_dist));
+//     //                 }
+//     //             }
+//     //         }
+//     //     }
+//     // }
+
+//     // split user hits by loop
+//     // check if loop was aced
+//     (currect, total)
+// }
+
 #[cfg(test)]
 mod tests {
     use std::f64::EPSILON;
@@ -133,7 +113,6 @@ mod tests {
         consts::BEATS_PER_LOOP,
         score::{compute_accuracy, Accuracy, CORRECT_MARGIN, MISS_MARGIN},
     };
-
     #[test]
     fn it_computes_accuracy_against_one_note() {
         // exactly correct

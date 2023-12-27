@@ -17,6 +17,7 @@ The tool is in a pre-alpha state.
 3. `cd release/`
 4. Run `./macroix`.
    - On Mac, ou will likely need to open your security settings (roughly: https://www.macworld.com/article/672947/how-to-open-a-mac-app-from-an-unidentified-developer.html) and allow it to run.
+     ![mac security settings](./mac-security-settings.png)
 
 ### Testing goals
 

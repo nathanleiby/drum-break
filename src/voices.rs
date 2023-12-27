@@ -4,7 +4,6 @@ use macroquad::file::load_file;
 use serde::{Deserialize, Serialize};
 
 pub enum Instrument {
-    Metronome,
     ClosedHihat,
     Snare,
     Kick,
@@ -27,18 +26,6 @@ pub struct Loop {
     voices: Voices,
 }
 
-// name
-// bpm
-// beats_total:
-// beats_per_measure: # optional, will draw lines if so
-
-// voices: # TODO: instruments?
-//     [
-//         sound: required
-//         override_name: # optional:
-//         notes: [] # a series of numbers, 0 indexes, corresponding to the beats to play on.
-//     ]
-
 impl Voices {
     pub fn new() -> Self {
         Self {
@@ -52,8 +39,6 @@ impl Voices {
 
     pub async fn new_from_file(path: &str) -> Result<Self, Box<dyn Error>> {
         let f = load_file(path).await?;
-        // let file = File::open(path)?;
-        // let reader = BufReader::new(f);
         let out: Self = serde_json::from_reader(&*f)?;
         Ok(out)
     }

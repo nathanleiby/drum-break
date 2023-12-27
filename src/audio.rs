@@ -146,7 +146,6 @@ impl Audio {
             Instrument::Snare => self.user_hits.snare.push(self.current_beat()),
             Instrument::Kick => self.user_hits.kick.push(self.current_beat()),
             Instrument::OpenHihat => self.user_hits.open_hihat.push(self.current_beat()),
-            Instrument::Metronome => self.user_hits.metronome.push(self.current_beat()),
         }
 
         // // play sound effect

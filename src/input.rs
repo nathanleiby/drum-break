@@ -12,7 +12,7 @@ use crate::{
     audio::Audio,
     config::{AppConfig, InputConfigMidi},
     consts::*,
-    midi::{MidiInput},
+    midi::MidiInput,
     voices::Instrument,
     Voices,
 };

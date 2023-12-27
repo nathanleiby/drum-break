@@ -2,24 +2,15 @@
 
 ## asap
 
-what's must-have to make it useful to me?
+_what's must-have to make it useful to me?_
 
 - tracking loop accuracy: "perfect" vs "great" vs etc
   - handle beat 0 edge case
 
 ## soon
 
-- (bug) Downloaded binary doesn't work b/c can't find necessary sound files
-  ```
-  Error: FileError { kind: IOError(Os { code: 2, kind: NotFound, message: "No such file or directory" }), path: "res/sounds/snare.wav" }
-  ```
-- (bug) explore triggering
-  - [ ] double triggering of some TD17 notes (e.g. 2x hihat hits or 2x open hihat hits, esp on hard hits?)
-  - [ ] non triggering (hit too soft? event getting dropped?)
+- cleanup input UI, which quickly gets noisy -- e.g. hacky is a button to reset
 - (bug) on changing loop, the voices aren't scheduled immediately. this means first few notes don't make sounds because of schedule ahead logic
-- input improvements
-  - support >1 midi value per voice
-  - allow easy rebinding within the app
 - save all input data
   - when?
     - on exit (click "x")
@@ -29,16 +20,18 @@ what's must-have to make it useful to me?
       1. the loop voices itself
       2. the users's input data
       3. worry about visualizing and cleaning later.. this is first pass on session over session data
-- cleanup input UI, which quickly gets noisy -- e.g. hacky is a button to reset
-- [ ] make it shareable
-  - [ ] set keybindings (midi bindings) for each drum
-  - [ ] windows build? or bring a mac downstairs to drums
-- [ ] attach to my drumkit and test
-- [ ] (bug) hard crash if no midi device is attached
-- [x] add UI to save / open a loop file from your machine
+- (bug) explore triggering
+  - [ ] double triggering of some TD17 notes (e.g. 2x hihat hits or 2x open hihat hits, esp on hard hits?)
+  - [ ] non triggering (hit too soft? event getting dropped?)
+- input improvements
+  - [x] support >1 midi value per voice
+  - [ ] allow easy rebinding within the app
 
 ## future
 
+- enforce MIN_BPM and MAX_BPM (ex: 40 - 240)
+- get better at using rust (+VSCode), e.g. debugger, cargo fix, etc https://code.visualstudio.com/docs/languages/rust
+- allow printing version. use include str / include bytes from VERSION file
 - press ? to show help (e.g. see all key bindings)
 - accuracy
   - [ ] figure out how to allow first beat to get measured correct. since space starts clock right away... need a click in or empty space before the notes
@@ -78,6 +71,8 @@ what's must-have to make it useful to me?
 - [ ] bundle so it can be shared
   - [ ] as DMG?
   - [ ] include loops JSON data, or fetch them remotely (e.g. from public GH link)
+  - [ ] include audio data so we can play sounds?
+    - [ ] `include_bytes!` https://doc.rust-lang.org/std/macro.include_bytes.html
   - [ ] sign code for easier local running without security override on Mac
 - [ ] quality
   - [..] add unit tests
@@ -88,7 +83,28 @@ what's must-have to make it useful to me?
   - [ ] support more drum sounds (not just kick, snare, hat, clap)
   - [ ] support different numbers of voices (not just 4, as today)
   - [ ] capture loop config like tempo, length, etc. (++ for tempo ASAP)
+  ```
+  name:
+  bpm:
+  beats_total:
+  beats_per_measure: # optional, will draw lines if so
+  voices: # TODO: instruments?
+    [
+        sound: required
+        override_name: # optional:
+        notes: [] # a series of numbers, 0 indexes, corresponding to the beats to play on.
+    ]
+  ```
 - [ ] show music as sheet music notation (e.g. https://github.com/jaredforth/lilypond-rs or various others)
 - [ ] explore improving Kira's interface around the clock and looping to support my sequencer like use-case
   - [ ] idea: editing clock while it's playing
 - [ ] Explore porting the "core" audio to Rust and UI in TS (https://tauri.app/)
+
+## done
+
+- [..] make it shareable
+  - [x] set keybindings (midi bindings) for each drum
+  - [..] windows build? or bring a mac downstairs to drums
+- [x] attach to my drumkit and test
+- [x] (bug) hard crash if no midi device is attached
+- [x] add UI to save / open a loop file from your machine

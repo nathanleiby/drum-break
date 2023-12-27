@@ -54,37 +54,6 @@ impl MidiInput {
         })
     }
 
-    pub fn is_button_held(&self, id: u8) -> bool {
-        let mut raw_inputs = self.raw_inputs.lock().unwrap();
-        let mut previous_raw_inputs = self.previous_raw_inputs.lock().unwrap();
-        if let Some(raw_input) = raw_inputs.get_mut(&id) {
-            if let Some(previous_raw_input) = previous_raw_inputs.get_mut(&id) {
-                raw_input.is_note_on() && previous_raw_input.is_note_on()
-            } else {
-                raw_input.is_note_on()
-            }
-        } else {
-            if let Some(previous_raw_input) = previous_raw_inputs.get_mut(&id) {
-                previous_raw_input.is_note_on()
-            } else {
-                false
-            }
-        }
-    }
-
-    pub fn is_button_pressed(&self, id: u8) -> bool {
-        let mut raw_inputs = self.raw_inputs.lock().unwrap();
-        if let Some(raw_input) = raw_inputs.get_mut(&id) {
-            raw_input.is_note_on()
-        } else {
-            false
-        }
-    }
-
-    pub fn is_button_released(&self, id: u8) -> bool {
-        !self.is_button_pressed(id)
-    }
-
     pub fn get_pressed_buttons(&self) -> Vec<u8> {
         let mut pressed = Vec::new();
         let mut raw_inputs = self.raw_inputs.lock().unwrap();

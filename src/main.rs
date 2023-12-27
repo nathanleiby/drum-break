@@ -10,7 +10,6 @@ mod voices;
 
 use std::error::Error;
 
-
 use crate::audio::*;
 use crate::config::AppConfig;
 use crate::fps::FPS;
@@ -32,6 +31,9 @@ fn window_conf() -> Conf {
 
 #[macroquad::main(window_conf)]
 async fn main() -> Result<(), Box<dyn Error>> {
+    let version = include_str!("../VERSION");
+    debug!("version: {}", version);
+
     let conf = AppConfig::new()?;
     dbg!(&conf);
 
