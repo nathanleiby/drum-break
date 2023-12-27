@@ -30,8 +30,9 @@ pub struct Audio {
     last_beat: i32,
 }
 
-// const DEFAULT_BPM: f64 = 120.;
 const DEFAULT_BPM: f64 = 60.;
+const MIN_BPM: f64 = 40.;
+const MAX_BPM: f64 = 240.;
 
 impl Audio {
     pub fn new(conf: &AppConfig) -> Self {
@@ -126,7 +127,7 @@ impl Audio {
     }
 
     pub fn set_bpm(self: &mut Self, bpm: f64) {
-        self.bpm = bpm;
+        self.bpm = clamp(bpm, MIN_BPM, MAX_BPM);
         self.clock
             .set_speed(ClockSpeed::TicksPerMinute(bpm * 2.), Tween::default())
             .unwrap();

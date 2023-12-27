@@ -29,7 +29,6 @@ _what's must-have to make it useful to me?_
 
 ## future
 
-- enforce MIN_BPM and MAX_BPM (ex: 40 - 240)
 - get better at using rust (+VSCode), e.g. debugger, cargo fix, etc https://code.visualstudio.com/docs/languages/rust
 - allow printing version. use include str / include bytes from VERSION file
 - press ? to show help (e.g. see all key bindings)
@@ -108,3 +107,4 @@ _what's must-have to make it useful to me?_
 - [x] attach to my drumkit and test
 - [x] (bug) hard crash if no midi device is attached
 - [x] add UI to save / open a loop file from your machine
+- [x] enforce MIN_BPM and MAX_BPM (ex: 40 - 240)
