@@ -84,12 +84,8 @@ fn draw_beat_grid(voices: &Voices) {
 
     let start_x = GRID_LEFT_X;
     let start_y = GRID_TOP_Y;
-    for i in 0..=(NUM_ROWS_IN_GRID as usize) {
-        let y = start_y + i as f64 * ROW_HEIGHT;
-        draw_line_f64(start_x, y, start_x + GRID_WIDTH, y, 4.0, BLACK);
-    }
 
-    // draw vertical lines every 4 beats
+    // draw vertical lines every beats
     for i in 0..=(BEATS_PER_LOOP as i32) {
         let x = start_x + i as f64 * BEAT_WIDTH_PX;
         draw_line_f64(
@@ -97,9 +93,14 @@ fn draw_beat_grid(voices: &Voices) {
             start_y,
             x,
             start_y + ROW_HEIGHT * NUM_ROWS_IN_GRID,
-            4.0,
-            BLACK,
+            if i % 4 == 0 { 4.0 } else { 2.0 },
+            if i % 4 == 0 { BLACK } else { DARKGRAY },
         );
+    }
+
+    for i in 0..=(NUM_ROWS_IN_GRID as usize) {
+        let y = start_y + i as f64 * ROW_HEIGHT;
+        draw_line_f64(start_x, y, start_x + GRID_WIDTH, y, 4.0, BLACK);
     }
 
     for note in closed_hihat_notes.iter() {
