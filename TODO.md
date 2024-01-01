@@ -6,11 +6,13 @@ _what's must-have to make it useful to me?_
 
 - tracking loop accuracy: "perfect" vs "great" vs etc
   - handle beat 0 edge case
+- cleanup input UI, which quickly gets noisy -- e.g. hacky is a button to reset
 
 ## soon
 
-- [ ] save latency config by connected midi device / system
-- cleanup input UI, which quickly gets noisy -- e.g. hacky is a button to reset
+- [ ] support a longer loop (e.g. 2x longer to start)
+- [ ] save calibrated offset (latency) config per connected midi device / system (TD17 = -0.01) .. i have multiple for testing
+- [ ] UserHit model should include real ClockTime and (computed from that) corresponding beat.. this way we can determine "age" of a beat and expire it if needed (from looping perspective).
 - (bug) on changing loop, the voices aren't scheduled immediately. this means first few notes don't make sounds because of schedule ahead logic
 - save all input data
   - when?

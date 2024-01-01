@@ -244,7 +244,11 @@ async fn schedule_note(
     let f = load_file(sound_path).await?;
     let sound = StaticSoundData::from_cursor(
         Cursor::new(f),
-        StaticSoundSettings::new().start_time(ClockTime {
+        match sound_path {
+            "res/sounds/open-hihat.wav" => StaticSoundSettings::new().volume(0.5),
+            _ => StaticSoundSettings::new(),
+        }
+        .start_time(ClockTime {
             clock: clock.id(),
             ticks: note_tick,
         }),

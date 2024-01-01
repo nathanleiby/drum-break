@@ -7,6 +7,10 @@ use crate::{
 
 use macroquad::{prelude::*, ui::*};
 
+const LINE_COLOR: Color = DARKGRAY;
+
+const NOTE_COLOR: Color = GRAY;
+
 pub struct UI {}
 
 impl UI {
@@ -93,8 +97,9 @@ fn draw_beat_grid(voices: &Voices) {
             start_y,
             x,
             start_y + ROW_HEIGHT * NUM_ROWS_IN_GRID,
-            if i % 4 == 0 { 4.0 } else { 2.0 },
-            if i % 4 == 0 { BLACK } else { DARKGRAY },
+            // if i % 4 == 0 { 6.0 } else { 4.0 },
+            4.0,
+            if i % 4 == 0 { BLACK } else { LINE_COLOR },
         );
     }
 
@@ -165,13 +170,7 @@ fn draw_note(beats_offset: f64, row: usize) {
         y + BEAT_PADDING / 2.,
         BEAT_WIDTH_PX * beat_duration - BEAT_PADDING,
         BEAT_WIDTH_PX - BEAT_PADDING,
-        Color {
-            r: 0.0,
-            // g: 0.63 + row as f32 * 0.1,
-            g: 0.9,
-            b: 1.0,
-            a: 0.6,
-        },
+        NOTE_COLOR,
     );
 }
 

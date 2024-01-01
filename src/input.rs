@@ -188,10 +188,13 @@ fn get_pressed_midi(midi_input: &mut MidiInput) -> IsHit {
         open_hi_hat: HashSet::from_iter(vec![47, 51]),
     };
     let td17 = InputConfigMidi {
-        closed_hi_hat: HashSet::from_iter(vec![42, 22]),
+        // closed_hi_hat: HashSet::from_iter(vec![42, 22]),
+        closed_hi_hat: HashSet::from_iter(vec![51, 59, 53]), // TODO: add ride support
         snare: HashSet::from_iter(vec![38]),
         kick: HashSet::from_iter(vec![36]),
-        open_hi_hat: HashSet::from_iter(vec![46, 26]),
+        // open_hi_hat: HashSet::from_iter(vec![46, 26]),
+        open_hi_hat: HashSet::from_iter(vec![44]), // TODO: add pedal_hihat support
+                                                   // pedal_hi_hat: HashSet::from_iter(vec![44]),
     };
     let alesis_nitro = InputConfigMidi {
         closed_hi_hat: HashSet::from_iter(vec![42]),
