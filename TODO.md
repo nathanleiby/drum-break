@@ -9,6 +9,7 @@ _what's must-have to make it useful to me?_
 
 ## soon
 
+- [ ] save latency config by connected midi device / system
 - cleanup input UI, which quickly gets noisy -- e.g. hacky is a button to reset
 - (bug) on changing loop, the voices aren't scheduled immediately. this means first few notes don't make sounds because of schedule ahead logic
 - save all input data
@@ -29,6 +30,7 @@ _what's must-have to make it useful to me?_
 
 ## future
 
+- design v2 UX for the app (prototype in Figma): core interactions, colors, layout, etc
 - get better at using rust (+VSCode), e.g. debugger, cargo fix, etc https://code.visualstudio.com/docs/languages/rust
 - allow printing version. use include str / include bytes from VERSION file
 - press ? to show help (e.g. see all key bindings)
@@ -67,10 +69,10 @@ _what's must-have to make it useful to me?_
 - [ ] volume control
   - [ ] global
   - [ ] per voice (inl metronome)
-- [ ] bundle so it can be shared
+- [..] bundle so it can be shared
   - [ ] as DMG?
-  - [ ] include loops JSON data, or fetch them remotely (e.g. from public GH link)
-  - [ ] include audio data so we can play sounds?
+  - [..] include loops JSON data, or fetch them remotely (e.g. from public GH link)
+  - [..] include audio data so we can play sounds?
     - [ ] `include_bytes!` https://doc.rust-lang.org/std/macro.include_bytes.html
   - [ ] sign code for easier local running without security override on Mac
 - [ ] quality
@@ -101,6 +103,7 @@ _what's must-have to make it useful to me?_
 
 ## done
 
+- [x] change note color -- orange note is too similar to "early" orange color
 - [..] make it shareable
   - [x] set keybindings (midi bindings) for each drum
   - [..] windows build? or bring a mac downstairs to drums
