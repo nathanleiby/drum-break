@@ -6,14 +6,26 @@ _what's must-have to make it useful to me?_
 
 - tracking loop accuracy: "perfect" vs "great" vs etc
   - handle beat 0 edge case
-- cleanup input UI, which quickly gets noisy -- e.g. hacky is a button to reset
+- handle idea of "miss" due to not playing a desired note at all
+- cleanup input UI, which quickly gets noisy
+  -- e.g. hacky is a button to reset
+  -- another idea is "fade out" by age (e.g. just keep last K loops, or actually fade over time until gone by Kth loop)
+
+_what's very important to make it engaging to me?_
+
+- quick start + gets you into flow
+- "golden" practice mode (play it perfectly N times and then speeds up by X bpm)
+  - you can tweak knobs for shiny-ness of gold (N and X)
+- capture progress over time (graph it, etc)
 
 ## soon
 
-- [ ] support a longer loop (e.g. 2x longer to start)
+- [ ] support a flexible length loop
+  - longer is needed. ideally you could have a "song" and loop any segment of it for practice
 - [ ] save calibrated offset (latency) config per connected midi device / system (TD17 = -0.01) .. i have multiple for testing
-- [ ] UserHit model should include real ClockTime and (computed from that) corresponding beat.. this way we can determine "age" of a beat and expire it if needed (from looping perspective).
+- [ ] UserHit model should include real ClockTime and (computed from that) corresponding beat.. this way we can determine "age" of a beat and expire it if needed (from looping perspective). Currently, UserHit is just re-using `Voices` as its data model
 - (bug) on changing loop, the voices aren't scheduled immediately. this means first few notes don't make sounds because of schedule ahead logic
+  - this means even on first run.. when you choose an initial track and press play.. its sounds aren't scheduled yet.
 - save all input data
   - when?
     - on exit (click "x")
@@ -83,7 +95,8 @@ _what's must-have to make it useful to me?_
 - [ ] shipping artifacts
   - [ ] on git tag, ship a release in Github CI
 - [ ] Make "voices" data model more generic.
-  - [ ] support more drum sounds (not just kick, snare, hat, clap)
+  - [ ] support more drum types (not just kick, snare, open/closed hat)
+    - ride, pedal HH, crash, 3 toms.. or arbitrary mappings
   - [ ] support different numbers of voices (not just 4, as today)
   - [ ] capture loop config like tempo, length, etc. (++ for tempo ASAP)
   ```
