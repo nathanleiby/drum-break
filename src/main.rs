@@ -18,6 +18,7 @@ use crate::ui::*;
 use crate::voices::Voices;
 
 use macroquad::prelude::*;
+use voices::Loop;
 
 fn window_conf() -> Conf {
     Conf {
@@ -39,14 +40,16 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     // read loops
     let dir_name = process_cli_args();
-    let mut loops: Vec<(String, Voices)> = Vec::new();
-    if let Ok(loops_from_dir) = read_loops(&dir_name).await {
-        loops = loops_from_dir;
-    } else {
-        warn!(
-            "warning: unable to read loops from given directory ({})",
-            &dir_name
-        )
+    let mut loops: Vec<(String, Loop)> = Vec::new();
+
+    match read_loops(&dir_name).await {
+        Ok(loops_from_dir) => loops = loops_from_dir,
+        Err(e) => {
+            warn!(
+                "warning: unable to read loops from given directory ({}) due to '{}'",
+                &dir_name, e
+            )
+        }
     }
 
     // Setup global game state
@@ -64,7 +67,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
         input.process(&mut voices, &mut audio, &dir_name)?;
 
-        ui.render(&mut voices, &audio, &loops);
+        ui.render(&mut voices, &mut audio, &loops);
 
         // debug
         fps_tracker.update();
@@ -84,17 +87,17 @@ fn process_cli_args() -> String {
     return dir_name;
 }
 
-async fn read_loops(dir_name: &str) -> Result<Vec<(String, Voices)>, Box<dyn Error>> {
+async fn read_loops(dir_name: &str) -> Result<Vec<(String, Loop)>, Box<dyn Error>> {
     // get all file names from the dir
     let paths = std::fs::read_dir(dir_name)?
         .map(|res| res.map(|e| e.path()))
         .collect::<Result<Vec<_>, std::io::Error>>()?;
 
     // for each file name, load the file into Voices
-    let mut loops = Vec::<(String, Voices)>::new();
+    let mut loops = Vec::<(String, Loop)>::new();
     for path in &paths {
         let p = path.to_str().expect("unable to convert PathBuf to string");
-        let v = Voices::new_from_file(p).await?;
+        let v = Loop::new_from_file(p).await?;
 
         // get just the file name from the path
         let n = path

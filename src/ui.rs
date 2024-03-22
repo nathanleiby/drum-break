@@ -2,6 +2,7 @@ use crate::{
     audio::Audio,
     consts::*,
     score::{compute_accuracy, Accuracy},
+    voices::Loop,
     Voices,
 };
 
@@ -21,8 +22,8 @@ impl UI {
     pub fn render(
         self: &mut Self,
         voices: &mut Voices,
-        audio: &Audio,
-        loops: &Vec<(String, Voices)>,
+        audio: &mut Audio,
+        loops: &Vec<(String, Loop)>,
     ) {
         let current_beat = audio.current_beat();
         let audio_latency = audio.get_configured_audio_latency_seconds();
@@ -41,7 +42,7 @@ impl UI {
 
         draw_pulse_beat(current_beat + audio_latency);
 
-        draw_loop_choices(voices, &loops);
+        draw_loop_choices(voices, audio, &loops);
     }
 }
 
@@ -229,15 +230,17 @@ const UI_TOP_LEFT: Vec2 = vec2(100., 400.);
 
 fn draw_loop_choices<'a, 'b: 'a>(
     voices: &'a mut Voices,
-    voices_options: &'b Vec<(String, Voices)>,
+    audio: &'a mut Audio,
+    voices_options: &'b Vec<(String, Loop)>,
 ) {
     widgets::Window::new(hash!(), UI_TOP_LEFT, vec2(320., 200.))
         .label("Loops")
         .titlebar(true)
         .ui(&mut *root_ui(), |ui| {
-            voices_options.iter().for_each(|(name, new_voices)| {
-                if ui.button(None, name.as_str()) {
-                    *voices = new_voices.clone();
+            voices_options.iter().for_each(|(name, new_loop)| {
+                if ui.button(None, format!("{:?} ({:?})", name.as_str(), new_loop.bpm)) {
+                    *voices = new_loop.voices.clone();
+                    audio.set_bpm(new_loop.bpm as f64);
                     info!("Switched to {:?}", name);
                 }
             });

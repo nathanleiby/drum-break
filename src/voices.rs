@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use macroquad::file::load_file;
+use macroquad::{file::load_file, logging::info};
 use serde::{Deserialize, Serialize};
 
 pub enum Instrument {
@@ -20,12 +20,6 @@ pub struct Voices {
     pub open_hihat: Vec<f64>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Loop {
-    bpm: usize,
-    voices: Voices,
-}
-
 impl Voices {
     pub fn new() -> Self {
         Self {
@@ -35,12 +29,6 @@ impl Voices {
             kick: vec![],
             open_hihat: vec![],
         }
-    }
-
-    pub async fn new_from_file(path: &str) -> Result<Self, Box<dyn Error>> {
-        let f = load_file(path).await?;
-        let out: Self = serde_json::from_reader(&*f)?;
-        Ok(out)
     }
 
     pub fn toggle_beat(&mut self, row: f64, beat: f64) {
@@ -71,3 +59,40 @@ impl Voices {
         }
     }
 }
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Loop {
+    pub bpm: usize,
+    pub voices: Voices,
+}
+
+impl Loop {
+    pub async fn new_from_file(path: &str) -> Result<Self, Box<dyn Error>> {
+        info!("Loop::new_from_file .. {}", path);
+        let f = load_file(path).await?;
+        let out: Self = serde_json::from_reader(&*f)?;
+        Ok(out)
+    }
+}
+
+//// TODO: Get test working.. it's async so needs some special setup
+
+// #[cfg(test)]
+// mod tests {
+//     use std::f64::EPSILON;
+
+//     use crate::{
+//         consts::BEATS_PER_LOOP,
+//         score::{compute_accuracy, Accuracy, CORRECT_MARGIN, MISS_MARGIN},
+//         voices::Loop,
+//     };
+
+//     #[test]
+//     fn it_can_load_a_loop_from_file() {
+//         let result = Loop::new_from_file("res/loops/samba.json").await;
+//         assert_eq!(result, (Accuracy::Correct, true));
+
+//         let result = compute_accuracy(BEATS_PER_LOOP - 2. * CORRECT_MARGIN, &vec![0.0]);
+//         assert_eq!(result, (Accuracy::Early, true));
+//     }
+// }
