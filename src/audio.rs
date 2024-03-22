@@ -91,7 +91,6 @@ impl Audio {
             self.last_scheduled_tick, tick_to_schedule
         );
         for pair in [
-            (&voices.metronome, "res/sounds/click.wav"),
             (&voices.closed_hihat, "res/sounds/closed-hihat.wav"),
             (&voices.snare, "res/sounds/snare.wav"),
             (&voices.kick, "res/sounds/kick.wav"),
@@ -108,6 +107,9 @@ impl Audio {
             )
             .await?;
         }
+
+        // if metronome on, schedule it
+        // (&voices.metronome, "res/sounds/click.wav"),
 
         self.last_scheduled_tick = tick_to_schedule;
 

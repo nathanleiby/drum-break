@@ -3,17 +3,40 @@ use std::error::Error;
 use macroquad::{file::load_file, logging::info};
 use serde::{Deserialize, Serialize};
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum Instrument {
     ClosedHihat,
     Snare,
     Kick,
     OpenHihat,
+    // PedalHiHat,
+    // Ride,
+    // RideBell,
+    // LTom,
+    // MTom,
+    // HTom,
+    // Crash,
+}
+
+/// Voices represents the notes to be played on each instrument.
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Voice {
+    pub instrument: Instrument,
+    pub beat_timings: Vec<f64>,
+}
+
+impl Voice {
+    pub fn new() -> Self {
+        Self {
+            instrument: Instrument::Snare,
+            beat_timings: vec![],
+        }
+    }
 }
 
 /// Voices represents the notes to be played on each instrument.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Voices {
-    pub metronome: Vec<f64>,
     pub closed_hihat: Vec<f64>,
     pub snare: Vec<f64>,
     pub kick: Vec<f64>,
@@ -23,7 +46,6 @@ pub struct Voices {
 impl Voices {
     pub fn new() -> Self {
         Self {
-            metronome: vec![],
             closed_hihat: vec![],
             snare: vec![],
             kick: vec![],
