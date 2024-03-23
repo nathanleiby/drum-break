@@ -154,11 +154,17 @@ impl Input {
             process::exit(0);
         }
 
+        if is_key_pressed(KeyCode::R) {
+            // reset user hits
+            audio.user_hits = Voices::new();
+        }
+
         if is_key_pressed(KeyCode::S) {
             // write serialized JSON output to a file
             let dir_name = dir_name.trim_end_matches('/');
             let file = File::create(format!("{}/loop-{}.json", dir_name, get_time()))?;
             let mut writer = BufWriter::new(file);
+            // TODO: support loop, saving BPM as well
             serde_json::to_writer(&mut writer, &voices)?;
             writer.flush()?;
         }

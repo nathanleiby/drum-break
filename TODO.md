@@ -8,7 +8,7 @@ _what's must-have to make it useful to me?_
   - handle beat 0 edge case
 - handle idea of "miss" due to not playing a desired note at all
 - cleanup input UI, which quickly gets noisy
-  -- e.g. hacky is a button to reset
+  -- [x] e.g. hacky is a button to reset
   -- another idea is "fade out" by age (e.g. just keep last K loops, or actually fade over time until gone by Kth loop)
 
 _what's very important to make it engaging to me?_
