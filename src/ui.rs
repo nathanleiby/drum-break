@@ -2,8 +2,8 @@ use crate::{
     audio::Audio,
     consts::*,
     score::{compute_accuracy, Accuracy},
-    voices::Loop,
-    Voices,
+    voices::{Instrument, Loop},
+    UserHit, Voices,
 };
 
 use macroquad::{prelude::*, ui::*};
@@ -30,9 +30,9 @@ impl UI {
         let bpm = audio.get_bpm();
 
         clear_background(Color {
-            r: 0.9,
-            g: 0.9,
-            b: 0.9,
+            r: 0.99,
+            g: 0.99,
+            b: 0.99,
             a: 1.0,
         });
         draw_beat_grid(voices);
@@ -128,11 +128,23 @@ fn draw_beat_grid(voices: &Voices) {
     }
 }
 
-fn draw_user_hits(user_hits: &Voices, desired_hits: &Voices, audio_latency: f64) {
-    let closed_hihat_notes = &user_hits.closed_hihat;
-    let snare_notes = &user_hits.snare;
-    let kick_notes = &user_hits.kick;
-    let open_hihat_notes = &user_hits.open_hihat;
+fn get_user_hit_timings_by_instrument(
+    user_hits: &Vec<UserHit>,
+    instrument: Instrument,
+) -> Vec<f64> {
+    user_hits
+        .iter()
+        .filter(|hit| hit.instrument == instrument)
+        .map(|hit| hit.beat)
+        .collect::<Vec<f64>>()
+}
+
+fn draw_user_hits(user_hits: &Vec<UserHit>, desired_hits: &Voices, audio_latency: f64) {
+    // filter user hits to just closed hihat
+    let closed_hihat_notes = get_user_hit_timings_by_instrument(user_hits, Instrument::ClosedHihat);
+    let snare_notes = get_user_hit_timings_by_instrument(user_hits, Instrument::Snare);
+    let kick_notes = get_user_hit_timings_by_instrument(user_hits, Instrument::Kick);
+    let open_hihat_notes = get_user_hit_timings_by_instrument(user_hits, Instrument::OpenHihat);
 
     for note in closed_hihat_notes.iter() {
         draw_user_hit(*note, 0, audio_latency, &desired_hits.closed_hihat);

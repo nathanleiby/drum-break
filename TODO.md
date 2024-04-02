@@ -7,9 +7,19 @@ _what's must-have to make it useful to me?_
 - tracking loop accuracy: "perfect" vs "great" vs etc
   - handle beat 0 edge case
   - mvp: show 'last loop performance' and update it on each loop completion
+  - BREAKDOWN:
+    - [ ] review how I'm tracking hits
+    - [ ] ensure i record the  `current_clock_tick` timestamp (total beats elapsed ever)
+      - [ ] from this, compute the "sequencer loop number" (this is computable from the sequencer timestamp mod loop length)
+    - [ ] emit a single print statement to CLI when loop number changes
+    - [ ] emit a summary to CLI of what happened in the last loop (hits, misses, etc)
+    - [ ] compute a summary metric based on the above
+    - [ ] emit that metric
+    - [ ] show this metric in the UI
+
 - handle idea of "miss" due to not playing a desired note at all
 - cleanup input UI, which quickly gets noisy
-  -- [x] e.g. hacky is a button to reset
+  -- [x] e.g. hacky is a button to reset -> press "r"
   -- another idea is "fade out" by age (e.g. just keep last K loops, or actually fade over time until gone by Kth loop)
 
 _what's very important to make it engaging to me?_

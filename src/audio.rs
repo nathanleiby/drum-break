@@ -16,13 +16,18 @@ use crate::{
     Voices,
 };
 
+pub struct UserHit {
+    pub instrument: Instrument,
+    pub beat: f64,
+}
+
 pub struct Audio {
     manager: AudioManager<DefaultBackend>,
     clock: ClockHandle,
     last_scheduled_tick: f64,
     bpm: f64,
 
-    pub user_hits: Voices,
+    pub user_hits: Vec<UserHit>,
     calibration_input: VecDeque<f64>,
     configured_audio_latency_seconds: f64,
 
@@ -49,7 +54,7 @@ impl Audio {
             last_scheduled_tick: -1.,
             bpm: DEFAULT_BPM,
 
-            user_hits: Voices::new(),
+            user_hits: vec![],
             calibration_input: VecDeque::new(),
             configured_audio_latency_seconds: conf.audio_latency_seconds,
 
@@ -144,12 +149,11 @@ impl Audio {
     }
 
     pub fn track_user_hit(self: &mut Self, instrument: Instrument) {
-        match instrument {
-            Instrument::ClosedHihat => self.user_hits.closed_hihat.push(self.current_beat()),
-            Instrument::Snare => self.user_hits.snare.push(self.current_beat()),
-            Instrument::Kick => self.user_hits.kick.push(self.current_beat()),
-            Instrument::OpenHihat => self.user_hits.open_hihat.push(self.current_beat()),
-        }
+        self.user_hits.push(UserHit {
+            instrument,
+            beat: self.current_beat(), // TODO: can compute current_beat from current_clock_tick
+                                       // clock_tick: self.current_clock_tick(),
+        });
 
         // // play sound effect
         // let sound = StaticSoundData::from_file(

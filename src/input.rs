@@ -156,7 +156,7 @@ impl Input {
 
         if is_key_pressed(KeyCode::R) {
             // reset user hits
-            audio.user_hits = Voices::new();
+            audio.user_hits = vec![];
         }
 
         if is_key_pressed(KeyCode::S) {
