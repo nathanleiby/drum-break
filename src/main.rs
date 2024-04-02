@@ -20,6 +20,8 @@ use crate::voices::Voices;
 use macroquad::prelude::*;
 use voices::Loop;
 
+use event_emitter_rs::EventEmitter;
+
 fn window_conf() -> Conf {
     Conf {
         window_title: "Macroix".to_owned(),
@@ -52,12 +54,17 @@ async fn main() -> Result<(), Box<dyn Error>> {
         }
     }
 
+    let mut ui = UI::new(); // Consider passing in audio and voices here?
+
+    // TODO: move to events.rs and setup there
+    let mut event_emitter = EventEmitter::new();
+    event_emitter.on("Say Hello", |_: ()| println!("Hello world!"));
+    event_emitter.on("NewLoop", |value: i32| println!("New Loop {:?}!", value));
+
     // Setup global game state
     let mut input = Input::new();
     let mut voices = Voices::new();
-    let mut audio = Audio::new(&conf);
-
-    let mut ui = UI::new(); // Consider passing in audio and voices here?
+    let mut audio = Audio::new(&conf, &mut event_emitter);
 
     // debug
     let mut fps_tracker = FPS::new();

@@ -1,5 +1,6 @@
 use std::{collections::VecDeque, error::Error, io::Cursor};
 
+use event_emitter_rs::EventEmitter;
 use kira::{
     clock::{ClockHandle, ClockSpeed, ClockTime},
     manager::{backend::DefaultBackend, AudioManager, AudioManagerSettings},
@@ -18,25 +19,23 @@ use crate::{
 
 pub struct UserHit {
     pub instrument: Instrument,
-    pub beat: f64, // TODO: compute from clock_tick
     pub clock_tick: f64,
 }
 
 impl UserHit {
-    pub fn new(instrument: Instrument, beat: f64, clock_tick: f64) -> Self {
+    pub fn new(instrument: Instrument, clock_tick: f64) -> Self {
         Self {
             instrument,
-            beat,
             clock_tick,
         }
     }
 
-    pub fn get_beat(self: Self) -> f64 {
+    pub fn beat(self: &Self) -> f64 {
         self.clock_tick % BEATS_PER_LOOP
     }
 }
 
-pub struct Audio {
+pub struct Audio<'a> {
     manager: AudioManager<DefaultBackend>,
     clock: ClockHandle,
     last_scheduled_tick: f64,
@@ -47,6 +46,7 @@ pub struct Audio {
     configured_audio_latency_seconds: f64,
 
     // debug only
+    event_emitter: &'a mut EventEmitter,
     last_beat: i32,
 }
 
@@ -54,14 +54,16 @@ const DEFAULT_BPM: f64 = 60.;
 const MIN_BPM: f64 = 40.;
 const MAX_BPM: f64 = 240.;
 
-impl Audio {
-    pub fn new(conf: &AppConfig) -> Self {
+impl<'a> Audio<'a> {
+    pub fn new(conf: &AppConfig, event_emitter: &'a mut EventEmitter) -> Self {
         let mut manager =
             AudioManager::<DefaultBackend>::new(AudioManagerSettings::default()).unwrap();
         let clock = manager
             // TODO: investigate bpm * 2 stuff
             .add_clock(ClockSpeed::TicksPerMinute(DEFAULT_BPM * 2. as f64))
             .unwrap();
+
+        event_emitter.emit("Say Hello", ());
 
         Self {
             manager,
@@ -73,6 +75,7 @@ impl Audio {
             calibration_input: VecDeque::new(),
             configured_audio_latency_seconds: conf.audio_latency_seconds,
 
+            event_emitter,
             last_beat: -1,
         }
     }
@@ -86,6 +89,7 @@ impl Audio {
         self.configured_audio_latency_seconds = latency;
     }
 
+    // TODO: Move this outside and then use it to summary loop accuracy
     fn print_if_new_beat(self: &mut Self) {
         // For debugging, print when we pass an integer beat
         let current_beat = self.current_beat() as i32;
@@ -96,6 +100,7 @@ impl Audio {
             if current_beat == 0 {
                 let loop_num = (self.current_clock_tick() / BEATS_PER_LOOP) as i32;
                 debug!("Starting loop num #{:?}", loop_num);
+                self.event_emitter.emit("NewLoop", loop_num);
             }
         }
     }
@@ -169,11 +174,8 @@ impl Audio {
     }
 
     pub fn track_user_hit(self: &mut Self, instrument: Instrument) {
-        self.user_hits.push(UserHit::new(
-            instrument,
-            self.current_beat(),
-            self.current_clock_tick(),
-        ));
+        self.user_hits
+            .push(UserHit::new(instrument, self.current_clock_tick()));
 
         // // play sound effect
         // let sound = StaticSoundData::from_file(

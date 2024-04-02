@@ -9,8 +9,8 @@ _what's must-have to make it useful to me?_
   - mvp: show 'last loop performance' and update it on each loop completion
   - BREAKDOWN:
     - [x] review how I'm tracking hits
-    - [..] ensure i record the  `current_clock_tick` timestamp (total beats elapsed ever)
-      - [ ] from this, compute the "sequencer loop number" (this is computable from the sequencer timestamp mod loop length)
+    - [x] ensure i record the  `current_clock_tick` timestamp (total beats elapsed ever)
+      - [x] from this, compute the "sequencer loop number" (this is computable from the sequencer timestamp mod loop length)
     - [x] emit a single print statement to CLI when loop number changes
     - [ ] emit a summary to CLI of what happened in the last loop (hits, misses, etc)
     - [ ] compute a summary metric based on the above
