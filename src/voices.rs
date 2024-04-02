@@ -89,32 +89,33 @@ pub struct Loop {
 }
 
 impl Loop {
-    pub async fn new_from_file(path: &str) -> Result<Self, Box<dyn Error>> {
+    pub async fn new_from_file_async(path: &str) -> Result<Self, Box<dyn Error>> {
         info!("Loop::new_from_file .. {}", path);
         let f = load_file(path).await?;
         let out: Self = serde_json::from_reader(&*f)?;
         Ok(out)
     }
+
+    pub fn new_from_file(path: &str) -> Result<Self, Box<dyn Error>> {
+        // load file at path
+        let f = std::fs::File::open(path)?;
+        let out: Self = serde_json::from_reader(f)?;
+        Ok(out)
+    }
 }
 
-//// TODO: Get test working.. it's async so needs some special setup
+#[cfg(test)]
+mod tests {
+    use crate::voices::Loop;
 
-// #[cfg(test)]
-// mod tests {
-//     use std::f64::EPSILON;
-
-//     use crate::{
-//         consts::BEATS_PER_LOOP,
-//         score::{compute_accuracy, Accuracy, CORRECT_MARGIN, MISS_MARGIN},
-//         voices::Loop,
-//     };
-
-//     #[test]
-//     fn it_can_load_a_loop_from_file() {
-//         let result = Loop::new_from_file("res/loops/samba.json").await;
-//         assert_eq!(result, (Accuracy::Correct, true));
-
-//         let result = compute_accuracy(BEATS_PER_LOOP - 2. * CORRECT_MARGIN, &vec![0.0]);
-//         assert_eq!(result, (Accuracy::Early, true));
-//     }
-// }
+    #[test]
+    fn it_can_load_a_loop_from_file() {
+        let result = Loop::new_from_file("res/loops/samba.json");
+        let loop_data = result.unwrap();
+        assert_eq!(loop_data.bpm, 120);
+        assert_eq!(loop_data.voices.closed_hihat.len(), 12);
+        assert_eq!(loop_data.voices.snare.len(), 7);
+        assert_eq!(loop_data.voices.kick.len(), 8);
+        assert_eq!(loop_data.voices.open_hihat.len(), 4);
+    }
+}

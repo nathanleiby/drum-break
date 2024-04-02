@@ -97,7 +97,7 @@ async fn read_loops(dir_name: &str) -> Result<Vec<(String, Loop)>, Box<dyn Error
     let mut loops = Vec::<(String, Loop)>::new();
     for path in &paths {
         let p = path.to_str().expect("unable to convert PathBuf to string");
-        let v = Loop::new_from_file(p).await?;
+        let v = Loop::new_from_file_async(p).await?;
 
         // get just the file name from the path
         let n = path
