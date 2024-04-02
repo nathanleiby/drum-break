@@ -7,7 +7,6 @@ edition = "2021"
 
 [dependencies]
 confy = "0.5.1"
-event-emitter-rs = "0.1.4"
 # egui-macroquad = { version = "0.15.0", default_features = false }
 kira = "0.8.5"
 macroquad = { version = "0.4.4", default_features = false }

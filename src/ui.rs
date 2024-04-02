@@ -22,7 +22,7 @@ impl UI {
     pub fn render(
         self: &mut Self,
         voices: &mut Voices,
-        audio: &mut Audio,
+        audio: &Audio,
         loops: &Vec<(String, Loop)>,
     ) {
         let current_beat = audio.current_beat();
@@ -42,7 +42,11 @@ impl UI {
 
         draw_pulse_beat(current_beat + audio_latency);
 
-        draw_loop_choices(voices, audio, &loops);
+        draw_loop_choices(voices, mut audio, &loops);
+    }
+
+    pub fn on_say_hello(self: &Self) {
+        print!("Hello from UI");
     }
 }
 

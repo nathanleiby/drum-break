@@ -1,6 +1,7 @@
 mod audio;
 mod config;
 mod consts;
+mod events;
 mod fps;
 mod input;
 mod midi;
@@ -12,6 +13,7 @@ use std::error::Error;
 
 use crate::audio::*;
 use crate::config::AppConfig;
+use crate::events::Events;
 use crate::fps::FPS;
 use crate::input::*;
 use crate::ui::*;
@@ -19,8 +21,6 @@ use crate::voices::Voices;
 
 use macroquad::prelude::*;
 use voices::Loop;
-
-use event_emitter_rs::EventEmitter;
 
 fn window_conf() -> Conf {
     Conf {
@@ -37,10 +37,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let version = include_str!("../VERSION");
     debug!("version: {}", version);
 
+    // bootstrap application config, such as audio offset
     let conf = AppConfig::new()?;
     dbg!(&conf);
 
-    // read loops
+    // read application data, such as loop files
     let dir_name = process_cli_args();
     let mut loops: Vec<(String, Loop)> = Vec::new();
 
@@ -54,17 +55,12 @@ async fn main() -> Result<(), Box<dyn Error>> {
         }
     }
 
-    let mut ui = UI::new(); // Consider passing in audio and voices here?
-
-    // TODO: move to events.rs and setup there
-    let mut event_emitter = EventEmitter::new();
-    event_emitter.on("Say Hello", |_: ()| println!("Hello world!"));
-    event_emitter.on("NewLoop", |value: i32| println!("New Loop {:?}!", value));
-
     // Setup global game state
+    let mut ui = UI::new();
+    let mut events = Events::new(&mut ui);
     let mut input = Input::new();
     let mut voices = Voices::new();
-    let mut audio = Audio::new(&conf, &mut event_emitter);
+    let mut audio = Audio::new(&conf, &mut events);
 
     // debug
     let mut fps_tracker = FPS::new();
