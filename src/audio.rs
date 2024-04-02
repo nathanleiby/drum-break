@@ -18,7 +18,22 @@ use crate::{
 
 pub struct UserHit {
     pub instrument: Instrument,
-    pub beat: f64,
+    pub beat: f64, // TODO: compute from clock_tick
+    pub clock_tick: f64,
+}
+
+impl UserHit {
+    pub fn new(instrument: Instrument, beat: f64, clock_tick: f64) -> Self {
+        Self {
+            instrument,
+            beat,
+            clock_tick,
+        }
+    }
+
+    pub fn get_beat(self: Self) -> f64 {
+        self.clock_tick % BEATS_PER_LOOP
+    }
 }
 
 pub struct Audio {
@@ -73,10 +88,15 @@ impl Audio {
 
     fn print_if_new_beat(self: &mut Self) {
         // For debugging, print when we pass an integer beat
-        let current_beat = self.current_beat();
-        if (current_beat as i32) > self.last_beat {
+        let current_beat = self.current_beat() as i32;
+        if current_beat != self.last_beat {
             debug!("Beat: {}", current_beat as i32);
             self.last_beat = current_beat as i32;
+            // if new loop, print that too
+            if current_beat == 0 {
+                let loop_num = (self.current_clock_tick() / BEATS_PER_LOOP) as i32;
+                debug!("Starting loop num #{:?}", loop_num);
+            }
         }
     }
 
@@ -149,11 +169,11 @@ impl Audio {
     }
 
     pub fn track_user_hit(self: &mut Self, instrument: Instrument) {
-        self.user_hits.push(UserHit {
+        self.user_hits.push(UserHit::new(
             instrument,
-            beat: self.current_beat(), // TODO: can compute current_beat from current_clock_tick
-                                       // clock_tick: self.current_clock_tick(),
-        });
+            self.current_beat(),
+            self.current_clock_tick(),
+        ));
 
         // // play sound effect
         // let sound = StaticSoundData::from_file(
