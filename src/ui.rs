@@ -195,6 +195,7 @@ fn draw_last_loop_summary(user_hits: &Vec<UserHit>, desired_hits: &Voices, audio
 
     // compare that to desired hits for hihat
     let mut note_idx: i32 = 0;
+    let mut score: f64 = 0.0;
     for note in closed_hihat_hit_timings.iter() {
         let (acc, _) = compute_accuracy(note + audio_latency, &desired_hits.closed_hihat);
 
@@ -208,8 +209,33 @@ fn draw_last_loop_summary(user_hits: &Vec<UserHit>, desired_hits: &Voices, audio
             30.0,
             DARKGRAY,
         );
+
+        if acc == Accuracy::Correct {
+            score += 1.0;
+        }
         note_idx += 1;
     }
+
+    // Labels in top-left of grid
+    let instrument_names = ["Hihat", "Snare", "Kick", "Open hi-hat"];
+    for (idx, _) in instrument_names.iter().enumerate() {
+        draw_text(
+            format!("{score} / {:?}", desired_hits.closed_hihat.len()).as_str(),
+            (GRID_LEFT_X + GRID_WIDTH + 32.) as f32,
+            (GRID_TOP_Y + ROW_HEIGHT * (idx as f64 + 0.5)) as f32,
+            20.0,
+            DARKGRAY,
+        );
+    }
+
+    // Summary over all voices
+    draw_text(
+        format!("{score} / {:?}", desired_hits.closed_hihat.len()).as_str(),
+        (GRID_LEFT_X + GRID_WIDTH + 32.) as f32,
+        (GRID_TOP_Y + ROW_HEIGHT * (instrument_names.len() as f64 + 0.5)) as f32,
+        20.0,
+        DARKGRAY,
+    );
 }
 
 fn draw_position_line(current_beat: f64) {
