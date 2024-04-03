@@ -1,9 +1,9 @@
 use std::error::Error;
 
-use macroquad::{file::load_file, logging::info};
+use macroquad::file::load_file;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq)]
 pub enum Instrument {
     ClosedHihat,
     Snare,

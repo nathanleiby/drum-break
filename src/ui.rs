@@ -12,6 +12,13 @@ const LINE_COLOR: Color = DARKGRAY;
 
 const NOTE_COLOR: Color = GRAY;
 
+const BACKGROUND_COLOR: Color = Color {
+    r: 0.99,
+    g: 0.99,
+    b: 0.99,
+    a: 1.0,
+};
+
 pub struct UI {}
 
 impl UI {
@@ -32,12 +39,7 @@ impl UI {
         let audio_latency = audio.get_configured_audio_latency_seconds();
         let bpm = audio.get_bpm();
 
-        clear_background(Color {
-            r: 0.99,
-            g: 0.99,
-            b: 0.99,
-            a: 1.0,
-        });
+        clear_background(BACKGROUND_COLOR);
         draw_beat_grid(voices);
         draw_user_hits(&audio.user_hits, &voices, audio_latency);
         draw_position_line(current_beat + audio_latency);
@@ -45,23 +47,27 @@ impl UI {
         // TODO: render current loop considering audio latency
         draw_status(bpm, current_beat / 2., audio.current_loop(), audio_latency);
 
-        // filter to hits from last loop
-        let last_loop_hits: Vec<UserHit> = audio
-            .user_hits
-            .iter()
-            .filter(|hit| {
-                let loop_num_forbeat = (hit.clock_tick / BEATS_PER_LOOP) as i32;
-                loop_num_forbeat == audio.current_loop() - 1
-            })
-            .map(|hit| hit.clone())
-            .collect::<Vec<UserHit>>();
-
+        let last_loop_hits = get_last_loop_hits(audio);
         draw_last_loop_summary(&last_loop_hits, &voices, audio_latency);
 
+        // TODO: toggle this on and off with a key for 'calibration' mode
         draw_pulse_beat(current_beat + audio_latency);
 
         draw_loop_choices(voices, audio, &loops);
     }
+}
+
+fn get_last_loop_hits(audio: &mut Audio) -> Vec<UserHit> {
+    let last_loop_hits: Vec<UserHit> = audio
+        .user_hits
+        .iter()
+        .filter(|hit| {
+            let loop_num_forbeat = (hit.clock_tick / BEATS_PER_LOOP) as i32;
+            loop_num_forbeat == audio.current_loop() - 1
+        })
+        .map(|hit| hit.clone())
+        .collect::<Vec<UserHit>>();
+    last_loop_hits
 }
 
 fn draw_status(bpm: f64, current_beat: f64, current_loop: i32, audio_latency: f64) {
@@ -184,58 +190,86 @@ fn draw_user_hits(user_hits: &Vec<UserHit>, desired_hits: &Voices, audio_latency
 }
 
 fn draw_last_loop_summary(user_hits: &Vec<UserHit>, desired_hits: &Voices, audio_latency: f64) {
-    // get accuracy of hihat
-    let closed_hihat_hit_timings =
-        get_user_hit_timings_by_instrument(user_hits, Instrument::ClosedHihat);
-    // filter to notes from the current loop
-    // let closed_hihat_notes = closed_hihat_notes
-    //     .iter()
-    //     .filter(|note| note + audio_latency >= BEATS_PER_LOOP)
-    //     .collect::<Vec<&f64>>();
+    let mut total_score: usize = 0;
+    let mut total_notes: usize = 0;
 
-    // compare that to desired hits for hihat
-    let mut note_idx: i32 = 0;
-    let mut score: f64 = 0.0;
-    for note in closed_hihat_hit_timings.iter() {
-        let (acc, _) = compute_accuracy(note + audio_latency, &desired_hits.closed_hihat);
+    let instruments = [
+        Instrument::ClosedHihat,
+        Instrument::Snare,
+        Instrument::Kick,
+        Instrument::OpenHihat,
+    ];
+    for (idx, instrument) in instruments.iter().enumerate() {
+        // get accuracy of hihat
+        let user_timings = get_user_hit_timings_by_instrument(user_hits, *instrument);
+        let desired_timings = get_desired_timings_by_instrument(instrument, desired_hits);
 
-        // // print number of correct notes
-        // let x = GRID_LEFT_X + note * BEAT_WIDTH_PX;
-        // let y = GRID_TOP_Y + 0.5 * ROW_HEIGHT;
-        draw_text(
-            format!("note={note} -> acc={:?}", acc).as_str(),
-            (GRID_LEFT_X + GRID_WIDTH / 2.) as f32,
-            (GRID_TOP_Y + 256. + (note_idx + 1) as f64 * 32.) as f32,
-            30.0,
-            DARKGRAY,
-        );
-
-        if acc == Accuracy::Correct {
-            score += 1.0;
+        // compare that to desired hits for hihat
+        let mut note_idx: i32 = 0;
+        let mut num_correct: usize = 0;
+        for note in user_timings.iter() {
+            let (acc, _) = compute_accuracy(note + audio_latency, desired_timings);
+            if acc == Accuracy::Correct {
+                num_correct += 1;
+            }
+            note_idx += 1;
         }
-        note_idx += 1;
-    }
 
-    // Labels in top-left of grid
-    let instrument_names = ["Hihat", "Snare", "Kick", "Open hi-hat"];
-    for (idx, _) in instrument_names.iter().enumerate() {
+        // Labels in top-left of grid
         draw_text(
-            format!("{score} / {:?}", desired_hits.closed_hihat.len()).as_str(),
+            format!("{num_correct} / {:?}", desired_timings.len()).as_str(),
             (GRID_LEFT_X + GRID_WIDTH + 32.) as f32,
             (GRID_TOP_Y + ROW_HEIGHT * (idx as f64 + 0.5)) as f32,
             20.0,
             DARKGRAY,
         );
+
+        total_score += num_correct;
+        total_notes += desired_timings.len();
     }
 
     // Summary over all voices
     draw_text(
-        format!("{score} / {:?}", desired_hits.closed_hihat.len()).as_str(),
+        format!("{total_score} / {:?}", total_notes).as_str(),
         (GRID_LEFT_X + GRID_WIDTH + 32.) as f32,
-        (GRID_TOP_Y + ROW_HEIGHT * (instrument_names.len() as f64 + 0.5)) as f32,
+        (GRID_TOP_Y + ROW_HEIGHT * (instruments.len() as f64 + 0.5)) as f32,
         20.0,
         DARKGRAY,
     );
+
+    // TODO: div by zero issue -> shows NaN
+    let score_ratio = total_score as f64 / total_notes as f64;
+    draw_circle(
+        (GRID_LEFT_X + GRID_WIDTH + 32.) as f32,
+        (GRID_TOP_Y + ROW_HEIGHT * ((instruments.len() + 1) as f64 + 0.5)) as f32,
+        64.,
+        Color {
+            r: 1. - score_ratio as f32,
+            g: score_ratio as f32,
+            b: 0.,
+            a: 1.,
+        },
+    );
+    draw_text(
+        format!("{:.1}%", score_ratio * 100.).as_str(),
+        (GRID_LEFT_X + GRID_WIDTH - 32. + 8.) as f32,
+        (GRID_TOP_Y + ROW_HEIGHT * ((instruments.len() + 1) as f64 + 0.5) + 16.) as f32,
+        64.,
+        WHITE,
+    );
+}
+
+fn get_desired_timings_by_instrument<'a>(
+    instrument: &Instrument,
+    desired_hits: &'a Voices,
+) -> &'a Vec<f64> {
+    let desired_timings = match instrument {
+        Instrument::ClosedHihat => &desired_hits.closed_hihat,
+        Instrument::Snare => &desired_hits.snare,
+        Instrument::Kick => &desired_hits.kick,
+        Instrument::OpenHihat => &desired_hits.open_hihat,
+    };
+    desired_timings
 }
 
 fn draw_position_line(current_beat: f64) {
