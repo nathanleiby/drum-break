@@ -21,11 +21,14 @@ impl UI {
 
     pub fn render(
         self: &mut Self,
+
+        // TODO: consider bundling the below into a Game struct or similar
         voices: &mut Voices,
         audio: &mut Audio,
         loops: &Vec<(String, Loop)>,
     ) {
         let current_beat = audio.current_beat();
+
         let audio_latency = audio.get_configured_audio_latency_seconds();
         let bpm = audio.get_bpm();
 
@@ -38,7 +41,22 @@ impl UI {
         draw_beat_grid(voices);
         draw_user_hits(&audio.user_hits, &voices, audio_latency);
         draw_position_line(current_beat + audio_latency);
-        draw_status(bpm, current_beat / 2., audio_latency);
+
+        // TODO: render current loop considering audio latency
+        draw_status(bpm, current_beat / 2., audio.current_loop(), audio_latency);
+
+        // filter to hits from last loop
+        let last_loop_hits: Vec<UserHit> = audio
+            .user_hits
+            .iter()
+            .filter(|hit| {
+                let loop_num_forbeat = (hit.clock_tick / BEATS_PER_LOOP) as i32;
+                loop_num_forbeat == audio.current_loop() - 1
+            })
+            .map(|hit| hit.clone())
+            .collect::<Vec<UserHit>>();
+
+        draw_last_loop_accuracy(&last_loop_hits, &voices, audio_latency);
 
         draw_pulse_beat(current_beat + audio_latency);
 
@@ -46,7 +64,7 @@ impl UI {
     }
 }
 
-fn draw_status(bpm: f64, current_beat: f64, audio_latency: f64) {
+fn draw_status(bpm: f64, current_beat: f64, current_loop: i32, audio_latency: f64) {
     draw_text(
         format!("BPM: {bpm}").as_str(),
         (GRID_LEFT_X) as f32,
@@ -55,7 +73,7 @@ fn draw_status(bpm: f64, current_beat: f64, audio_latency: f64) {
         DARKGRAY,
     );
     draw_text(
-        format!("Current Beat: {:.1}", current_beat).as_str(),
+        format!("Current Beat={:.1} (Loop={:?})", current_beat, current_loop).as_str(),
         (GRID_LEFT_X) as f32,
         40.0,
         30.0,
@@ -162,6 +180,35 @@ fn draw_user_hits(user_hits: &Vec<UserHit>, desired_hits: &Voices, audio_latency
     // same kick notes but with a lead up to each note
     for note in open_hihat_notes.iter() {
         draw_user_hit(*note, 3, audio_latency, &desired_hits.open_hihat);
+    }
+}
+
+fn draw_last_loop_accuracy(user_hits: &Vec<UserHit>, desired_hits: &Voices, audio_latency: f64) {
+    // get accuracy of hihat
+    let closed_hihat_hit_timings =
+        get_user_hit_timings_by_instrument(user_hits, Instrument::ClosedHihat);
+    // filter to notes from the current loop
+    // let closed_hihat_notes = closed_hihat_notes
+    //     .iter()
+    //     .filter(|note| note + audio_latency >= BEATS_PER_LOOP)
+    //     .collect::<Vec<&f64>>();
+
+    // compare that to desired hits for hihat
+    let mut note_idx: i32 = 0;
+    for note in closed_hihat_hit_timings.iter() {
+        let (acc, _) = compute_accuracy(note + audio_latency, &desired_hits.closed_hihat);
+
+        // // print number of correct notes
+        // let x = GRID_LEFT_X + note * BEAT_WIDTH_PX;
+        // let y = GRID_TOP_Y + 0.5 * ROW_HEIGHT;
+        draw_text(
+            format!("note={note} -> acc={:?}", acc).as_str(),
+            (GRID_LEFT_X + GRID_WIDTH / 2.) as f32,
+            (GRID_TOP_Y + 256. + (note_idx + 1) as f64 * 32.) as f32,
+            30.0,
+            DARKGRAY,
+        );
+        note_idx += 1;
     }
 }
 

@@ -38,3 +38,30 @@ The tool is in a pre-alpha state.
 - update the `VERSION` file
   - versioning scheme is semver with leading `v`, e.g. `v0.0.1`
 - run `./release.sh`
+
+```mermaid
+graph TD;
+  ui
+  audio
+  input
+
+  events --> ui
+  events --> audio
+
+  input --> events
+  audio --> events
+  ui --> events
+```
+
+```mermaid
+graph TD;
+  ui
+  audio
+  input
+  voices
+
+  input --> audio
+  audio --> ui
+
+
+```

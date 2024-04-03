@@ -1,6 +1,5 @@
 use std::{collections::VecDeque, error::Error, io::Cursor};
 
-use event_emitter_rs::EventEmitter;
 use kira::{
     clock::{ClockHandle, ClockSpeed, ClockTime},
     manager::{backend::DefaultBackend, AudioManager, AudioManagerSettings},
@@ -17,6 +16,7 @@ use crate::{
     Voices,
 };
 
+#[derive(Debug, Clone)]
 pub struct UserHit {
     pub instrument: Instrument,
     pub clock_tick: f64,
@@ -35,7 +35,7 @@ impl UserHit {
     }
 }
 
-pub struct Audio<'a> {
+pub struct Audio {
     manager: AudioManager<DefaultBackend>,
     clock: ClockHandle,
     last_scheduled_tick: f64,
@@ -46,7 +46,6 @@ pub struct Audio<'a> {
     configured_audio_latency_seconds: f64,
 
     // debug only
-    event_emitter: &'a mut EventEmitter,
     last_beat: i32,
 }
 
@@ -54,16 +53,14 @@ const DEFAULT_BPM: f64 = 60.;
 const MIN_BPM: f64 = 40.;
 const MAX_BPM: f64 = 240.;
 
-impl<'a> Audio<'a> {
-    pub fn new(conf: &AppConfig, event_emitter: &'a mut EventEmitter) -> Self {
+impl Audio {
+    pub fn new(conf: &AppConfig) -> Self {
         let mut manager =
             AudioManager::<DefaultBackend>::new(AudioManagerSettings::default()).unwrap();
         let clock = manager
             // TODO: investigate bpm * 2 stuff
             .add_clock(ClockSpeed::TicksPerMinute(DEFAULT_BPM * 2. as f64))
             .unwrap();
-
-        event_emitter.emit("Say Hello", ());
 
         Self {
             manager,
@@ -74,8 +71,6 @@ impl<'a> Audio<'a> {
             user_hits: vec![],
             calibration_input: VecDeque::new(),
             configured_audio_latency_seconds: conf.audio_latency_seconds,
-
-            event_emitter,
             last_beat: -1,
         }
     }
@@ -98,9 +93,7 @@ impl<'a> Audio<'a> {
             self.last_beat = current_beat as i32;
             // if new loop, print that too
             if current_beat == 0 {
-                let loop_num = (self.current_clock_tick() / BEATS_PER_LOOP) as i32;
-                debug!("Starting loop num #{:?}", loop_num);
-                self.event_emitter.emit("NewLoop", loop_num);
+                debug!("Starting loop num #{:?}", self.current_loop());
             }
         }
     }
@@ -152,6 +145,10 @@ impl<'a> Audio<'a> {
 
     pub fn current_beat(self: &Self) -> f64 {
         self.current_clock_tick() % BEATS_PER_LOOP
+    }
+
+    pub fn current_loop(self: &Self) -> i32 {
+        (self.current_clock_tick() / BEATS_PER_LOOP) as i32
     }
 
     pub fn get_bpm(self: &Self) -> f64 {
