@@ -251,7 +251,7 @@ fn draw_last_loop_summary(user_hits: &Vec<UserHit>, desired_hits: &Voices, audio
         },
     );
     draw_text(
-        format!("{:.1}%", score_ratio * 100.).as_str(),
+        format!("{:.0}%", score_ratio * 100.).as_str(),
         (GRID_LEFT_X + GRID_WIDTH - 32. + 8.) as f32,
         (GRID_TOP_Y + ROW_HEIGHT * ((instruments.len() + 1) as f64 + 0.5) + 16.) as f32,
         64.,

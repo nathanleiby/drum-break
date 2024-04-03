@@ -13,9 +13,9 @@ _what's must-have to make it useful to me?_
       - [x] from this, compute the "sequencer loop number" (this is computable from the sequencer timestamp mod loop length)
     - [x] emit a single print statement to CLI when loop number changes
     - [x] emit a summary to CLI (UI) of what happened in the last loop (hits, misses, etc)
-    - [ ] compute a summary metric based on the above
+    - [x] compute a summary metric based on the above
       - [ ] write a unit test re: the summary metric
-    - [ ] show this metric in the UI
+    - [x] show this metric in the UI
 
 - handle idea of "miss" due to not playing a desired note at all
 - cleanup input UI, which quickly gets noisy
@@ -76,6 +76,8 @@ _what's very important to make it engaging to me?_
 - [ ] explore Rust GUI options
   - [ ] egui https://www.egui.rs/ .. https://github.com/optozorax/egui-macroquad
     - had trouble getting egui-macroquad to build due to audio lib issues. version outdated? tried to pull in file and build locally, but had trouble with that too b/c of macroquad/miniquad version mismatch
+    - `iced` https://lib.rs/crates/iced (.. with `coffee` game engine too? https://github.com/hecrj/coffee .. or not that part, it's 4y old)
+    - `slint`: https://github.com/slint-ui/slint
 - [ ] Explore macroquad featureset, including [experimental](https://docs.rs/macroquad/latest/macroquad/experimental/index.html) like state machine and scenes
   - [ ] Also explore community extension https://github.com/ozkriff/awesome-quads
   - [ ] tune config w cvars approach? https://github.com/martin-t/cvars
