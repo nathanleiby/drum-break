@@ -57,11 +57,11 @@ pub fn compute_accuracy(user_beat_with_latency: f64, desired_hits: &Vec<f64>) ->
 
     match target_beat {
         None => {
-            // info!("No target beat found, returning Miss");
+            // log::info!("No target beat found, returning Miss");
             return (Accuracy::Miss, false);
         }
         Some((b, _)) => {
-            // info!("Target beat found: {:?}", b);
+            // log::info!("Target beat found: {:?}", b);
             let distance = user_beat_with_latency - b;
             let acc = match distance {
                 d if d.abs() > MISS_MARGIN => Accuracy::Miss,
@@ -70,7 +70,7 @@ pub fn compute_accuracy(user_beat_with_latency: f64, desired_hits: &Vec<f64>) ->
                 _ => Accuracy::Correct,
             };
 
-            // info!(
+            // log::info!(
             //     "Accuracy: {:?} .. user_input_beat = {:?} .. target_beat = {:?} .. distance = {:?} .. is_next_loop = {:?}",
             //     acc, user_beat_with_latency, target_beat, distance, is_next_loop
             // );
