@@ -63,7 +63,7 @@ impl MidiInput {
             }
         }
         if pressed.len() > 0 {
-            info!("Pressed midi: {:?}", pressed);
+            log::info!("Pressed midi: {:?}", pressed);
         }
         pressed
     }
@@ -84,7 +84,7 @@ impl MidiInput {
     }
 
     pub fn connect(&mut self) {
-        info!("Connecting to midi device: {}", self.device_name);
+        log::info!("Connecting to midi device: {}", self.device_name);
         let raw_inputs = self.raw_inputs.clone();
         self.connection = Some(
             self.midi_input

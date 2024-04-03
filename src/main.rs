@@ -17,6 +17,8 @@ use crate::input::*;
 use crate::ui::*;
 use crate::voices::Voices;
 
+use simple_logger;
+
 use macroquad::prelude::*;
 use voices::Loop;
 
@@ -32,11 +34,13 @@ fn window_conf() -> Conf {
 
 #[macroquad::main(window_conf)]
 async fn main() -> Result<(), Box<dyn Error>> {
+    // simple_logger::init_with_level(log::Level::Info).unwrap();
+    simple_logger::init_with_env().unwrap();
     let version = include_str!("../VERSION");
-    debug!("version: {}", version);
+    log::info!("version: {}", version);
 
     let conf = AppConfig::new()?;
-    dbg!(&conf);
+    log::debug!("{:?}", &conf);
 
     // read loops
     let dir_name = process_cli_args();
@@ -45,9 +49,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
     match read_loops(&dir_name).await {
         Ok(loops_from_dir) => loops = loops_from_dir,
         Err(e) => {
-            warn!(
+            log::warn!(
                 "warning: unable to read loops from given directory ({}) due to '{}'",
-                &dir_name, e
+                &dir_name,
+                e
             )
         }
     }

@@ -46,7 +46,7 @@ impl Input {
             Some(ref mut midi_input) => {
                 midi_input.connect();
             }
-            None => warn!("warning: no midi input device found"),
+            None => log::warn!("warning: no midi input device found"),
         }
 
         Self { midi_input }
@@ -176,7 +176,7 @@ impl Input {
             let beat = ((mouse_x as f64 - GRID_LEFT_X) / BEAT_WIDTH_PX).floor();
             let row = ((mouse_y as f64 - GRID_TOP_Y) / ROW_HEIGHT).floor();
             if beat >= 0. && beat < BEATS_PER_LOOP && row >= 0. && row < NUM_ROWS_IN_GRID {
-                debug!("Clicked on row={}, beat={}", row, beat);
+                log::debug!("Clicked on row={}, beat={}", row, beat);
                 voices.toggle_beat(row, beat);
             }
         }
@@ -214,7 +214,7 @@ fn get_pressed_midi(midi_input: &mut MidiInput) -> IsHit {
         s if s.contains("TD-17") => td17,
         s if s.contains("Nitro") => alesis_nitro,
         _ => {
-            warn!("warning: unknown midi device, using default of 'alesis nitro'");
+            log::warn!("warning: unknown midi device, using default of 'alesis nitro'");
             alesis_nitro
         }
     };

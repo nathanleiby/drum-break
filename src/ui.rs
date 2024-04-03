@@ -56,7 +56,7 @@ impl UI {
             .map(|hit| hit.clone())
             .collect::<Vec<UserHit>>();
 
-        draw_last_loop_accuracy(&last_loop_hits, &voices, audio_latency);
+        draw_last_loop_summary(&last_loop_hits, &voices, audio_latency);
 
         draw_pulse_beat(current_beat + audio_latency);
 
@@ -183,7 +183,7 @@ fn draw_user_hits(user_hits: &Vec<UserHit>, desired_hits: &Voices, audio_latency
     }
 }
 
-fn draw_last_loop_accuracy(user_hits: &Vec<UserHit>, desired_hits: &Voices, audio_latency: f64) {
+fn draw_last_loop_summary(user_hits: &Vec<UserHit>, desired_hits: &Voices, audio_latency: f64) {
     // get accuracy of hihat
     let closed_hihat_hit_timings =
         get_user_hit_timings_by_instrument(user_hits, Instrument::ClosedHihat);
@@ -300,7 +300,7 @@ fn draw_loop_choices<'a, 'b: 'a>(
                 if ui.button(None, format!("{:?} ({:?})", name.as_str(), new_loop.bpm)) {
                     *voices = new_loop.voices.clone();
                     audio.set_bpm(new_loop.bpm as f64);
-                    info!("Switched to {:?}", name);
+                    log::info!("Switched to {:?}", name);
                 }
             });
         });

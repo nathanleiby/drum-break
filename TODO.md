@@ -14,6 +14,7 @@ _what's must-have to make it useful to me?_
     - [x] emit a single print statement to CLI when loop number changes
     - [x] emit a summary to CLI (UI) of what happened in the last loop (hits, misses, etc)
     - [ ] compute a summary metric based on the above
+      - [ ] write a unit test re: the summary metric
     - [ ] show this metric in the UI
 
 - handle idea of "miss" due to not playing a desired note at all
@@ -46,7 +47,7 @@ _what's very important to make it engaging to me?_
 
 ## future
 
-- log levels that allow easy filtering
+- [x] log levels that allow easy filtering
 - input improvements
   - [x] support >1 midi value per voice
   - [ ] allow easy rebinding within the app

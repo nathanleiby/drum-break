@@ -89,11 +89,11 @@ impl Audio {
         // For debugging, print when we pass an integer beat
         let current_beat = self.current_beat() as i32;
         if current_beat != self.last_beat {
-            debug!("Beat: {}", current_beat as i32);
+            // log::debug!("Beat: {}", current_beat as i32);
             self.last_beat = current_beat as i32;
             // if new loop, print that too
             if current_beat == 0 {
-                debug!("Starting loop num #{:?}", self.current_loop());
+                // log::debug!("Starting loop num #{:?}", self.current_loop());
             }
         }
     }
@@ -109,9 +109,10 @@ impl Audio {
 
         let tick_to_schedule = current + TICK_SCHEDULE_AHEAD;
 
-        debug!(
+        log::debug!(
             "Scheduling from {} to {}",
-            self.last_scheduled_tick, tick_to_schedule
+            self.last_scheduled_tick,
+            tick_to_schedule
         );
         for pair in [
             (&voices.closed_hihat, "res/sounds/closed-hihat.wav"),
@@ -184,7 +185,7 @@ impl Audio {
         // );
         // self.manager.play(sound.unwrap()).unwrap();
 
-        debug!(
+        log::debug!(
             "Capture at beat = {}, clock = {}",
             self.current_beat(),
             self.current_clock_tick()
@@ -204,7 +205,7 @@ impl Audio {
         // );
         // self.manager.play(sound.unwrap()).unwrap();
 
-        debug!(
+        log::debug!(
             "Capture + calibrate at beat = {}, clock = {}",
             self.current_beat(),
             self.current_clock_tick()
@@ -216,7 +217,7 @@ impl Audio {
         if self.calibration_input.len() > 5 {
             self.calibration_input.pop_front();
         }
-        debug!(
+        log::debug!(
             "Average distance from integer beats: {} beats ({} seconds)",
             avg_dist,
             avg_dist / self.bpm * 60.
@@ -265,7 +266,7 @@ async fn schedule_note(
     sound_path: &str,
 ) -> Result<(), Box<dyn Error>> {
     let note_tick = (*note + (loop_num as f64) * BEATS_PER_LOOP) as u64;
-    debug!("\tScheduling {} ({}) at {}", sound_path, note, note_tick);
+    // log::debug!("\tScheduling {} ({}) at {}", sound_path, note, note_tick);
     let f = load_file(sound_path).await?;
     let sound = StaticSoundData::from_cursor(
         Cursor::new(f),

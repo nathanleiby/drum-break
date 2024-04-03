@@ -90,7 +90,7 @@ pub struct Loop {
 
 impl Loop {
     pub async fn new_from_file_async(path: &str) -> Result<Self, Box<dyn Error>> {
-        info!("Loop::new_from_file .. {}", path);
+        log::info!("Loop::new_from_file .. {}", path);
         let f = load_file(path).await?;
         let out: Self = serde_json::from_reader(&*f)?;
         Ok(out)
