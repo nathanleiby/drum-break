@@ -1,10 +1,4 @@
-use std::{
-    collections::HashSet,
-    error::Error,
-    fs::File,
-    io::{BufWriter, Write},
-    process, result,
-};
+use std::{collections::HashSet, error::Error, process, result};
 
 use macroquad::prelude::*;
 
@@ -29,6 +23,15 @@ pub enum Events {
     },
     Quit,
     ResetHits,
+    SaveLoop,
+    ToggleBeat {
+        row: f64,
+        beat: f64,
+    },
+    TrackForCalibration,
+    SetAudioLatency {
+        delta: f64,
+    },
 }
 
 pub struct Input {
@@ -48,12 +51,7 @@ impl Input {
         Self { midi_input }
     }
 
-    pub fn process(
-        self: &mut Self,
-        voices: &mut Voices,
-        audio: &mut Audio,
-        dir_name: &str,
-    ) -> Result<Vec<Events>, Box<dyn Error>> {
+    pub fn process(self: &mut Self) -> Vec<Events> {
         let mut events: Vec<Events> = vec![];
 
         // TODO(future): get the current clock time AND audio clock time at the start of a frame, and use that for all downstream calcs
@@ -117,14 +115,7 @@ impl Input {
         }
 
         if is_key_pressed(KeyCode::Equal) {
-            // capture note timing data
-            let updated_val = audio.track_for_calibration();
-            audio.set_configured_audio_latency_seconds(updated_val);
-
-            let cfg = AppConfig {
-                audio_latency_seconds: updated_val,
-            };
-            cfg.save()?;
+            events.push(Events::TrackForCalibration);
         }
 
         if is_key_pressed(KeyCode::LeftBracket) {
@@ -132,14 +123,9 @@ impl Input {
             if is_key_down(KeyCode::LeftShift) || is_key_down(KeyCode::RightShift) {
                 multiplier = 100.;
             }
-
-            let updated_val = audio.get_configured_audio_latency_seconds() - (0.001 * multiplier);
-            audio.set_configured_audio_latency_seconds(updated_val);
-
-            let cfg = AppConfig {
-                audio_latency_seconds: updated_val,
-            };
-            cfg.save()?;
+            events.push(Events::SetAudioLatency {
+                delta: -0.001 * multiplier,
+            });
         }
 
         if is_key_pressed(KeyCode::RightBracket) {
@@ -147,14 +133,9 @@ impl Input {
             if is_key_down(KeyCode::LeftShift) || is_key_down(KeyCode::RightShift) {
                 multiplier = 100.;
             }
-
-            let updated_val = audio.get_configured_audio_latency_seconds() + (0.001 * multiplier);
-            audio.set_configured_audio_latency_seconds(updated_val);
-
-            let cfg = AppConfig {
-                audio_latency_seconds: updated_val,
-            };
-            cfg.save()?;
+            events.push(Events::SetAudioLatency {
+                delta: 0.001 * multiplier,
+            });
         }
 
         // Improve UX here
@@ -179,22 +160,15 @@ impl Input {
         // }
 
         if is_key_pressed(KeyCode::Q) {
-            process::exit(0);
+            events.push(Events::Quit)
         }
 
         if is_key_pressed(KeyCode::R) {
-            // reset user hits
-            audio.user_hits = vec![];
+            events.push(Events::ResetHits)
         }
 
         if is_key_pressed(KeyCode::S) {
-            // write serialized JSON output to a file
-            let dir_name = dir_name.trim_end_matches('/');
-            let file = File::create(format!("{}/loop-{}.json", dir_name, get_time()))?;
-            let mut writer = BufWriter::new(file);
-            // TODO: support loop, saving BPM as well
-            serde_json::to_writer(&mut writer, &voices)?;
-            writer.flush()?;
+            events.push(Events::SaveLoop);
         }
 
         if is_mouse_button_pressed(MouseButton::Left) {
@@ -205,11 +179,11 @@ impl Input {
             let row = ((mouse_y as f64 - GRID_TOP_Y) / ROW_HEIGHT).floor();
             if beat >= 0. && beat < BEATS_PER_LOOP && row >= 0. && row < NUM_ROWS_IN_GRID {
                 log::debug!("Clicked on row={}, beat={}", row, beat);
-                voices.toggle_beat(row, beat);
+                events.push(Events::ToggleBeat { row, beat });
             }
         }
 
-        Ok(events)
+        events
     }
 }
 

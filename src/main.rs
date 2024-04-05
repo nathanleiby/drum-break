@@ -10,6 +10,8 @@ mod ui;
 mod voices;
 
 use std::error::Error;
+use std::fs::File;
+use std::io::{BufWriter, Write};
 
 use crate::audio::*;
 use crate::config::AppConfig;
@@ -69,36 +71,83 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let mut fps_tracker = FPS::new();
 
     loop {
+        // process input
+        let events = input.process();
+
+        // change state
+        process_events(&mut voices, &mut audio, &events, &dir_name)?;
         audio.schedule(&voices).await?;
-
-        let events = input.process(&mut voices, &mut audio, &dir_name)?;
-        for event in events {
-            match event {
-                Events::UserHit {
-                    instrument,
-                    processing_delay,
-                } => {
-                    audio.track_user_hit(instrument, processing_delay);
-                }
-                Events::Pause => {
-                    audio.toggle_pause();
-                }
-                Events::ChangeBPM { delta } => {
-                    audio.set_bpm(audio.get_bpm() + delta);
-                }
-                _ => {}
-            }
-        }
-
-        ui.render(&mut voices, &mut audio, &loops);
-
-        // debug
         fps_tracker.update();
+
+        // render UI
+        ui.render(&mut voices, &mut audio, &loops);
         fps_tracker.render();
 
         // wait for next frame from game engine
         next_frame().await
     }
+}
+
+fn process_events(
+    voices: &mut Voices,
+    audio: &mut Audio,
+    events: &Vec<Events>,
+    dir_name: &str,
+) -> Result<(), Box<dyn Error>> {
+    for event in events {
+        match event {
+            Events::UserHit {
+                instrument,
+                processing_delay,
+            } => {
+                audio.track_user_hit(*instrument, *processing_delay);
+            }
+            Events::Pause => {
+                audio.toggle_pause();
+            }
+            Events::ChangeBPM { delta } => {
+                audio.set_bpm(audio.get_bpm() + delta);
+            }
+            Events::Quit => {
+                std::process::exit(0);
+            }
+            Events::ResetHits => {
+                audio.user_hits = vec![];
+            }
+            Events::SaveLoop => {
+                // write serialized JSON output to a file
+                let dir_name = dir_name.trim_end_matches('/');
+                let file = File::create(format!("{}/loop-{}.json", dir_name, get_time()))?;
+                let mut writer = BufWriter::new(file);
+                // TODO: support loop, saving BPM as well
+                serde_json::to_writer(&mut writer, &voices)?;
+                writer.flush()?;
+            }
+            Events::ToggleBeat { row, beat } => {
+                voices.toggle_beat(*row, *beat);
+            }
+            Events::TrackForCalibration => {
+                let updated_val = audio.track_for_calibration();
+                audio.set_configured_audio_latency_seconds(updated_val);
+
+                let cfg = AppConfig {
+                    audio_latency_seconds: updated_val,
+                };
+                cfg.save()?;
+            }
+            Events::SetAudioLatency { delta } => {
+                let updated_val = audio.get_configured_audio_latency_seconds() + delta;
+                audio.set_configured_audio_latency_seconds(updated_val);
+
+                let cfg = AppConfig {
+                    audio_latency_seconds: updated_val,
+                };
+                cfg.save()?;
+            }
+        }
+    }
+
+    Ok(())
 }
 
 fn process_cli_args() -> String {
