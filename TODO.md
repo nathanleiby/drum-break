@@ -16,7 +16,7 @@ _what's must-have to make it useful to me?_
     - [x] compute a summary metric based on the above
       - [ ] write a unit test re: the summary metric
     - [x] show this metric in the UI
-
+- Capture EXACT timing of the midi note for use in timing.
 - handle idea of "miss" due to not playing a desired note at all
 - cleanup input UI, which quickly gets noisy
   -- [x] e.g. hacky is a button to reset -> press "r"
@@ -77,7 +77,12 @@ _what's very important to make it engaging to me?_
   - [ ] egui https://www.egui.rs/ .. https://github.com/optozorax/egui-macroquad
     - had trouble getting egui-macroquad to build due to audio lib issues. version outdated? tried to pull in file and build locally, but had trouble with that too b/c of macroquad/miniquad version mismatch
     - `iced` https://lib.rs/crates/iced (.. with `coffee` game engine too? https://github.com/hecrj/coffee .. or not that part, it's 4y old)
+      - input subscription https://www.reddit.com/r/rust/comments/wtzkx6/need_help_iced_subscriptions/ .. rdev has some MacOS permissions [caveats](https://crates.io/crates/rdev)
+      - minimal audio focused app https://github.com/AWBroch/metronome/blob/main/src/main.rs .. could use kira for clock instead of iced's `time::every` which supports this metronome
+        - static audio data to include it binary seems handy
     - `slint`: https://github.com/slint-ui/slint
+    - try using Tauri and build a web UI
+      - can we have a Rust "engine" (process keyboard/midi events, play sound, etc) with the FE (draw UI, etc)
 - [ ] Explore macroquad featureset, including [experimental](https://docs.rs/macroquad/latest/macroquad/experimental/index.html) like state machine and scenes
   - [ ] Also explore community extension https://github.com/ozkriff/awesome-quads
   - [ ] tune config w cvars approach? https://github.com/martin-t/cvars

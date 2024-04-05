@@ -1,6 +1,5 @@
 // Thanks to: https://github.com/TanTanDev/midi_game
 
-use macroquad::miniquad::info;
 use midir;
 use std::collections::HashMap;
 use std::string::*;
