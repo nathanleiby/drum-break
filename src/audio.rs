@@ -152,6 +152,10 @@ impl Audio {
         (self.current_clock_tick() / BEATS_PER_LOOP) as i32
     }
 
+    fn get_seconds_per_tick(self: &Self) -> f64 {
+        60. / self.bpm / 2.
+    }
+
     pub fn get_bpm(self: &Self) -> f64 {
         self.bpm
     }
@@ -171,9 +175,15 @@ impl Audio {
         }
     }
 
-    pub fn track_user_hit(self: &mut Self, instrument: Instrument) {
-        self.user_hits
-            .push(UserHit::new(instrument, self.current_clock_tick()));
+    pub fn track_user_hit(self: &mut Self, instrument: Instrument, processing_delay_s: f64) {
+        // convert processing delay to ticks, based on BPM
+        let ticks_per_second = 1. / self.get_seconds_per_tick();
+        let processing_delay_ticks = ticks_per_second * processing_delay_s;
+
+        self.user_hits.push(UserHit::new(
+            instrument,
+            self.current_clock_tick() - processing_delay_ticks,
+        ));
 
         // // play sound effect
         // let sound = StaticSoundData::from_file(

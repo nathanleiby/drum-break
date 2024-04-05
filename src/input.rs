@@ -3,7 +3,7 @@ use std::{
     error::Error,
     fs::File,
     io::{BufWriter, Write},
-    process,
+    process, result,
 };
 
 use macroquad::prelude::*;
@@ -13,30 +13,13 @@ use crate::{
     config::{AppConfig, InputConfigMidi},
     consts::*,
     midi::MidiInput,
+    time::current_time_millis,
     voices::Instrument,
-    Voices,
+    UserHit, Voices,
 };
 
 pub struct Input {
     midi_input: Option<MidiInput>,
-}
-
-pub struct IsHit {
-    snare: bool,
-    kick: bool,
-    closed_hi_hat: bool,
-    open_hi_hat: bool,
-}
-
-impl IsHit {
-    pub fn new() -> Self {
-        Self {
-            snare: false,
-            kick: false,
-            closed_hi_hat: false,
-            open_hi_hat: false,
-        }
-    }
 }
 
 impl Input {
@@ -58,30 +41,46 @@ impl Input {
         audio: &mut Audio,
         dir_name: &str,
     ) -> Result<(), Box<dyn Error>> {
-        let midi_hits = match &mut self.midi_input {
+        // TODO(future): get the current clock time AND audio clock time at the start of a frame, and use that for all downstream calcs
+        let now_ms = current_time_millis();
+        match &mut self.midi_input {
             Some(midi_input) => {
-                let hits = get_pressed_midi(midi_input);
+                let hits = get_midi_as_user_hits(midi_input);
+
+                // for each hit, calculate the processing delay and correct the clock time
+                for hit in &hits {
+                    // let processing_delay_ms = now_ms - hit.clock_tick as u128;
+                    /// TODO: needs work
+                    let processing_delay_ms = 0;
+
+                    audio.track_user_hit(hit.instrument, processing_delay_ms as f64 / 1000.);
+                }
+
+                // let processing_delay = now - ; // is this better called "input latency"?
+                // let corrected_clock_time = current_clock_time - processing_delay;
+
                 midi_input.flush();
-                hits
             }
-            None => IsHit::new(),
+            None => {}
         };
 
         // Playing the drums //
-        if is_key_pressed(KeyCode::Z) || midi_hits.closed_hi_hat {
-            audio.track_user_hit(Instrument::ClosedHihat);
+        let processing_delay = 0.; // TODO: solve this for keyboard input, too.
+                                   // Right now we don't know the delay between key press and frame start .. we could improve by guessing midway through the previous frame (1/2 frame duration) without any knowledge
+        if is_key_pressed(KeyCode::Z) {
+            audio.track_user_hit(Instrument::ClosedHihat, processing_delay);
         }
 
-        if is_key_pressed(KeyCode::X) || midi_hits.snare {
-            audio.track_user_hit(Instrument::Snare);
+        if is_key_pressed(KeyCode::X) {
+            audio.track_user_hit(Instrument::Snare, processing_delay);
         }
 
-        if is_key_pressed(KeyCode::C) || midi_hits.kick {
-            audio.track_user_hit(Instrument::Kick);
+        if is_key_pressed(KeyCode::C) {
+            audio.track_user_hit(Instrument::Kick, processing_delay);
         }
 
-        if is_key_pressed(KeyCode::V) || midi_hits.open_hi_hat {
-            audio.track_user_hit(Instrument::OpenHihat);
+        if is_key_pressed(KeyCode::V) {
+            audio.track_user_hit(Instrument::OpenHihat, processing_delay);
         }
 
         if is_key_pressed(KeyCode::Space) {
@@ -185,7 +184,9 @@ impl Input {
     }
 }
 
-fn get_pressed_midi(midi_input: &mut MidiInput) -> IsHit {
+fn get_midi_as_user_hits(midi_input: &mut MidiInput) -> Vec<UserHit> {
+    let mut out: Vec<UserHit> = vec![];
+
     // midi device: "MPK Mini Mk II"
     let mpk_mini_mk_ii = InputConfigMidi {
         closed_hi_hat: HashSet::from_iter(vec![44, 48]),
@@ -219,12 +220,25 @@ fn get_pressed_midi(midi_input: &mut MidiInput) -> IsHit {
         }
     };
 
-    let pressed_midi = HashSet::from_iter(midi_input.get_pressed_buttons());
+    let pressed_midi = midi_input.get_pressed_buttons();
 
-    IsHit {
-        snare: ic_midi.snare.intersection(&pressed_midi).count() > 0,
-        kick: ic_midi.kick.intersection(&pressed_midi).count() > 0,
-        closed_hi_hat: ic_midi.closed_hi_hat.intersection(&pressed_midi).count() > 0,
-        open_hi_hat: ic_midi.open_hi_hat.intersection(&pressed_midi).count() > 0,
+    // for each pressed_midi, check if it's in the ic_midi and then add to out as a proper UserHit if so
+    for midi in pressed_midi {
+        log::debug!("midi: {:?}", midi); // TODO: compare timestamps
+        let timestamp = midi.timestamp as f64;
+        if ic_midi.closed_hi_hat.contains(&midi.note_number) {
+            out.push(UserHit::new(Instrument::ClosedHihat, timestamp));
+        }
+        if ic_midi.snare.contains(&midi.note_number) {
+            out.push(UserHit::new(Instrument::Snare, timestamp));
+        }
+        if ic_midi.kick.contains(&midi.note_number) {
+            out.push(UserHit::new(Instrument::Kick, timestamp));
+        }
+        if ic_midi.open_hi_hat.contains(&midi.note_number) {
+            out.push(UserHit::new(Instrument::OpenHihat, timestamp));
+        }
     }
+
+    out
 }

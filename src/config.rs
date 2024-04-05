@@ -2,6 +2,8 @@ use std::{collections::HashSet, error::Error};
 
 use serde::{Deserialize, Serialize};
 
+use crate::voices::Instrument;
+
 #[derive(Default, Debug, Serialize, Deserialize)]
 pub struct AppConfig {
     pub audio_latency_seconds: f64,
@@ -19,6 +21,9 @@ impl AppConfig {
         Ok(())
     }
 }
+
+// TODO: Use a hashmap of {instrument : HashSet } instead of hard-coded list of instruments
+// type GeneralizedInputConfigMidi = HashMap<Instrument, HashSet<u8>>;
 
 pub struct InputConfigMidi {
     pub kick: HashSet<u8>,

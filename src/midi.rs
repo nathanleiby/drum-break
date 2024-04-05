@@ -5,6 +5,8 @@ use std::collections::HashMap;
 use std::string::*;
 use std::sync::{Arc, Mutex};
 
+use crate::time::current_time_millis;
+
 pub struct MidiInput {
     input_port: midir::MidiInputPort,
     device_name: String,
@@ -17,8 +19,10 @@ pub struct MidiInput {
 }
 
 #[derive(Eq, Clone, Debug, Copy, PartialEq)]
-struct MidiInputDataRaw {
-    timestamp: u64,
+pub struct MidiInputDataRaw {
+    pub note_number: u8,
+    pub timestamp: u64,
+    pub non_midi_timestamp_ms: u128,
     // https://www.logosfoundation.org/kursus/1075.html
     status: u8,
     note_velocity: u8,
@@ -53,12 +57,12 @@ impl MidiInput {
         })
     }
 
-    pub fn get_pressed_buttons(&self) -> Vec<u8> {
+    pub fn get_pressed_buttons(&self) -> Vec<MidiInputDataRaw> {
         let mut pressed = Vec::new();
         let mut raw_inputs = self.raw_inputs.lock().unwrap();
         for (id, raw_input) in raw_inputs.iter_mut() {
             if raw_input.is_note_on() {
-                pressed.push(*id);
+                pressed.push(*raw_input);
             }
         }
         if pressed.len() > 0 {
@@ -93,13 +97,17 @@ impl MidiInput {
                     &self.input_port,
                     self.device_name.as_str(),
                     move |stamp, message, _| {
+                        // get timestamp
+                        let non_midi_timestamp_ms = current_time_millis();
                         println!("{}: {:?} (len = {})", stamp, message, message.len());
                         let mut rw = raw_inputs.lock().unwrap();
                         let note_number = message[1];
                         rw.insert(
                             note_number,
                             MidiInputDataRaw {
+                                note_number,
                                 timestamp: stamp,
+                                non_midi_timestamp_ms,
                                 status: message[0],
                                 note_velocity: message[2],
                             },

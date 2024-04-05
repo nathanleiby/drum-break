@@ -5,6 +5,7 @@ mod fps;
 mod input;
 mod midi;
 mod score;
+mod time;
 mod ui;
 mod voices;
 
