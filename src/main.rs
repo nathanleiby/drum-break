@@ -71,7 +71,24 @@ async fn main() -> Result<(), Box<dyn Error>> {
     loop {
         audio.schedule(&voices).await?;
 
-        input.process(&mut voices, &mut audio, &dir_name)?;
+        let events = input.process(&mut voices, &mut audio, &dir_name)?;
+        for event in events {
+            match event {
+                Events::UserHit {
+                    instrument,
+                    processing_delay,
+                } => {
+                    audio.track_user_hit(instrument, processing_delay);
+                }
+                Events::Pause => {
+                    audio.toggle_pause();
+                }
+                Events::ChangeBPM { delta } => {
+                    audio.set_bpm(audio.get_bpm() + delta);
+                }
+                _ => {}
+            }
+        }
 
         ui.render(&mut voices, &mut audio, &loops);
 

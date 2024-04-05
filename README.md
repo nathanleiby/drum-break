@@ -39,6 +39,33 @@ The tool is in a pre-alpha state.
   - versioning scheme is semver with leading `v`, e.g. `v0.0.1`
 - run `./release.sh`
 
+### System Design
+
+What happens in a frame
+
+```
+- process
+  - timing info (audio clock, actual)
+  - user input (TODO: translate into events)
+- update state
+  - save user input
+  - propagate corresponding game state
+  - schedule upcoming audio events, if needed
+- draw
+```
+
+What threads are running and need to be coordinated:
+
+```
+game
+audio
+input
+```
+
+How is the project organized
+
+```
+- Input -
 ```mermaid
 graph TD;
   ui

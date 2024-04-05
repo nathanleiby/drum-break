@@ -18,6 +18,19 @@ use crate::{
     UserHit, Voices,
 };
 
+pub enum Events {
+    UserHit {
+        instrument: Instrument,
+        processing_delay: f64,
+    },
+    Pause,
+    ChangeBPM {
+        delta: f64,
+    },
+    Quit,
+    ResetHits,
+}
+
 pub struct Input {
     midi_input: Option<MidiInput>,
 }
@@ -40,7 +53,9 @@ impl Input {
         voices: &mut Voices,
         audio: &mut Audio,
         dir_name: &str,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<Vec<Events>, Box<dyn Error>> {
+        let mut events: Vec<Events> = vec![];
+
         // TODO(future): get the current clock time AND audio clock time at the start of a frame, and use that for all downstream calcs
         let now_ms = current_time_millis();
         match &mut self.midi_input {
@@ -52,8 +67,10 @@ impl Input {
                     // let processing_delay_ms = now_ms - hit.clock_tick as u128;
                     /// TODO: needs work
                     let processing_delay_ms = 0;
-
-                    audio.track_user_hit(hit.instrument, processing_delay_ms as f64 / 1000.);
+                    events.push(Events::UserHit {
+                        instrument: hit.instrument,
+                        processing_delay: processing_delay_ms as f64 / 1000.,
+                    })
                 }
 
                 // let processing_delay = now - ; // is this better called "input latency"?
@@ -68,23 +85,35 @@ impl Input {
         let processing_delay = 0.; // TODO: solve this for keyboard input, too.
                                    // Right now we don't know the delay between key press and frame start .. we could improve by guessing midway through the previous frame (1/2 frame duration) without any knowledge
         if is_key_pressed(KeyCode::Z) {
-            audio.track_user_hit(Instrument::ClosedHihat, processing_delay);
+            events.push(Events::UserHit {
+                instrument: Instrument::ClosedHihat,
+                processing_delay,
+            });
         }
 
         if is_key_pressed(KeyCode::X) {
-            audio.track_user_hit(Instrument::Snare, processing_delay);
+            events.push(Events::UserHit {
+                instrument: Instrument::Snare,
+                processing_delay,
+            });
         }
 
         if is_key_pressed(KeyCode::C) {
-            audio.track_user_hit(Instrument::Kick, processing_delay);
+            events.push(Events::UserHit {
+                instrument: Instrument::Kick,
+                processing_delay,
+            });
         }
 
         if is_key_pressed(KeyCode::V) {
-            audio.track_user_hit(Instrument::OpenHihat, processing_delay);
+            events.push(Events::UserHit {
+                instrument: Instrument::OpenHihat,
+                processing_delay,
+            });
         }
 
         if is_key_pressed(KeyCode::Space) {
-            audio.toggle_pause();
+            events.push(Events::Pause)
         }
 
         if is_key_pressed(KeyCode::Equal) {
@@ -131,18 +160,18 @@ impl Input {
         // Improve UX here
         // Check if down < 0.5s then go fast? (then can use same key incr.. "Up")
         if is_key_pressed(KeyCode::Up) {
-            audio.set_bpm(audio.get_bpm() + 1.);
+            events.push(Events::ChangeBPM { delta: 1. });
         }
         if is_key_down(KeyCode::Right) {
-            audio.set_bpm(audio.get_bpm() + 1.);
+            events.push(Events::ChangeBPM { delta: 1. });
         }
 
         if is_key_pressed(KeyCode::Down) {
-            audio.set_bpm(audio.get_bpm() - 1.);
+            events.push(Events::ChangeBPM { delta: -1. });
         }
 
         if is_key_down(KeyCode::Left) {
-            audio.set_bpm(audio.get_bpm() - 1.);
+            events.push(Events::ChangeBPM { delta: -1. });
         }
 
         // if is_key_pressed(KeyCode::M) {
@@ -180,7 +209,7 @@ impl Input {
             }
         }
 
-        Ok(())
+        Ok(events)
     }
 }
 

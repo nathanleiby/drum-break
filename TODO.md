@@ -1,26 +1,16 @@
 # TODO
 
+## working on
+
+INPUT EVENTS
+
 ## asap
 
 _what's must-have to make it useful to me?_
 
 - tracking loop accuracy: "perfect" vs "great" vs etc
+  - handle idea of "miss" due to not playing a desired note at all
   - handle beat 0 edge case
-  - mvp: show 'last loop performance' and update it on each loop completion
-  - BREAKDOWN:
-    - [x] review how I'm tracking hits
-    - [x] ensure i record the  `current_clock_tick` timestamp (total beats elapsed ever)
-      - [x] from this, compute the "sequencer loop number" (this is computable from the sequencer timestamp mod loop length)
-    - [x] emit a single print statement to CLI when loop number changes
-    - [x] emit a summary to CLI (UI) of what happened in the last loop (hits, misses, etc)
-    - [x] compute a summary metric based on the above
-      - [ ] write a unit test re: the summary metric
-    - [x] show this metric in the UI
-- Capture EXACT timing of the midi note for use in timing.
-- handle idea of "miss" due to not playing a desired note at all
-- cleanup input UI, which quickly gets noisy
-  -- [x] e.g. hacky is a button to reset -> press "r"
-  -- another idea is "fade out" by age (e.g. just keep last K loops, or actually fade over time until gone by Kth loop)
 
 _what's very important to make it engaging to me?_
 
@@ -31,7 +21,31 @@ _what's very important to make it engaging to me?_
 
 ## soon
 
-- [ ] UserHit model should include real ClockTime and (computed from that) corresponding beat.. this way we can determine "age" of a beat and expire it if needed (from looping perspective). Currently, UserHit is just re-using `Voices` as its data model
+- [..] Capture EXACT timing of the midi note for use in timing.
+  - [..] UserHit model should include real ClockTime and (computed from that) corresponding beat.. this way we can determine "age" of a beat and expire it if needed (from looping perspective). Currently, UserHit is just re-using `Voices` as its data model
+  - high precision input https://github.com/not-fl3/macroquad/issues/1 vs per frame
+    - maybe could PR this? https://github.com/not-fl3/miniquad/issues/117
+    - maybe separate thread for midi is enough, if i capture timing .. I have `raw_input.timestamp` in `midi.rs` .. could compare that vs frame start time
+- (bug) explore triggering
+  - [ ] double triggering of some TD17 notes (e.g. 2x hihat hits or 2x open hihat hits, esp on hard hits?)
+  - [ ] non triggering (hit too soft? event getting dropped?)
+
+## future
+
+- [..] explore Rust GUI options
+  - [..] convert input to Event-based model .. better for new UI layer migration
+  - [ ] egui https://www.egui.rs/ .. https://github.com/optozorax/egui-macroquad
+    - had trouble getting egui-macroquad to build due to audio lib issues. version outdated? tried to pull in file and build locally, but had trouble with that too b/c of macroquad/miniquad version mismatch
+    - `iced` https://lib.rs/crates/iced (.. with `coffee` game engine too? https://github.com/hecrj/coffee .. or not that part, it's 4y old)
+      - input subscription https://www.reddit.com/r/rust/comments/wtzkx6/need_help_iced_subscriptions/ .. rdev has some MacOS permissions [caveats](https://crates.io/crates/rdev)
+      - minimal audio focused app https://github.com/AWBroch/metronome/blob/main/src/main.rs .. could use kira for clock instead of iced's `time::every` which supports this metronome
+        - static audio data to include it binary seems handy
+    - `slint`: https://github.com/slint-ui/slint
+    - try using Tauri and build a web UI
+      - can we have a Rust "engine" (process keyboard/midi events, play sound, etc) with the FE (draw UI, etc)
+- cleanup input UI, which quickly gets noisy
+  - [x] e.g. hacky is a button to reset -> press "r"
+  - another idea is "fade out" by age (e.g. just keep last K loops, or actually fade over time until gone by Kth loop)
 - save all input data
   - when?
     - on exit (click "x")
@@ -41,12 +55,9 @@ _what's very important to make it engaging to me?_
       1. the loop voices itself
       2. the users's input data
       3. worry about visualizing and cleaning later.. this is first pass on session over session data
-- (bug) explore triggering
-  - [ ] double triggering of some TD17 notes (e.g. 2x hihat hits or 2x open hihat hits, esp on hard hits?)
-  - [ ] non triggering (hit too soft? event getting dropped?)
-
-## future
-
+- [ ] unit tests
+  - [ ] consider + document which pieces can be unit tested (and iterated on more effectively than manual testing)
+    - [ ] ex. write unit tests re: the accuracy summary metric
 - [x] log levels that allow easy filtering
 - input improvements
   - [x] support >1 midi value per voice
@@ -68,21 +79,8 @@ _what's very important to make it engaging to me?_
     - [ ] idea: color for each note (e.g. red for bad, green for good .. could also have a color to indicate early/late/miss trends)
   - [ ] since you started (press a button to reset)
   - [ ] all time
-- high precision input https://github.com/not-fl3/macroquad/issues/1 vs per frame
-  - maybe could PR this? https://github.com/not-fl3/miniquad/issues/117
-  - maybe separate thread for midi is enough, if i capture timing .. I have `raw_input.timestamp` in `midi.rs` .. could compare that vs frame start time
 - midi - how does it work?
   - [ ] https://computermusicresource.com/MIDI.Commands.html
-- [ ] explore Rust GUI options
-  - [ ] egui https://www.egui.rs/ .. https://github.com/optozorax/egui-macroquad
-    - had trouble getting egui-macroquad to build due to audio lib issues. version outdated? tried to pull in file and build locally, but had trouble with that too b/c of macroquad/miniquad version mismatch
-    - `iced` https://lib.rs/crates/iced (.. with `coffee` game engine too? https://github.com/hecrj/coffee .. or not that part, it's 4y old)
-      - input subscription https://www.reddit.com/r/rust/comments/wtzkx6/need_help_iced_subscriptions/ .. rdev has some MacOS permissions [caveats](https://crates.io/crates/rdev)
-      - minimal audio focused app https://github.com/AWBroch/metronome/blob/main/src/main.rs .. could use kira for clock instead of iced's `time::every` which supports this metronome
-        - static audio data to include it binary seems handy
-    - `slint`: https://github.com/slint-ui/slint
-    - try using Tauri and build a web UI
-      - can we have a Rust "engine" (process keyboard/midi events, play sound, etc) with the FE (draw UI, etc)
 - [ ] Explore macroquad featureset, including [experimental](https://docs.rs/macroquad/latest/macroquad/experimental/index.html) like state machine and scenes
   - [ ] Also explore community extension https://github.com/ozkriff/awesome-quads
   - [ ] tune config w cvars approach? https://github.com/martin-t/cvars
