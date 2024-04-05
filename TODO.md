@@ -2,13 +2,14 @@
 
 ## working on
 
-INPUT EVENTS
+TODO
 
 ## asap
 
 _what's must-have to make it useful to me?_
 
 - tracking loop accuracy: "perfect" vs "great" vs etc
+  - give partial credit in "% acc" summary for close hits (e.g. 75% of the note)
   - handle idea of "miss" due to not playing a desired note at all
   - handle beat 0 edge case
 

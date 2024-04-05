@@ -45,10 +45,12 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let conf = AppConfig::new()?;
     log::debug!("{:?}", &conf);
 
+    let mut input = Input::new();
+
+    // Setup game state
     // read loops
     let dir_name = process_cli_args();
     let mut loops: Vec<(String, Loop)> = Vec::new();
-
     match read_loops(&dir_name).await {
         Ok(loops_from_dir) => loops = loops_from_dir,
         Err(e) => {
@@ -60,12 +62,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
         }
     }
 
-    let mut ui = UI::new(); // Consider passing in audio and voices here?
-
-    // Setup global game state
-    let mut input = Input::new();
     let mut voices = Voices::new();
     let mut audio = Audio::new(&conf);
+    let mut ui = UI::new();
 
     // debug
     let mut fps_tracker = FPS::new();
