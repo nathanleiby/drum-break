@@ -118,8 +118,11 @@ fn process_events(
                 let dir_name = dir_name.trim_end_matches('/');
                 let file = File::create(format!("{}/loop-{}.json", dir_name, get_time()))?;
                 let mut writer = BufWriter::new(file);
-                // TODO: support loop, saving BPM as well
-                serde_json::to_writer(&mut writer, &voices)?;
+                let my_loop = Loop {
+                    bpm: audio.get_bpm() as usize,
+                    voices: voices.clone(),
+                };
+                serde_json::to_writer(&mut writer, &my_loop)?;
                 writer.flush()?;
             }
             Events::ToggleBeat { row, beat } => {
