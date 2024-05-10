@@ -1,7 +1,10 @@
 use crate::{
     audio::Audio,
     consts::*,
-    score::{compute_accuracy, Accuracy},
+    score::{
+        compute_accuracy_of_single_hit, compute_last_loop_summary,
+        get_desired_timings_by_instrument, get_user_hit_timings_by_instrument, Accuracy,
+    },
     voices::{Instrument, Loop},
     UserHit, Voices,
 };
@@ -47,6 +50,7 @@ impl UI {
         // TODO: render current loop considering audio latency
         draw_status(bpm, current_beat / 2., audio.current_loop(), audio_latency);
 
+        // TODO: refactor to last N loops
         let last_loop_hits = get_last_loop_hits(audio);
         draw_last_loop_summary(&last_loop_hits, &voices, audio_latency);
 
@@ -62,8 +66,8 @@ fn get_last_loop_hits(audio: &mut Audio) -> Vec<UserHit> {
         .user_hits
         .iter()
         .filter(|hit| {
-            let loop_num_forbeat = (hit.clock_tick / BEATS_PER_LOOP) as i32;
-            loop_num_forbeat == audio.current_loop() - 1
+            let loop_num_for_beat = (hit.clock_tick / BEATS_PER_LOOP) as i32;
+            loop_num_for_beat == audio.current_loop() - 1
         })
         .map(|hit| hit.clone())
         .collect::<Vec<UserHit>>();
@@ -152,17 +156,6 @@ fn draw_beat_grid(voices: &Voices) {
     }
 }
 
-fn get_user_hit_timings_by_instrument(
-    user_hits: &Vec<UserHit>,
-    instrument: Instrument,
-) -> Vec<f64> {
-    user_hits
-        .iter()
-        .filter(|hit| hit.instrument == instrument)
-        .map(|hit| hit.beat())
-        .collect::<Vec<f64>>()
-}
-
 fn draw_user_hits(user_hits: &Vec<UserHit>, desired_hits: &Voices, audio_latency: f64) {
     // filter user hits to just closed hihat
     let closed_hihat_notes = get_user_hit_timings_by_instrument(user_hits, Instrument::ClosedHihat);
@@ -190,8 +183,7 @@ fn draw_user_hits(user_hits: &Vec<UserHit>, desired_hits: &Voices, audio_latency
 }
 
 fn draw_last_loop_summary(user_hits: &Vec<UserHit>, desired_hits: &Voices, audio_latency: f64) {
-    let mut total_score: usize = 0;
-    let mut total_notes: usize = 0;
+    let summary_data = compute_last_loop_summary(user_hits, desired_hits, audio_latency);
 
     let instruments = [
         Instrument::ClosedHihat,
@@ -200,33 +192,31 @@ fn draw_last_loop_summary(user_hits: &Vec<UserHit>, desired_hits: &Voices, audio
         Instrument::OpenHihat,
     ];
     for (idx, instrument) in instruments.iter().enumerate() {
-        // get accuracy of hihat
-        let user_timings = get_user_hit_timings_by_instrument(user_hits, *instrument);
-        let desired_timings = get_desired_timings_by_instrument(instrument, desired_hits);
+        let num_correct = match instrument {
+            Instrument::ClosedHihat => summary_data.hihat.num_correct,
+            Instrument::Snare => summary_data.snare.num_correct,
+            Instrument::Kick => summary_data.kick.num_correct,
+            Instrument::OpenHihat => summary_data.open_hihat.num_correct,
+        };
+        let num_notes = match instrument {
+            Instrument::ClosedHihat => summary_data.hihat.num_notes,
+            Instrument::Snare => summary_data.snare.num_notes,
+            Instrument::Kick => summary_data.kick.num_notes,
+            Instrument::OpenHihat => summary_data.open_hihat.num_notes,
+        };
 
-        // compare that to desired hits for hihat
-        let mut note_idx: i32 = 0;
-        let mut num_correct: usize = 0;
-        for note in user_timings.iter() {
-            let (acc, _) = compute_accuracy(note + audio_latency, desired_timings);
-            if acc == Accuracy::Correct {
-                num_correct += 1;
-            }
-            note_idx += 1;
-        }
-
-        // Labels in top-left of grid
         draw_text(
-            format!("{num_correct} / {:?}", desired_timings.len()).as_str(),
+            format!("{num_correct} / {:?}", num_notes).as_str(),
             (GRID_LEFT_X + GRID_WIDTH + 32.) as f32,
             (GRID_TOP_Y + ROW_HEIGHT * (idx as f64 + 0.5)) as f32,
             20.0,
             DARKGRAY,
         );
-
-        total_score += num_correct;
-        total_notes += desired_timings.len();
     }
+
+    let totals = summary_data.total();
+    let total_score = totals.num_correct;
+    let total_notes = totals.num_notes;
 
     // Summary over all voices
     draw_text(
@@ -238,7 +228,7 @@ fn draw_last_loop_summary(user_hits: &Vec<UserHit>, desired_hits: &Voices, audio
     );
 
     // TODO: div by zero issue -> shows NaN
-    let score_ratio = total_score as f64 / total_notes as f64;
+    let score_ratio = totals.ratio();
     draw_circle(
         (GRID_LEFT_X + GRID_WIDTH + 32.) as f32,
         (GRID_TOP_Y + ROW_HEIGHT * ((instruments.len() + 1) as f64 + 0.5)) as f32,
@@ -257,19 +247,6 @@ fn draw_last_loop_summary(user_hits: &Vec<UserHit>, desired_hits: &Voices, audio
         64.,
         WHITE,
     );
-}
-
-fn get_desired_timings_by_instrument<'a>(
-    instrument: &Instrument,
-    desired_hits: &'a Voices,
-) -> &'a Vec<f64> {
-    let desired_timings = match instrument {
-        Instrument::ClosedHihat => &desired_hits.closed_hihat,
-        Instrument::Snare => &desired_hits.snare,
-        Instrument::Kick => &desired_hits.kick,
-        Instrument::OpenHihat => &desired_hits.open_hihat,
-    };
-    desired_timings
 }
 
 fn draw_position_line(current_beat: f64) {
@@ -297,7 +274,7 @@ fn draw_note(beats_offset: f64, row: usize) {
 fn draw_user_hit(user_beat: f64, row: usize, audio_latency: f64, desired_hits: &Vec<f64>) {
     let user_beat_with_latency = user_beat + audio_latency;
 
-    let (acc, is_next_loop) = compute_accuracy(user_beat_with_latency, desired_hits);
+    let (acc, is_next_loop) = compute_accuracy_of_single_hit(user_beat_with_latency, desired_hits);
 
     let beat_duration = 0.1 as f64; // make it thin for easier overlap, for now
 

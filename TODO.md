@@ -21,10 +21,15 @@ _what's very important to make it engaging to me?_
 - quick start + gets you into flow
 - "golden" practice mode (play it perfectly N times and then speeds up by X bpm)
   - you can tweak knobs for shiny-ness of gold (N and X)
+    - MVP:
+      - last loop
+      - last 5 loops
+      - since you started session
 - capture progress over time (graph it, etc)
 
 ## soon
 
+- [ ] refactor so i don't need explicit branches for each of 4 instruments everywhere..
 - [..] Capture EXACT timing of the midi note for use in timing.
   - [..] UserHit model should include real ClockTime and (computed from that) corresponding beat.. this way we can determine "age" of a beat and expire it if needed (from looping perspective). Currently, UserHit is just re-using `Voices` as its data model
   - high precision input https://github.com/not-fl3/macroquad/issues/1 vs per frame
