@@ -12,6 +12,9 @@ _what's must-have to make it useful to me?_
   - give partial credit in "% acc" summary for close hits (e.g. 75% of the note)
   - handle idea of "miss" due to not playing a desired note at all
   - handle beat 0 edge case
+  - add simple adjustment for tolerance (i.e. '% of beat' offset allowed for perfect vs great vs miss)
+    - could be a slider. could be config file adjustment
+    - see `CORRECT_MARGIN` in `score.rs`
 
 _what's very important to make it engaging to me?_
 
@@ -37,12 +40,15 @@ _what's very important to make it engaging to me?_
   - [..] convert input to Event-based model .. better for new UI layer migration
   - [ ] egui https://www.egui.rs/ .. https://github.com/optozorax/egui-macroquad
     - had trouble getting egui-macroquad to build due to audio lib issues. version outdated? tried to pull in file and build locally, but had trouble with that too b/c of macroquad/miniquad version mismatch
-    - `iced` https://lib.rs/crates/iced (.. with `coffee` game engine too? https://github.com/hecrj/coffee .. or not that part, it's 4y old)
+    - [..] `iced` https://lib.rs/crates/iced (.. with `coffee` game engine too? https://github.com/hecrj/coffee .. or not that part, it's 4y old)
+      - custom widget for the sequencer
+        - https://github.com/iced-rs/iced/blob/master/examples/custom_widget/src/main.rs`
+        - https://discourse.iced.rs/t/custom-widget-for-chess-board/325
       - input subscription https://www.reddit.com/r/rust/comments/wtzkx6/need_help_iced_subscriptions/ .. rdev has some MacOS permissions [caveats](https://crates.io/crates/rdev)
       - minimal audio focused app https://github.com/AWBroch/metronome/blob/main/src/main.rs .. could use kira for clock instead of iced's `time::every` which supports this metronome
         - static audio data to include it binary seems handy
     - `slint`: https://github.com/slint-ui/slint
-    - try using Tauri and build a web UI
+    - [..] try using Tauri and build a web UI
       - can we have a Rust "engine" (process keyboard/midi events, play sound, etc) with the FE (draw UI, etc)
 - cleanup input UI, which quickly gets noisy
   - [x] e.g. hacky is a button to reset -> press "r"
@@ -102,7 +108,7 @@ _what's very important to make it engaging to me?_
   - [ ] global
   - [ ] per voice (inl metronome)
 - [..] bundle so it can be shared
-  - [ ] as DMG?
+  - [ ] as DMG? via [Tauri distribution](https://tauri.app/v1/guides/distribution/publishing)?
   - [..] include loops JSON data, or fetch them remotely (e.g. from public GH link)
   - [..] include audio data so we can play sounds?
     - [ ] `include_bytes!` https://doc.rust-lang.org/std/macro.include_bytes.html
