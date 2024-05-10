@@ -36,6 +36,8 @@ _what's very important to make it engaging to me?_
 
 ## future
 
+- [ ] easily import midi
+  - [ ] e.g. from Groove Scribe
 - [..] explore Rust GUI options
   - [..] convert input to Event-based model .. better for new UI layer migration
   - [ ] egui https://www.egui.rs/ .. https://github.com/optozorax/egui-macroquad
