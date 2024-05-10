@@ -187,7 +187,7 @@ impl Input {
     }
 }
 
-fn get_midi_as_user_hits(midi_input: &mut MidiInput) -> Vec<UserHit> {
+fn get_midi_as_user_hits(midi_input: &MidiInput) -> Vec<UserHit> {
     let mut out: Vec<UserHit> = vec![];
 
     // midi device: "MPK Mini Mk II"
