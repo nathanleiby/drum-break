@@ -60,7 +60,7 @@ impl MidiInput {
     pub fn get_pressed_buttons(&self) -> Vec<MidiInputDataRaw> {
         let mut pressed = Vec::new();
         let mut raw_inputs = self.raw_inputs.lock().unwrap();
-        for (id, raw_input) in raw_inputs.iter_mut() {
+        for (_id, raw_input) in raw_inputs.iter_mut() {
             if raw_input.is_note_on() {
                 pressed.push(*raw_input);
             }

@@ -1,15 +1,14 @@
-use std::{collections::HashSet, error::Error, process, result};
+use std::{collections::HashSet};
 
 use macroquad::prelude::*;
 
 use crate::{
-    audio::Audio,
-    config::{AppConfig, InputConfigMidi},
+    config::{InputConfigMidi},
     consts::*,
     midi::MidiInput,
     time::current_time_millis,
     voices::Instrument,
-    UserHit, Voices,
+    UserHit,
 };
 
 pub enum Events {
@@ -55,7 +54,7 @@ impl Input {
         let mut events: Vec<Events> = vec![];
 
         // TODO(future): get the current clock time AND audio clock time at the start of a frame, and use that for all downstream calcs
-        let now_ms = current_time_millis();
+        let _now_ms = current_time_millis();
         match &mut self.midi_input {
             Some(midi_input) => {
                 let hits = get_midi_as_user_hits(midi_input);
