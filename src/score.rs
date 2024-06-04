@@ -84,6 +84,7 @@ pub fn compute_accuracy_of_single_hit(
     }
 }
 
+#[derive(Debug, Eq, PartialEq)]
 pub struct ScoreTracker {
     pub num_correct: usize,
     pub num_notes: usize,
@@ -216,10 +217,22 @@ pub fn compute_last_loop_summary(
 mod tests {
     use std::f64::EPSILON;
 
+    use log::debug;
+
     use crate::{
         consts::BEATS_PER_LOOP,
-        score::{compute_accuracy_of_single_hit, Accuracy, CORRECT_MARGIN, MISS_MARGIN},
+        score::{
+            compute_accuracy_of_single_hit, compute_last_loop_summary, Accuracy, ScoreTracker,
+            CORRECT_MARGIN, MISS_MARGIN,
+        },
+        voices::Instrument,
+        UserHit,
     };
+
+    //
+    // compute_accuracy_of_single_hit
+    //
+
     #[test]
     fn it_computes_accuracy_against_one_note() {
         let compute_accuracy_legacy = |user_beat_with_latency: f64, desired_hits: &Vec<f64>| {
@@ -291,5 +304,48 @@ mod tests {
         let result =
             compute_accuracy_of_single_hit(BEATS_PER_LOOP - 2. * CORRECT_MARGIN, &vec![0.0]);
         assert_eq!(result, (Accuracy::Early, true));
+    }
+
+    //
+    // compute_last_loop_summary
+    //
+
+    #[test]
+    fn it_computes_last_loop_summary_for_correct_user_htis() {
+        let user_hits = vec![UserHit::new(Instrument::Kick, 0.0)];
+        let desired_hits = crate::voices::Voices {
+            closed_hihat: vec![],
+            snare: vec![],
+            kick: vec![0.0],
+            open_hihat: vec![],
+        };
+
+        let result = compute_last_loop_summary(&user_hits, &desired_hits, 0.0);
+        assert_eq!(
+            result.kick,
+            ScoreTracker {
+                num_correct: 1,
+                num_notes: 1,
+            }
+        );
+    }
+
+    #[test]
+    fn it_computes_last_loop_summary_for_incorrect_user_hits() {
+        let user_hits = vec![UserHit::new(Instrument::Kick, 0.5)];
+        let desired_hits = crate::voices::Voices {
+            closed_hihat: vec![],
+            snare: vec![],
+            kick: vec![0.0],
+            open_hihat: vec![],
+        };
+        let result = compute_last_loop_summary(&user_hits, &desired_hits, 0.0);
+        assert_eq!(
+            result.kick,
+            ScoreTracker {
+                num_correct: 0,
+                num_notes: 1,
+            }
+        );
     }
 }

@@ -2,7 +2,9 @@
 
 ## working on
 
-TODO
+- [ ] unit tests
+  - [ ] consider + document which pieces can be unit tested (and iterated on more effectively than manual testing)
+    - [ ] ex. write unit tests re: the accuracy summary metric
 
 ## asap
 
@@ -41,6 +43,15 @@ _what's very important to make it engaging to me?_
 
 ## future
 
+- save all input data
+  - when?
+    - on exit (click "x")
+    - on "save" (press "s" explicitly)
+  - save user timing data to a file (e.g. start with flatfile, someday a DB)
+    - e.g. dump to a JSON
+      1. the loop voices itself
+      2. the users's input data
+      3. worry about visualizing and cleaning later.. this is first pass on session over session data
 - [ ] easily import midi
   - [ ] e.g. from Groove Scribe
 - [..] explore Rust GUI options
@@ -60,18 +71,6 @@ _what's very important to make it engaging to me?_
 - cleanup input UI, which quickly gets noisy
   - [x] e.g. hacky is a button to reset -> press "r"
   - another idea is "fade out" by age (e.g. just keep last K loops, or actually fade over time until gone by Kth loop)
-- save all input data
-  - when?
-    - on exit (click "x")
-    - on "save" (press "s" explicitly)
-  - save user timing data to a file (e.g. start with flatfile, someday a DB)
-    - e.g. dump to a JSON
-      1. the loop voices itself
-      2. the users's input data
-      3. worry about visualizing and cleaning later.. this is first pass on session over session data
-- [ ] unit tests
-  - [ ] consider + document which pieces can be unit tested (and iterated on more effectively than manual testing)
-    - [ ] ex. write unit tests re: the accuracy summary metric
 - [x] log levels that allow easy filtering
 - input improvements
   - [x] support >1 midi value per voice
