@@ -2,8 +2,7 @@ use crate::{
     audio::Audio,
     consts::*,
     score::{
-        compute_accuracy_of_single_hit, compute_last_loop_summary,
-        get_desired_timings_by_instrument, get_user_hit_timings_by_instrument, Accuracy,
+        compute_accuracy_of_single_hit, compute_last_loop_summary, get_user_hit_timings_by_instrument, Accuracy,
     },
     voices::{Instrument, Loop},
     UserHit, Voices,

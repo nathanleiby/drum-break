@@ -217,7 +217,7 @@ pub fn compute_last_loop_summary(
 mod tests {
     use std::f64::EPSILON;
 
-    use log::debug;
+    
 
     use crate::{
         consts::BEATS_PER_LOOP,
