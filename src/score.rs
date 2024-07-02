@@ -395,14 +395,9 @@ mod tests {
     fn it_computes_loop_performance_for_voice() {
         let user_hits = vec![0.5, 0.6, 0.8];
         let desired_hits = vec![0.0, 0.5, 1.0];
-        let loop_start_beat = 0.;
         let loop_current_beat = 4.;
-        let result = compute_loop_performance_for_voice(
-            &user_hits,
-            &desired_hits,
-            loop_start_beat,
-            loop_current_beat,
-        );
+        let result =
+            compute_loop_performance_for_voice(&user_hits, &desired_hits, loop_current_beat);
         assert_eq!(
             result,
             vec![Accuracy::Miss, Accuracy::Correct, Accuracy::Early]
