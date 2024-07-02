@@ -1,3 +1,9 @@
+/*
+  Computes score by comparing timings of user's hits vs desired hits.
+
+  This logic is pure, so it can be iterated independently of other game logic or audio system.
+*/
+
 use crate::{
     consts::BEATS_PER_LOOP,
     voices::{Instrument, Voices},
@@ -216,8 +222,6 @@ pub fn compute_last_loop_summary(
 #[cfg(test)]
 mod tests {
     use std::f64::EPSILON;
-
-    
 
     use crate::{
         consts::BEATS_PER_LOOP,

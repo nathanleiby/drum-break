@@ -1,3 +1,7 @@
+/*
+    Generic FPS tracker for Macroquad. For debugging only.
+*/
+
 use std::collections::VecDeque;
 
 use macroquad::prelude::*;

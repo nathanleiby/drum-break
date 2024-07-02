@@ -51,6 +51,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     // read loops
     let dir_name = process_cli_args();
     let mut loops: Vec<(String, Loop)> = Vec::new();
+    // TODO: does this need to be async still?
     match read_loops(&dir_name).await {
         Ok(loops_from_dir) => loops = loops_from_dir,
         Err(e) => {
@@ -69,6 +70,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     // debug
     let mut fps_tracker = FPS::new();
 
+    // gameplay loop
     loop {
         // process input
         let events = input.process();
@@ -87,6 +89,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     }
 }
 
+/// update application state based on events (that came from user input)
 fn process_events(
     voices: &mut Voices,
     audio: &mut Audio,

@@ -1,14 +1,14 @@
-use std::{collections::HashSet};
+/*
+  Capture user input (keyboard, midi) and convert it into events.
+*/
+
+use std::collections::HashSet;
 
 use macroquad::prelude::*;
 
 use crate::{
-    config::{InputConfigMidi},
-    consts::*,
-    midi::MidiInput,
-    time::current_time_millis,
-    voices::Instrument,
-    UserHit,
+    config::InputConfigMidi, consts::*, midi::MidiInput, time::current_time_millis,
+    voices::Instrument, UserHit,
 };
 
 pub enum Events {
@@ -50,6 +50,7 @@ impl Input {
         Self { midi_input }
     }
 
+    /// convert any user input from the last frame into Events
     pub fn process(self: &mut Self) -> Vec<Events> {
         let mut events: Vec<Events> = vec![];
 
@@ -62,7 +63,7 @@ impl Input {
                 // for each hit, calculate the processing delay and correct the clock time
                 for hit in &hits {
                     // let processing_delay_ms = now_ms - hit.clock_tick as u128;
-                    /// TODO: needs work
+                    //// TODO: needs work
                     let processing_delay_ms = 0;
                     events.push(Events::UserHit {
                         instrument: hit.instrument,

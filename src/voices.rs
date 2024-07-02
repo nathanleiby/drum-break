@@ -1,3 +1,6 @@
+/*
+  Data structures describing the notes to be played on each instrument.
+*/
 use std::error::Error;
 
 use macroquad::file::load_file;
@@ -18,7 +21,7 @@ pub enum Instrument {
     // Crash,
 }
 
-/// Voices represents the notes to be played on each instrument.
+/// Voice represents the notes to be played on an instrument.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Voice {
     pub instrument: Instrument,
@@ -82,6 +85,7 @@ impl Voices {
     }
 }
 
+/// Loop is the full information required to play a loop. It can be read/written to a file.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Loop {
     pub bpm: usize,

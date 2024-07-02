@@ -1,8 +1,16 @@
+/*
+  Display the UI.
+
+  The UI is built in Macroquad's UI system, which is a simple immediate mode GUI system.
+  Mostly, we draw lines and boxes.
+  However, we also make use of EGUI for some items like the "choosing a loop".
+*/
 use crate::{
     audio::Audio,
     consts::*,
     score::{
-        compute_accuracy_of_single_hit, compute_last_loop_summary, get_user_hit_timings_by_instrument, Accuracy,
+        compute_accuracy_of_single_hit, compute_last_loop_summary,
+        get_user_hit_timings_by_instrument, Accuracy,
     },
     voices::{Instrument, Loop},
     UserHit, Voices,

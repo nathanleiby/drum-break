@@ -2,9 +2,12 @@
 
 ## working on
 
-- [ ] unit tests
-  - [ ] consider + document which pieces can be unit tested (and iterated on more effectively than manual testing)
-    - [ ] ex. write unit tests re: the accuracy summary metric
+- [ ] "golden" practice mode (play it perfectly N times and then speeds up by X bpm)
+  - you can tweak knobs for shiny-ness of gold (N and X)
+    - MVP:
+      - last loop
+      - last 5 loops
+      - since you started session
 
 ## asap
 
@@ -32,6 +35,14 @@ _what's very important to make it engaging to me?_
 ## soon
 
 - [ ] refactor so i don't need explicit branches for each of 4 instruments everywhere..
+      e.g. in `voices.rs`, moving from `Voices` to `Voice`
+      e.g. for `config.rs`:
+
+  ```
+  // TODO: Use a hashmap of {instrument : HashSet } instead of hard-coded list of instruments
+  // type GeneralizedInputConfigMidi = HashMap<Instrument, HashSet<u8>>;
+  ```
+
 - [..] Capture EXACT timing of the midi note for use in timing.
   - [..] UserHit model should include real ClockTime and (computed from that) corresponding beat.. this way we can determine "age" of a beat and expire it if needed (from looping perspective). Currently, UserHit is just re-using `Voices` as its data model
   - high precision input https://github.com/not-fl3/macroquad/issues/1 vs per frame
@@ -43,6 +54,9 @@ _what's very important to make it engaging to me?_
 
 ## future
 
+- [ ] unit tests
+  - [ ] consider + document which pieces can be unit tested (and iterated on more effectively than manual testing)
+    - [ ] ex. write unit tests re: the accuracy summary metric
 - save all input data
   - when?
     - on exit (click "x")

@@ -35,6 +35,10 @@ impl UserHit {
     }
 }
 
+/// Audio is the audio player and tracks the user's hits in relation to the audio timing.
+///
+/// These two responsibilities co-exist so that the audio player's subtle timing issues
+/// can be measured and corrected for.
 pub struct Audio {
     manager: AudioManager<DefaultBackend>,
     clock: ClockHandle,
@@ -175,6 +179,7 @@ impl Audio {
         }
     }
 
+    /// saves a user's hits, so they can be displayed and checked for accuracy
     pub fn track_user_hit(self: &mut Self, instrument: Instrument, processing_delay_s: f64) {
         // convert processing delay to ticks, based on BPM
         let ticks_per_second = 1. / self.get_seconds_per_tick();
@@ -202,6 +207,7 @@ impl Audio {
         );
     }
 
+    /// allows for hitting a single key repeatedly on the heard beat to calibrate the audio latency
     pub fn track_for_calibration(self: &mut Self) -> f64 {
         self.calibration_input.push_back(self.current_beat());
 
@@ -236,6 +242,7 @@ impl Audio {
     }
 }
 
+/// schedules notes for a single sound to be played between last_scheduled_tick and tick_to_schedule
 async fn schedule_audio(
     notes: &Vec<f64>,
     sound_path: &str,
@@ -268,6 +275,7 @@ async fn schedule_audio(
     Ok(())
 }
 
+/// schedules a single note to be played at a specific tick
 async fn schedule_note(
     note: &f64,
     loop_num: i32,
@@ -281,6 +289,7 @@ async fn schedule_note(
     let sound = StaticSoundData::from_cursor(
         Cursor::new(f),
         match sound_path {
+            // TODO: why are we playing hihat sound more quietly?
             "res/sounds/open-hihat.wav" => StaticSoundSettings::new().volume(0.5),
             _ => StaticSoundSettings::new(),
         }

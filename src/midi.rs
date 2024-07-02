@@ -1,4 +1,8 @@
-// Thanks to: https://github.com/TanTanDev/midi_game
+/*
+ Connect to midi device. Process midi input.
+
+ Thanks to: https://github.com/TanTanDev/midi_game
+*/
 
 use midir;
 use std::collections::HashMap;
