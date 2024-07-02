@@ -17,7 +17,7 @@ use crate::{
     UserHit, Voices,
 };
 
-use macroquad::{prelude::*, ui::*};
+use macroquad::{audio, prelude::*, ui::*};
 
 const LINE_COLOR: Color = DARKGRAY;
 
@@ -53,13 +53,12 @@ impl UI {
         clear_background(BACKGROUND_COLOR);
         draw_beat_grid(voices);
         draw_user_hits(&audio.user_hits, &voices, audio_latency);
-        let loop_start_beat = current_beat - current_beat % BEATS_PER_LOOP;
         let loop_last_completed_beat = current_beat - MISS_MARGIN;
+        let current_loop_hits = get_hits_from_nth_loop(&audio.user_hits, audio.current_loop());
         draw_note_successes(
-            &audio.user_hits,
+            &current_loop_hits,
             &voices,
             audio_latency,
-            loop_start_beat,
             loop_last_completed_beat,
         );
         draw_position_line(current_beat + audio_latency);
@@ -78,13 +77,13 @@ impl UI {
     }
 }
 
-// TODO: include hits from just before start of loop (back to 0 - MISS), since those could be early or on-time hits
-fn get_hits_from_nth_loop(user_hits: &Vec<UserHit>, loop_idx: i32) -> Vec<UserHit> {
+fn get_hits_from_nth_loop(user_hits: &Vec<UserHit>, desired_loop_idx: i32) -> Vec<UserHit> {
     let last_loop_hits: Vec<UserHit> = user_hits
         .iter()
         .filter(|hit| {
-            let loop_num_for_beat = (hit.clock_tick / BEATS_PER_LOOP) as i32;
-            loop_num_for_beat == loop_idx
+            // include hits from just before start of loop (back to 0 - MISS), since those could be early or on-time hits
+            let loop_num_for_hit = ((hit.clock_tick + MISS_MARGIN) / BEATS_PER_LOOP) as i32;
+            loop_num_for_hit == desired_loop_idx
         })
         .map(|hit| hit.clone())
         .collect::<Vec<UserHit>>();
@@ -204,7 +203,6 @@ fn draw_note_successes(
     user_hits: &Vec<UserHit>,
     desired_hits: &Voices,
     audio_latency: f64,
-    loop_start_beat: f64,
     loop_current_beat: f64,
 ) {
     // filter user hits to just closed hihat
@@ -222,7 +220,6 @@ fn draw_note_successes(
     let loop_perf = compute_loop_performance_for_voice(
         &closed_hihat_notes_w_latency,
         &desired_hits.closed_hihat,
-        loop_start_beat,
         loop_current_beat,
     );
     let mut idx = 0;

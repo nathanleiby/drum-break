@@ -176,7 +176,6 @@ pub fn get_desired_timings_by_instrument<'a>(
 pub fn compute_loop_performance_for_voice(
     user_hits: &Vec<f64>,
     desired_hits: &Vec<f64>,
-    loop_start_beat: f64,
     loop_current_beat: f64,
 ) -> Vec<Accuracy> {
     let mut out = Vec::new();
@@ -191,11 +190,6 @@ pub fn compute_loop_performance_for_voice(
         // find the first user hit that a non-miss
         let mut was_miss = true;
         for user_hit in user_hits {
-            // ignore hits that weren't for beats from this loop
-            if *user_hit < loop_start_beat - MISS_MARGIN {
-                continue;
-            }
-
             let (acc, _) = compute_accuracy_of_single_hit(*user_hit, &vec![*desired_hit]);
             if acc != Accuracy::Miss {
                 was_miss = false;
