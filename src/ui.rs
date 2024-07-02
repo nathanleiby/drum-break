@@ -10,7 +10,7 @@ use crate::{
     consts::*,
     score::{
         compute_accuracy_of_single_hit, compute_last_loop_summary,
-        get_user_hit_timings_by_instrument, Accuracy,
+        compute_loop_performance_for_voice, get_user_hit_timings_by_instrument, Accuracy,
     },
     voices::{Instrument, Loop},
     UserHit, Voices,
@@ -52,6 +52,7 @@ impl UI {
         clear_background(BACKGROUND_COLOR);
         draw_beat_grid(voices);
         draw_user_hits(&audio.user_hits, &voices, audio_latency);
+        draw_note_successes(&audio.user_hits, &voices, audio_latency);
         draw_position_line(current_beat + audio_latency);
 
         // TODO: render current loop considering audio latency
@@ -189,6 +190,45 @@ fn draw_user_hits(user_hits: &Vec<UserHit>, desired_hits: &Voices, audio_latency
     }
 }
 
+// TODO: Only draw up to the last completed beat
+fn draw_note_successes(user_hits: &Vec<UserHit>, desired_hits: &Voices, audio_latency: f64) {
+    // filter user hits to just closed hihat
+    let closed_hihat_notes = get_user_hit_timings_by_instrument(user_hits, Instrument::ClosedHihat);
+    // let snare_notes = get_user_hit_timings_by_instrument(user_hits, Instrument::Snare);
+    // let kick_notes = get_user_hit_timings_by_instrument(user_hits, Instrument::Kick);
+    // let open_hihat_notes = get_user_hit_timings_by_instrument(user_hits, Instrument::OpenHihat);
+
+    // add audio_latency to each note
+    let closed_hihat_notes_w_latency = closed_hihat_notes
+        .iter()
+        .map(|note| note + audio_latency)
+        .collect::<Vec<f64>>();
+
+    let loop_perf = compute_loop_performance_for_voice(
+        &closed_hihat_notes_w_latency,
+        &desired_hits.closed_hihat,
+    );
+    let mut idx = 0;
+    for note in desired_hits.closed_hihat.iter() {
+        draw_note_success(*note, 0, loop_perf[idx]);
+        idx += 1;
+    }
+
+    // for note in snare_notes.iter() {
+    //     draw_user_hit(*note, 1, audio_latency, &desired_hits.snare);
+    // }
+
+    // // same kick notes but with a lead up to each note
+    // for note in kick_notes.iter() {
+    //     draw_user_hit(*note, 2, audio_latency, &desired_hits.kick);
+    // }
+
+    // // same kick notes but with a lead up to each note
+    // for note in open_hihat_notes.iter() {
+    //     draw_user_hit(*note, 3, audio_latency, &desired_hits.open_hihat);
+    // }
+}
+
 fn draw_last_loop_summary(user_hits: &Vec<UserHit>, desired_hits: &Voices, audio_latency: f64) {
     let summary_data = compute_last_loop_summary(user_hits, desired_hits, audio_latency);
 
@@ -275,6 +315,27 @@ fn draw_note(beats_offset: f64, row: usize) {
         BEAT_WIDTH_PX * beat_duration - BEAT_PADDING,
         BEAT_WIDTH_PX - BEAT_PADDING,
         NOTE_COLOR,
+    );
+}
+
+fn draw_note_success(beats_offset: f64, row: usize, acc: Accuracy) {
+    let beat_duration = 1 as f64;
+    let x = GRID_LEFT_X + beats_offset * BEAT_WIDTH_PX;
+    let y = GRID_TOP_Y + row as f64 * ROW_HEIGHT;
+    let mut color = match acc {
+        Accuracy::Early => ORANGE,
+        Accuracy::Late => PURPLE,
+        Accuracy::Correct => GREEN,
+        Accuracy::Miss => RED,
+    };
+    color.a = 0.5;
+
+    draw_rectangle_f64(
+        x + BEAT_PADDING / 2.,
+        y + BEAT_PADDING / 2.,
+        BEAT_WIDTH_PX * beat_duration - BEAT_PADDING,
+        BEAT_WIDTH_PX - BEAT_PADDING,
+        color,
     );
 }
 

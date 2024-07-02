@@ -10,7 +10,7 @@ use crate::{
     UserHit,
 };
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub enum Accuracy {
     Correct,
     Early,
@@ -169,6 +169,34 @@ pub fn get_desired_timings_by_instrument<'a>(
     desired_timings
 }
 
+/// given timings for desired hits vs user hits, gives an accuracy for each desired hit
+/// the accuracy is based on the first user hit that's within "non miss" range of a desired hit
+pub fn compute_loop_performance_for_voice(
+    user_hits: &Vec<f64>,
+    desired_hits: &Vec<f64>,
+) -> Vec<Accuracy> {
+    let mut out = Vec::new();
+
+    // compare that to desired hits for hihat
+    for desired_hit in desired_hits {
+        // find the first user hit that a non-miss
+        let mut was_miss = true;
+        for user_hit in user_hits {
+            let (acc, _) = compute_accuracy_of_single_hit(*user_hit, &vec![*desired_hit]);
+            if acc != Accuracy::Miss {
+                was_miss = false;
+                out.push(acc);
+                break;
+            }
+        }
+        if was_miss {
+            out.push(Accuracy::Miss);
+        }
+    }
+
+    out
+}
+
 pub fn compute_last_loop_summary(
     user_hits: &Vec<UserHit>,
     desired_hits: &Voices,
@@ -232,6 +260,8 @@ mod tests {
         voices::Instrument,
         UserHit,
     };
+
+    use super::compute_loop_performance_for_voice;
 
     //
     // compute_accuracy_of_single_hit
@@ -350,6 +380,17 @@ mod tests {
                 num_correct: 0,
                 num_notes: 1,
             }
+        );
+    }
+
+    #[test]
+    fn it_computes_loop_performance_for_voice() {
+        let user_hits = vec![0.5, 0.6, 0.8];
+        let desired_hits = vec![0.0, 0.5, 1.0];
+        let result = compute_loop_performance_for_voice(&user_hits, &desired_hits);
+        assert_eq!(
+            result,
+            vec![Accuracy::Miss, Accuracy::Correct, Accuracy::Early]
         );
     }
 }

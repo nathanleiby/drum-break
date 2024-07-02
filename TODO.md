@@ -2,7 +2,8 @@
 
 ## working on
 
-- handle idea of "miss" due to not playing a desired note at all -- probably a change to in `score.rs`
+- [..] handle idea of "miss" due to not playing a desired note at all -- probably a change to in `score.rs`
+  - per note accuracy added for just closed_hihat for the moment..
 
 ## asap
 
