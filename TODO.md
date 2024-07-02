@@ -2,12 +2,7 @@
 
 ## working on
 
-- [ ] "golden" practice mode (play it perfectly N times and then speeds up by X bpm)
-  - you can tweak knobs for shiny-ness of gold (N and X)
-    - MVP:
-      - last loop
-      - last 5 loops
-      - since you started session
+- handle idea of "miss" due to not playing a desired note at all -- probably a change to in `score.rs`
 
 ## asap
 
@@ -15,8 +10,7 @@ _what's must-have to make it useful to me?_
 
 - tracking loop accuracy: "perfect" vs "great" vs etc
   - give partial credit in "% acc" summary for close hits (e.g. 75% of the note)
-  - handle idea of "miss" due to not playing a desired note at all
-  - handle beat 0 edge case
+  - handle beat 0 edge case -- q: is this working already?
   - add simple adjustment for tolerance (i.e. '% of beat' offset allowed for perfect vs great vs miss)
     - could be a slider. could be config file adjustment
     - see `CORRECT_MARGIN` in `score.rs`
@@ -24,12 +18,10 @@ _what's must-have to make it useful to me?_
 _what's very important to make it engaging to me?_
 
 - quick start + gets you into flow
-- "golden" practice mode (play it perfectly N times and then speeds up by X bpm)
-  - you can tweak knobs for shiny-ness of gold (N and X)
-    - MVP:
-      - last loop
-      - last 5 loops
-      - since you started session
+- [ ] "golden" practice mode (play it perfectly N times and then speeds up by X bpm)
+  - you can tweak knobs for shiny-ness of gold (N and X) -- could be consts at start
+    - idea: try https://docs.rs/cvars/latest/cvars/ to allow changing these in the UI during development
+  - MVP UX: display stats for (last loop, last 5 loops, since you started session)
 - capture progress over time (graph it, etc)
 
 ## soon
