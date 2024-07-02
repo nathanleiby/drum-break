@@ -30,6 +30,13 @@ const BACKGROUND_COLOR: Color = Color {
     a: 1.0,
 };
 
+const ALL_INSTRUMENTS: [Instrument; 4] = [
+    Instrument::ClosedHihat,
+    Instrument::Snare,
+    Instrument::Kick,
+    Instrument::OpenHihat,
+];
+
 pub struct UI {}
 
 impl UI {
@@ -66,9 +73,10 @@ impl UI {
         // TODO: render current loop considering audio latency
         draw_status(bpm, current_beat / 2., audio.current_loop(), audio_latency);
 
-        // TODO: refactor to last N loops
-        let last_loop_hits = get_hits_from_nth_loop(&audio.user_hits, audio.current_loop() - 1);
-        draw_last_loop_summary(&last_loop_hits, &voices, audio_latency);
+        for i in 1..=3 {
+            let last_loop_hits = get_hits_from_nth_loop(&audio.user_hits, audio.current_loop() - i);
+            draw_loop_summary(&last_loop_hits, &voices, audio_latency, i);
+        }
 
         // TODO: toggle this on and off with a key for 'calibration' mode
         draw_pulse_beat(current_beat + audio_latency);
@@ -161,13 +169,6 @@ fn draw_beat_grid(desired_hits: &Voices) {
     }
 }
 
-const ALL_INSTRUMENTS: [Instrument; 4] = [
-    Instrument::ClosedHihat,
-    Instrument::Snare,
-    Instrument::Kick,
-    Instrument::OpenHihat,
-];
-
 fn draw_user_hits(user_hits: &Vec<UserHit>, desired_hits: &Voices, audio_latency: f64) {
     for (instrument_idx, instrument) in ALL_INSTRUMENTS.iter().enumerate() {
         let user_notes = get_user_hit_timings_by_instrument(user_hits, *instrument);
@@ -202,51 +203,59 @@ fn draw_note_successes(
     }
 }
 
-fn draw_last_loop_summary(user_hits: &Vec<UserHit>, desired_hits: &Voices, audio_latency: f64) {
+fn draw_loop_summary(
+    user_hits: &Vec<UserHit>,
+    desired_hits: &Voices,
+    audio_latency: f64,
+    nth_loop: i32,
+) {
     let summary_data = compute_last_loop_summary(user_hits, desired_hits, audio_latency);
 
-    for (idx, instrument) in ALL_INSTRUMENTS.iter().enumerate() {
-        let num_correct = match instrument {
-            Instrument::ClosedHihat => summary_data.hihat.num_correct,
-            Instrument::Snare => summary_data.snare.num_correct,
-            Instrument::Kick => summary_data.kick.num_correct,
-            Instrument::OpenHihat => summary_data.open_hihat.num_correct,
-        };
-        let num_notes = match instrument {
-            Instrument::ClosedHihat => summary_data.hihat.num_notes,
-            Instrument::Snare => summary_data.snare.num_notes,
-            Instrument::Kick => summary_data.kick.num_notes,
-            Instrument::OpenHihat => summary_data.open_hihat.num_notes,
-        };
+    if nth_loop == 1 {
+        // Show summary to the right of each instrument row
+        for (idx, instrument) in ALL_INSTRUMENTS.iter().enumerate() {
+            let num_correct = match instrument {
+                Instrument::ClosedHihat => summary_data.hihat.num_correct,
+                Instrument::Snare => summary_data.snare.num_correct,
+                Instrument::Kick => summary_data.kick.num_correct,
+                Instrument::OpenHihat => summary_data.open_hihat.num_correct,
+            };
+            let num_notes = match instrument {
+                Instrument::ClosedHihat => summary_data.hihat.num_notes,
+                Instrument::Snare => summary_data.snare.num_notes,
+                Instrument::Kick => summary_data.kick.num_notes,
+                Instrument::OpenHihat => summary_data.open_hihat.num_notes,
+            };
 
-        draw_text(
-            format!("{num_correct} / {:?}", num_notes).as_str(),
-            (GRID_LEFT_X + GRID_WIDTH + 32.) as f32,
-            (GRID_TOP_Y + ROW_HEIGHT * (idx as f64 + 0.5)) as f32,
-            20.0,
-            DARKGRAY,
-        );
+            draw_text(
+                format!("{num_correct} / {:?}", num_notes).as_str(),
+                (GRID_LEFT_X + GRID_WIDTH + 32.) as f32,
+                (GRID_TOP_Y + ROW_HEIGHT * (idx as f64 + 0.5)) as f32,
+                20.0,
+                DARKGRAY,
+            );
+        }
     }
+
+    //
+    // Show overall summary for the nth loop
+    //
 
     let totals = summary_data.total();
     let total_score = totals.num_correct;
     let total_notes = totals.num_notes;
 
-    // Summary over all voices
-    draw_text(
-        format!("{total_score} / {:?}", total_notes).as_str(),
-        (GRID_LEFT_X + GRID_WIDTH + 32.) as f32,
-        (GRID_TOP_Y + ROW_HEIGHT * (ALL_INSTRUMENTS.len() as f64 + 0.5)) as f32,
-        20.0,
-        DARKGRAY,
-    );
+    let x_base = (GRID_LEFT_X + GRID_WIDTH + 32. - (nth_loop as f64 * (128. + 16.))) as f32;
+    let y_base = (GRID_TOP_Y + ROW_HEIGHT * ((ALL_INSTRUMENTS.len() + 2) as f64)) as f32;
 
+    // Summary over all voices
+    let circle_radius = 64.;
     // TODO: div by zero issue -> shows NaN
     let score_ratio = totals.ratio();
     draw_circle(
-        (GRID_LEFT_X + GRID_WIDTH + 32.) as f32,
-        (GRID_TOP_Y + ROW_HEIGHT * ((ALL_INSTRUMENTS.len() + 1) as f64 + 0.5)) as f32,
-        64.,
+        x_base,
+        y_base + ROW_HEIGHT as f32,
+        circle_radius,
         Color {
             r: 1. - score_ratio as f32,
             g: score_ratio as f32,
@@ -254,12 +263,21 @@ fn draw_last_loop_summary(user_hits: &Vec<UserHit>, desired_hits: &Voices, audio
             a: 1.,
         },
     );
+
     draw_text(
         format!("{:.0}%", score_ratio * 100.).as_str(),
-        (GRID_LEFT_X + GRID_WIDTH - 32. + 8.) as f32,
-        (GRID_TOP_Y + ROW_HEIGHT * ((ALL_INSTRUMENTS.len() + 1) as f64 + 0.5) + 16.) as f32,
+        x_base - circle_radius + 8.,
+        y_base + (ROW_HEIGHT * 1.25) as f32,
         64.,
         WHITE,
+    );
+
+    draw_text(
+        format!("{total_score} / {:?}", total_notes).as_str(),
+        x_base - 16.,
+        y_base,
+        20.0,
+        DARKGRAY,
     );
 }
 

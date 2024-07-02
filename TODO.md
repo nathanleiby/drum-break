@@ -2,8 +2,8 @@
 
 ## working on
 
-- [..] handle idea of "miss" due to not playing a desired note at all -- probably a change to in `score.rs`
-  - per note accuracy added for just closed_hihat for the moment..
+- [..] MVP UX: display stats for (last loop, last 5 loops, since you started session)
+  - [x] showing last 3 loops as of now
 
 ## asap
 
@@ -11,7 +11,6 @@ _what's must-have to make it useful to me?_
 
 - tracking loop accuracy: "perfect" vs "great" vs etc
   - give partial credit in "% acc" summary for close hits (e.g. 75% of the note)
-  - handle beat 0 edge case -- q: is this working already?
   - add simple adjustment for tolerance (i.e. '% of beat' offset allowed for perfect vs great vs miss)
     - could be a slider. could be config file adjustment
     - see `CORRECT_MARGIN` in `score.rs`
@@ -22,7 +21,6 @@ _what's very important to make it engaging to me?_
 - [ ] "golden" practice mode (play it perfectly N times and then speeds up by X bpm)
   - you can tweak knobs for shiny-ness of gold (N and X) -- could be consts at start
     - idea: try https://docs.rs/cvars/latest/cvars/ to allow changing these in the UI during development
-  - MVP UX: display stats for (last loop, last 5 loops, since you started session)
 - capture progress over time (graph it, etc)
 
 ## soon
@@ -155,6 +153,8 @@ _what's very important to make it engaging to me?_
 
 ## done
 
+- [x] handle beat 0 edge case -- q: is this working already? -> seems like it
+- [x] handle idea of "miss" due to not playing a desired note at all -- probably a change to in `score.rs`
 - [x] change note color -- orange note is too similar to "early" orange color
 - [..] make it shareable
   - [x] set keybindings (midi bindings) for each drum
