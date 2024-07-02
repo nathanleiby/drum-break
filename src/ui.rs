@@ -11,6 +11,7 @@ use crate::{
     score::{
         compute_accuracy_of_single_hit, compute_last_loop_summary,
         compute_loop_performance_for_voice, get_user_hit_timings_by_instrument, Accuracy,
+        MISS_MARGIN,
     },
     voices::{Instrument, Loop},
     UserHit, Voices,
@@ -52,14 +53,22 @@ impl UI {
         clear_background(BACKGROUND_COLOR);
         draw_beat_grid(voices);
         draw_user_hits(&audio.user_hits, &voices, audio_latency);
-        draw_note_successes(&audio.user_hits, &voices, audio_latency);
+        let loop_start_beat = current_beat - current_beat % BEATS_PER_LOOP;
+        let loop_last_completed_beat = current_beat - MISS_MARGIN;
+        draw_note_successes(
+            &audio.user_hits,
+            &voices,
+            audio_latency,
+            loop_start_beat,
+            loop_last_completed_beat,
+        );
         draw_position_line(current_beat + audio_latency);
 
         // TODO: render current loop considering audio latency
         draw_status(bpm, current_beat / 2., audio.current_loop(), audio_latency);
 
         // TODO: refactor to last N loops
-        let last_loop_hits = get_last_loop_hits(audio);
+        let last_loop_hits = get_hits_from_nth_loop(&audio.user_hits, audio.current_loop() - 1);
         draw_last_loop_summary(&last_loop_hits, &voices, audio_latency);
 
         // TODO: toggle this on and off with a key for 'calibration' mode
@@ -69,13 +78,13 @@ impl UI {
     }
 }
 
-fn get_last_loop_hits(audio: &mut Audio) -> Vec<UserHit> {
-    let last_loop_hits: Vec<UserHit> = audio
-        .user_hits
+// TODO: include hits from just before start of loop (back to 0 - MISS), since those could be early or on-time hits
+fn get_hits_from_nth_loop(user_hits: &Vec<UserHit>, loop_idx: i32) -> Vec<UserHit> {
+    let last_loop_hits: Vec<UserHit> = user_hits
         .iter()
         .filter(|hit| {
             let loop_num_for_beat = (hit.clock_tick / BEATS_PER_LOOP) as i32;
-            loop_num_for_beat == audio.current_loop() - 1
+            loop_num_for_beat == loop_idx
         })
         .map(|hit| hit.clone())
         .collect::<Vec<UserHit>>();
@@ -191,7 +200,13 @@ fn draw_user_hits(user_hits: &Vec<UserHit>, desired_hits: &Voices, audio_latency
 }
 
 // TODO: Only draw up to the last completed beat
-fn draw_note_successes(user_hits: &Vec<UserHit>, desired_hits: &Voices, audio_latency: f64) {
+fn draw_note_successes(
+    user_hits: &Vec<UserHit>,
+    desired_hits: &Voices,
+    audio_latency: f64,
+    loop_start_beat: f64,
+    loop_current_beat: f64,
+) {
     // filter user hits to just closed hihat
     let closed_hihat_notes = get_user_hit_timings_by_instrument(user_hits, Instrument::ClosedHihat);
     // let snare_notes = get_user_hit_timings_by_instrument(user_hits, Instrument::Snare);
@@ -207,6 +222,8 @@ fn draw_note_successes(user_hits: &Vec<UserHit>, desired_hits: &Voices, audio_la
     let loop_perf = compute_loop_performance_for_voice(
         &closed_hihat_notes_w_latency,
         &desired_hits.closed_hihat,
+        loop_start_beat,
+        loop_current_beat,
     );
     let mut idx = 0;
     for note in desired_hits.closed_hihat.iter() {
@@ -327,6 +344,7 @@ fn draw_note_success(beats_offset: f64, row: usize, acc: Accuracy) {
         Accuracy::Late => PURPLE,
         Accuracy::Correct => GREEN,
         Accuracy::Miss => RED,
+        Accuracy::Unknown => GRAY,
     };
     color.a = 0.5;
 
@@ -365,6 +383,7 @@ fn draw_user_hit(user_beat: f64, row: usize, audio_latency: f64, desired_hits: &
             Accuracy::Late => PURPLE,
             Accuracy::Correct => GREEN,
             Accuracy::Miss => RED,
+            Accuracy::Unknown => GRAY,
         },
     );
 }

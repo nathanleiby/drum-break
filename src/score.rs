@@ -16,11 +16,12 @@ pub enum Accuracy {
     Early,
     Late,
     Miss,
+    Unknown,
 }
 
 // TODO: consider using Decimal type for exact math on beats.
 // - Floating point math has comparison/equality challenges
-// - Can't hash pointing point numbers out of the gate
+// - Can't hash floating point numbers out of the gate
 pub const CORRECT_MARGIN: f64 = 0.1;
 pub const MISS_MARGIN: f64 = 0.3;
 
@@ -171,17 +172,30 @@ pub fn get_desired_timings_by_instrument<'a>(
 
 /// given timings for desired hits vs user hits, gives an accuracy for each desired hit
 /// the accuracy is based on the first user hit that's within "non miss" range of a desired hit
+/// TODO: This system doesn't work if beats are closer together than MISS_MARGIN (perhaps: 32nd notes?)
 pub fn compute_loop_performance_for_voice(
     user_hits: &Vec<f64>,
     desired_hits: &Vec<f64>,
+    loop_start_beat: f64,
+    loop_current_beat: f64,
 ) -> Vec<Accuracy> {
     let mut out = Vec::new();
 
     // compare that to desired hits for hihat
     for desired_hit in desired_hits {
+        if *desired_hit > loop_current_beat {
+            out.push(Accuracy::Unknown);
+            continue;
+        }
+
         // find the first user hit that a non-miss
         let mut was_miss = true;
         for user_hit in user_hits {
+            // ignore hits that weren't for beats from this loop
+            if *user_hit < loop_start_beat - MISS_MARGIN {
+                continue;
+            }
+
             let (acc, _) = compute_accuracy_of_single_hit(*user_hit, &vec![*desired_hit]);
             if acc != Accuracy::Miss {
                 was_miss = false;
@@ -387,7 +401,14 @@ mod tests {
     fn it_computes_loop_performance_for_voice() {
         let user_hits = vec![0.5, 0.6, 0.8];
         let desired_hits = vec![0.0, 0.5, 1.0];
-        let result = compute_loop_performance_for_voice(&user_hits, &desired_hits);
+        let loop_start_beat = 0.;
+        let loop_current_beat = 4.;
+        let result = compute_loop_performance_for_voice(
+            &user_hits,
+            &desired_hits,
+            loop_start_beat,
+            loop_current_beat,
+        );
         assert_eq!(
             result,
             vec![Accuracy::Miss, Accuracy::Correct, Accuracy::Early]
