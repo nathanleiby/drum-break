@@ -198,49 +198,43 @@ fn draw_user_hits(user_hits: &Vec<UserHit>, desired_hits: &Voices, audio_latency
     }
 }
 
-// TODO: Only draw up to the last completed beat
 fn draw_note_successes(
     user_hits: &Vec<UserHit>,
     desired_hits: &Voices,
     audio_latency: f64,
     loop_current_beat: f64,
 ) {
-    // filter user hits to just closed hihat
-    let closed_hihat_notes = get_user_hit_timings_by_instrument(user_hits, Instrument::ClosedHihat);
-    // let snare_notes = get_user_hit_timings_by_instrument(user_hits, Instrument::Snare);
-    // let kick_notes = get_user_hit_timings_by_instrument(user_hits, Instrument::Kick);
-    // let open_hihat_notes = get_user_hit_timings_by_instrument(user_hits, Instrument::OpenHihat);
+    let mut instrument_idx = 0;
+    for instrument in [
+        Instrument::ClosedHihat,
+        Instrument::Snare,
+        Instrument::Kick,
+        Instrument::OpenHihat,
+    ] {
+        let actual = get_user_hit_timings_by_instrument(user_hits, instrument);
+        // add audio_latency to each note
+        let actual_w_latency = actual
+            .iter()
+            .map(|note| note + audio_latency)
+            .collect::<Vec<f64>>();
 
-    // add audio_latency to each note
-    let closed_hihat_notes_w_latency = closed_hihat_notes
-        .iter()
-        .map(|note| note + audio_latency)
-        .collect::<Vec<f64>>();
+        let desired = match instrument {
+            Instrument::ClosedHihat => &desired_hits.closed_hihat,
+            Instrument::Snare => &desired_hits.snare,
+            Instrument::Kick => &desired_hits.kick,
+            Instrument::OpenHihat => &desired_hits.open_hihat,
+        };
 
-    let loop_perf = compute_loop_performance_for_voice(
-        &closed_hihat_notes_w_latency,
-        &desired_hits.closed_hihat,
-        loop_current_beat,
-    );
-    let mut idx = 0;
-    for note in desired_hits.closed_hihat.iter() {
-        draw_note_success(*note, 0, loop_perf[idx]);
-        idx += 1;
+        let loop_perf =
+            compute_loop_performance_for_voice(&actual_w_latency, &desired, loop_current_beat);
+        let mut idx = 0;
+        for note in desired.iter() {
+            draw_note_success(*note, instrument_idx, loop_perf[idx]);
+            idx += 1;
+        }
+
+        instrument_idx += 1;
     }
-
-    // for note in snare_notes.iter() {
-    //     draw_user_hit(*note, 1, audio_latency, &desired_hits.snare);
-    // }
-
-    // // same kick notes but with a lead up to each note
-    // for note in kick_notes.iter() {
-    //     draw_user_hit(*note, 2, audio_latency, &desired_hits.kick);
-    // }
-
-    // // same kick notes but with a lead up to each note
-    // for note in open_hihat_notes.iter() {
-    //     draw_user_hit(*note, 3, audio_latency, &desired_hits.open_hihat);
-    // }
 }
 
 fn draw_last_loop_summary(user_hits: &Vec<UserHit>, desired_hits: &Voices, audio_latency: f64) {
