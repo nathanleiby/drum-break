@@ -114,23 +114,7 @@ fn draw_status(bpm: f64, current_beat: f64, current_loop: i32, audio_latency: f6
     );
 }
 
-fn draw_beat_grid(voices: &Voices) {
-    let closed_hihat_notes = &voices.closed_hihat;
-    let snare_notes = &voices.snare;
-    let kick_notes = &voices.kick;
-    let open_hihat_notes = &voices.open_hihat;
-
-    // Labels in top-left of grid
-    for (idx, name) in ["Hihat", "Snare", "Kick", "Open hi-hat"].iter().enumerate() {
-        draw_text(
-            name,
-            20.0,
-            (GRID_TOP_Y + ROW_HEIGHT * (idx as f64 + 0.5)) as f32,
-            20.0,
-            DARKGRAY,
-        );
-    }
-
+fn draw_beat_grid(desired_hits: &Voices) {
     let start_x = GRID_LEFT_X;
     let start_y = GRID_TOP_Y;
 
@@ -153,22 +137,27 @@ fn draw_beat_grid(voices: &Voices) {
         draw_line_f64(start_x, y, start_x + GRID_WIDTH, y, 4.0, BLACK);
     }
 
-    for note in closed_hihat_notes.iter() {
-        draw_note(*note, 0);
-    }
+    for (instrument_idx, instrument) in ALL_INSTRUMENTS.iter().enumerate() {
+        let name = match *instrument {
+            Instrument::ClosedHihat => "Hihat",
+            Instrument::Snare => "Snare",
+            Instrument::Kick => "Kick",
+            Instrument::OpenHihat => "Open hi-hat",
+        };
 
-    for note in snare_notes.iter() {
-        draw_note(*note, 1);
-    }
+        // Labels in top-left of grid
+        draw_text(
+            name,
+            20.0,
+            (GRID_TOP_Y + ROW_HEIGHT * (instrument_idx as f64 + 0.5)) as f32,
+            20.0,
+            DARKGRAY,
+        );
 
-    // same kick notes but with a lead up to each note
-    for note in kick_notes.iter() {
-        draw_note(*note, 2);
-    }
-
-    // same kick notes but with a lead up to each note
-    for note in open_hihat_notes.iter() {
-        draw_note(*note, 3);
+        let desired = get_desired_timings_by_instrument(instrument, desired_hits);
+        for note in desired.iter() {
+            draw_note(*note, instrument_idx);
+        }
     }
 }
 
