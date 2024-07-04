@@ -198,8 +198,8 @@ fn get_midi_as_user_hits(midi_input: &MidiInput) -> Vec<UserHit> {
         open_hi_hat: HashSet::from_iter(vec![47, 51]),
     };
     let td17 = InputConfigMidi {
-        // closed_hi_hat: HashSet::from_iter(vec![42, 22]),
-        closed_hi_hat: HashSet::from_iter(vec![51, 59, 53]), // TODO: add ride support
+        closed_hi_hat: HashSet::from_iter(vec![42, 22]),
+        // closed_hi_hat: HashSet::from_iter(vec![51, 59, 53]), // TODO: add ride support-- I think this was ride
         snare: HashSet::from_iter(vec![38]),
         kick: HashSet::from_iter(vec![36]),
         // open_hi_hat: HashSet::from_iter(vec![46, 26]),

@@ -22,7 +22,7 @@ pub enum Accuracy {
 // TODO: consider using Decimal type for exact math on beats.
 // - Floating point math has comparison/equality challenges
 // - Can't hash floating point numbers out of the gate
-pub const CORRECT_MARGIN: f64 = 0.1;
+pub const CORRECT_MARGIN: f64 = 0.15;
 pub const MISS_MARGIN: f64 = 0.3;
 
 /// returns a tuple of (accuracy rating, a bool of whether not this measurement is wrapping around to the _next_ loop)

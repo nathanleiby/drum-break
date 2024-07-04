@@ -2,47 +2,51 @@
 
 ## working on
 
-- [ ] "golden" practice mode (play it perfectly N times and then speeds up by X bpm)
-  - you can tweak knobs for shiny-ness of gold (N and X) -- could be consts at start
-    - idea: try https://docs.rs/cvars/latest/cvars/ to allow changing these in the UI during development
+- [..] add better debugging for midi signals, so I can filter to important ones (e.g. can ignore polyphonic aftertouch 167 on changing HH pedal in terms of hitting notes on the beat)
+  - can translate to names from here https://midi.org/expanded-midi-1-0-messages-list, then log better
+  - proximate reason.. to figure out problem with closed HH not triggering
 
 ## asap
 
 _what's must-have to make it useful to me?_
 
+- make gold reachable
+  - tweak strictness .. just a lil more generous on timing?
+  - fix poor signaling of closed HH -- often triggers as MISSED (didn't hit? was Open HH due to midi)
+
+_what's very important to make it engaging to me?_
+
+- quick start + gets you into flow
+  - idea: saves whatever loop, BPM you were doing last time -- recovers on next start
+- capture progress over time (graph it, etc)
+
+## soon
+
+- (bug) explore triggering
+  - [ ] double triggering of some TD17 notes (e.g. 2x hihat hits or 2x open hihat hits, esp on hard hits?)
+  - [ ] non triggering (hit too soft? event getting dropped?)
 - tracking loop accuracy: "perfect" vs "great" vs etc
   - give partial credit in "% acc" summary for close hits (e.g. 75% of the note)
   - add simple adjustment for tolerance (i.e. '% of beat' offset allowed for perfect vs great vs miss)
     - could be a slider. could be config file adjustment
     - see `CORRECT_MARGIN` in `score.rs`
+- In "golden" practice mode.. you can tweak knobs for shiny-ness of gold (N and X) -- could be consts at start
+  - idea: try https://docs.rs/cvars/latest/cvars/ to allow changing these in the UI during development
 
-_what's very important to make it engaging to me?_
-
-- quick start + gets you into flow
-- capture progress over time (graph it, etc)
-
-## soon
-
-- [ ] refactor so i don't need explicit branches for each of 4 instruments everywhere..
-      e.g. in `voices.rs`, moving from `Voices` to `Voice`
-      e.g. for `config.rs`:
-
-  ```
-  // TODO: Use a hashmap of {instrument : HashSet } instead of hard-coded list of instruments
-  // type GeneralizedInputConfigMidi = HashMap<Instrument, HashSet<u8>>;
-  ```
+## future
 
 - [..] Capture EXACT timing of the midi note for use in timing.
   - [..] UserHit model should include real ClockTime and (computed from that) corresponding beat.. this way we can determine "age" of a beat and expire it if needed (from looping perspective). Currently, UserHit is just re-using `Voices` as its data model
   - high precision input https://github.com/not-fl3/macroquad/issues/1 vs per frame
     - maybe could PR this? https://github.com/not-fl3/miniquad/issues/117
     - maybe separate thread for midi is enough, if i capture timing .. I have `raw_input.timestamp` in `midi.rs` .. could compare that vs frame start time
-- (bug) explore triggering
-  - [ ] double triggering of some TD17 notes (e.g. 2x hihat hits or 2x open hihat hits, esp on hard hits?)
-  - [ ] non triggering (hit too soft? event getting dropped?)
-
-## future
-
+- [ ] refactor so i don't need explicit branches for each of 4 instruments everywhere..
+      e.g. in `voices.rs`, moving from `Voices` to `Voice`
+      e.g. for `config.rs`:
+  ```
+  // TODO: Use a hashmap of {instrument : HashSet } instead of hard-coded list of instruments
+  // type GeneralizedInputConfigMidi = HashMap<Instrument, HashSet<u8>>;
+  ```
 - [ ] unit tests
   - [ ] consider + document which pieces can be unit tested (and iterated on more effectively than manual testing)
     - [ ] ex. write unit tests re: the accuracy summary metric
@@ -151,6 +155,7 @@ _what's very important to make it engaging to me?_
 
 ## done
 
+- [x] MVP: "golden" practice mode (play it perfectly N times and then speeds up by X bpm)
 - [x] MVP UX: display stats for (last loop, last 5 loops, since you started session) - showing last 3 loops as of now
 - [x] handle beat 0 edge case -- q: is this working already? -> seems like it
 - [x] handle idea of "miss" due to not playing a desired note at all -- probably a change to in `score.rs`
