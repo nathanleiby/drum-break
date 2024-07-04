@@ -110,6 +110,7 @@ impl ScoreTracker {
     }
 }
 
+#[derive(Debug)]
 pub struct LastLoopSummary {
     pub hihat: ScoreTracker,
     pub snare: ScoreTracker,

@@ -1,4 +1,4 @@
-use std::{collections::VecDeque, error::Error, io::Cursor};
+use std::{collections::VecDeque, error::Error, io::Cursor, sync::mpsc::Sender};
 
 use kira::{
     clock::{ClockHandle, ClockSpeed, ClockTime},
@@ -49,6 +49,8 @@ pub struct Audio {
     calibration_input: VecDeque<f64>,
     configured_audio_latency_seconds: f64,
 
+    tx: Sender<String>,
+
     // debug only
     last_beat: i32,
 }
@@ -58,13 +60,15 @@ const MIN_BPM: f64 = 40.;
 const MAX_BPM: f64 = 240.;
 
 impl Audio {
-    pub fn new(conf: &AppConfig) -> Self {
+    pub fn new(conf: &AppConfig, tx: Sender<String>) -> Self {
         let mut manager =
             AudioManager::<DefaultBackend>::new(AudioManagerSettings::default()).unwrap();
         let clock = manager
             // TODO: investigate bpm * 2 stuff
             .add_clock(ClockSpeed::TicksPerMinute(DEFAULT_BPM * 2. as f64))
             .unwrap();
+
+        tx.send(String::from("Audio::new")).unwrap();
 
         Self {
             manager,
@@ -76,6 +80,8 @@ impl Audio {
             calibration_input: VecDeque::new(),
             configured_audio_latency_seconds: conf.audio_latency_seconds,
             last_beat: -1,
+
+            tx,
         }
     }
 
@@ -97,6 +103,12 @@ impl Audio {
             self.last_beat = current_beat as i32;
             // if new loop, print that too
             if current_beat == 0 {
+                self.tx
+                    .send(String::from(format!(
+                        "Starting loop num #{:?}",
+                        self.current_loop()
+                    )))
+                    .unwrap();
                 // log::debug!("Starting loop num #{:?}", self.current_loop());
             }
         }

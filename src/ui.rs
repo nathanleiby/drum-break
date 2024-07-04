@@ -85,7 +85,7 @@ impl UI {
     }
 }
 
-fn get_hits_from_nth_loop(user_hits: &Vec<UserHit>, desired_loop_idx: i32) -> Vec<UserHit> {
+pub fn get_hits_from_nth_loop(user_hits: &Vec<UserHit>, desired_loop_idx: i32) -> Vec<UserHit> {
     let last_loop_hits: Vec<UserHit> = user_hits
         .iter()
         .filter(|hit| {

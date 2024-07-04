@@ -2,8 +2,9 @@
 
 ## working on
 
-- [..] MVP UX: display stats for (last loop, last 5 loops, since you started session)
-  - [x] showing last 3 loops as of now
+- [ ] "golden" practice mode (play it perfectly N times and then speeds up by X bpm)
+  - you can tweak knobs for shiny-ness of gold (N and X) -- could be consts at start
+    - idea: try https://docs.rs/cvars/latest/cvars/ to allow changing these in the UI during development
 
 ## asap
 
@@ -18,9 +19,6 @@ _what's must-have to make it useful to me?_
 _what's very important to make it engaging to me?_
 
 - quick start + gets you into flow
-- [ ] "golden" practice mode (play it perfectly N times and then speeds up by X bpm)
-  - you can tweak knobs for shiny-ness of gold (N and X) -- could be consts at start
-    - idea: try https://docs.rs/cvars/latest/cvars/ to allow changing these in the UI during development
 - capture progress over time (graph it, etc)
 
 ## soon
@@ -153,6 +151,7 @@ _what's very important to make it engaging to me?_
 
 ## done
 
+- [x] MVP UX: display stats for (last loop, last 5 loops, since you started session) - showing last 3 loops as of now
 - [x] handle beat 0 edge case -- q: is this working already? -> seems like it
 - [x] handle idea of "miss" due to not playing a desired note at all -- probably a change to in `score.rs`
 - [x] change note color -- orange note is too similar to "early" orange color

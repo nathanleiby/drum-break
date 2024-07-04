@@ -12,6 +12,7 @@ mod voices;
 use std::error::Error;
 use std::fs::File;
 use std::io::{BufWriter, Write};
+use std::sync::mpsc;
 
 use crate::audio::*;
 use crate::config::AppConfig;
@@ -20,6 +21,7 @@ use crate::input::*;
 use crate::ui::*;
 use crate::voices::Voices;
 
+use score::compute_last_loop_summary;
 use simple_logger;
 
 use macroquad::prelude::*;
@@ -33,6 +35,18 @@ fn window_conf() -> Conf {
         window_height: 720,
         ..Default::default()
     }
+}
+
+const GOLD_MODE_BPM_STEP: f64 = 2.;
+const GOLD_MODE_CORRECT_TAKES: i32 = 3;
+
+struct Game {
+    gold_mode: GoldMode,
+}
+
+struct GoldMode {
+    current_bpm: f64,
+    correct_takes: i32,
 }
 
 #[macroquad::main(window_conf)]
@@ -63,15 +77,57 @@ async fn main() -> Result<(), Box<dyn Error>> {
         }
     }
 
+    let (tx, rx) = mpsc::channel();
+
     let mut voices = Voices::new();
-    let mut audio = Audio::new(&conf);
+    let mut audio = Audio::new(&conf, tx.clone());
     let mut ui = UI::new();
+
+    // Design:
+    // Emit an event whenever a loop completes. [x]
+    // This event should include the loop's summary.
+    //
+    // Gold mode tracking maintains state of `num_consecutive_aces`
+    // If event was 100%, the `num_consecutive_aces += 1`
+    // else `num_consecutive_aces = 0`
+    // if num_consecutive_aces == GOLD_MODE_CORRECT_TAKES {
+    //      increase BPM
+    //      num_consecutive_aces = 0
+    //      // notify user in UI - "aced! BPM += {GOLD_MODE_BPM_STEP}" or similar
+    // }
+
+    // let mut Game{
+    //     gold_mode: GoldMode{
+    //         current_bpm
+    //     }
+    // }
 
     // debug
     let mut fps_tracker = FPS::new();
 
+    // event reader
+    // event writer
+
     // gameplay loop
     loop {
+        // println!("About to read events...");
+        // read events
+        loop {
+            // TODO: handle different kinds of events. Enum it up!
+            match rx.try_recv() {
+                Ok(msg) => {
+                    println!("[event] {msg}");
+                    // TODO Get last loop summary
+                    let last_loop_hits =
+                        get_hits_from_nth_loop(&audio.user_hits, audio.current_loop() - 1);
+                    let audio_latency = audio.get_configured_audio_latency_seconds();
+                    let lls = compute_last_loop_summary(&last_loop_hits, &voices, audio_latency);
+                    println!("last loop summary = {:?}", lls);
+                }
+                Err(_) => break,
+            }
+        }
+
         // process input
         let events = input.process();
 
@@ -83,6 +139,12 @@ async fn main() -> Result<(), Box<dyn Error>> {
         // render UI
         ui.render(&mut voices, &mut audio, &loops);
         fps_tracker.render();
+
+        // // TODO: pass this deeper, but for now just send event here
+        // match tx.send(String::from("testing123")) {
+        //     Ok(_) => (),
+        //     Err(_) => warn!("error sending tx"),
+        // }
 
         // wait for next frame from game engine
         next_frame().await
