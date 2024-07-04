@@ -40,13 +40,9 @@ fn window_conf() -> Conf {
 const GOLD_MODE_BPM_STEP: f64 = 2.;
 const GOLD_MODE_CORRECT_TAKES: i32 = 3;
 
-struct Game {
-    gold_mode: GoldMode,
-}
-
 struct GoldMode {
-    current_bpm: f64,
     correct_takes: i32,
+    was_gold: bool,
 }
 
 #[macroquad::main(window_conf)]
@@ -96,11 +92,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
     //      // notify user in UI - "aced! BPM += {GOLD_MODE_BPM_STEP}" or similar
     // }
 
-    // let mut Game{
-    //     gold_mode: GoldMode{
-    //         current_bpm
-    //     }
-    // }
+    let mut gold_mode = GoldMode {
+        correct_takes: 0,
+        was_gold: false,
+    };
 
     // debug
     let mut fps_tracker = FPS::new();
@@ -117,12 +112,28 @@ async fn main() -> Result<(), Box<dyn Error>> {
             match rx.try_recv() {
                 Ok(msg) => {
                     println!("[event] {msg}");
-                    // TODO Get last loop summary
+
+                    // TODO: UPDATE TO ONLY RUN THIS CODE FOR "on loop complete" events
                     let last_loop_hits =
                         get_hits_from_nth_loop(&audio.user_hits, audio.current_loop() - 1);
                     let audio_latency = audio.get_configured_audio_latency_seconds();
-                    let lls = compute_last_loop_summary(&last_loop_hits, &voices, audio_latency);
-                    println!("last loop summary = {:?}", lls);
+                    let summary_data =
+                        compute_last_loop_summary(&last_loop_hits, &voices, audio_latency);
+                    println!("last loop summary = {:?}", summary_data);
+                    let totals = summary_data.total();
+
+                    gold_mode.was_gold = false;
+                    if totals.ratio() == 1. {
+                        gold_mode.correct_takes += 1;
+                    } else {
+                        gold_mode.correct_takes = 0;
+                    }
+
+                    if gold_mode.correct_takes == GOLD_MODE_CORRECT_TAKES {
+                        audio.set_bpm(audio.get_bpm() + GOLD_MODE_BPM_STEP);
+                        gold_mode.correct_takes = 0;
+                        gold_mode.was_gold = true;
+                    }
                 }
                 Err(_) => break,
             }
@@ -137,7 +148,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         fps_tracker.update();
 
         // render UI
-        ui.render(&mut voices, &mut audio, &loops);
+        ui.render(&mut voices, &mut audio, &loops, &gold_mode);
         fps_tracker.render();
 
         // // TODO: pass this deeper, but for now just send event here

@@ -14,7 +14,7 @@ use crate::{
         get_user_hit_timings_by_instrument, Accuracy, MISS_MARGIN,
     },
     voices::{Instrument, Loop},
-    UserHit, Voices,
+    GoldMode, UserHit, Voices,
 };
 
 use macroquad::{prelude::*, ui::*};
@@ -51,6 +51,7 @@ impl UI {
         voices: &mut Voices,
         audio: &mut Audio,
         loops: &Vec<(String, Loop)>,
+        gold_mode: &GoldMode,
     ) {
         let current_beat = audio.current_beat();
 
@@ -82,6 +83,8 @@ impl UI {
         draw_pulse_beat(current_beat + audio_latency);
 
         draw_loop_choices(voices, audio, &loops);
+
+        draw_gold_mode(gold_mode);
     }
 }
 
@@ -396,4 +399,18 @@ fn draw_loop_choices<'a, 'b: 'a>(
                 }
             });
         });
+}
+
+fn draw_gold_mode(gold_mode: &GoldMode) {
+    draw_text(
+        format!(
+            "Gold Mode = {} (was gold = {})",
+            gold_mode.correct_takes, gold_mode.was_gold
+        )
+        .as_str(),
+        420.,
+        360.,
+        32.,
+        BLACK,
+    )
 }
