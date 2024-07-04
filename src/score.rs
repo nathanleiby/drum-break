@@ -116,6 +116,7 @@ pub struct LastLoopSummary {
     pub snare: ScoreTracker,
     pub kick: ScoreTracker,
     pub open_hihat: ScoreTracker,
+    pub ride: ScoreTracker,
 }
 
 impl LastLoopSummary {
@@ -125,6 +126,7 @@ impl LastLoopSummary {
             snare: ScoreTracker::new(),
             kick: ScoreTracker::new(),
             open_hihat: ScoreTracker::new(),
+            ride: ScoreTracker::new(),
         }
     }
 
@@ -167,6 +169,7 @@ pub fn get_desired_timings_by_instrument<'a>(
         Instrument::Snare => &desired_hits.snare,
         Instrument::Kick => &desired_hits.kick,
         Instrument::OpenHihat => &desired_hits.open_hihat,
+        Instrument::Ride => &desired_hits.ride,
     };
     desired_timings
 }
@@ -249,6 +252,10 @@ pub fn compute_last_loop_summary(
             Instrument::OpenHihat => {
                 out.open_hihat.num_correct = num_correct;
                 out.open_hihat.num_notes = desired_timings.len();
+            }
+            Instrument::Ride => {
+                out.ride.num_correct = num_correct;
+                out.ride.num_notes = desired_timings.len();
             }
         }
     }
@@ -361,6 +368,7 @@ mod tests {
             snare: vec![],
             kick: vec![0.0],
             open_hihat: vec![],
+            ride: vec![],
         };
 
         let result = compute_last_loop_summary(&user_hits, &desired_hits, 0.0);
@@ -381,6 +389,7 @@ mod tests {
             snare: vec![],
             kick: vec![0.0],
             open_hihat: vec![],
+            ride: vec![],
         };
         let result = compute_last_loop_summary(&user_hits, &desired_hits, 0.0);
         assert_eq!(

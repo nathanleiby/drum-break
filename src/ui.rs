@@ -154,6 +154,7 @@ fn draw_beat_grid(desired_hits: &Voices) {
             Instrument::Snare => "Snare",
             Instrument::Kick => "Kick",
             Instrument::OpenHihat => "Open hi-hat",
+            Instrument::Ride => "Ride",
         };
 
         // Labels in top-left of grid
@@ -222,12 +223,14 @@ fn draw_loop_summary(
                 Instrument::Snare => summary_data.snare.num_correct,
                 Instrument::Kick => summary_data.kick.num_correct,
                 Instrument::OpenHihat => summary_data.open_hihat.num_correct,
+                Instrument::Ride => summary_data.ride.num_correct,
             };
             let num_notes = match instrument {
                 Instrument::ClosedHihat => summary_data.hihat.num_notes,
                 Instrument::Snare => summary_data.snare.num_notes,
                 Instrument::Kick => summary_data.kick.num_notes,
                 Instrument::OpenHihat => summary_data.open_hihat.num_notes,
+                Instrument::Ride => summary_data.ride.num_notes,
             };
 
             draw_text(

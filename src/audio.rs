@@ -114,6 +114,16 @@ impl Audio {
         }
     }
 
+    // fn get_audio_file_for_instrument(ins: Instrument) -> &str {
+    //     match ins {
+    //         Instrument::ClosedHihat => "res/sounds/closed-hihat.wav",
+    //         Instrument::Snare => "res/sounds/snare.wav",
+    //         Instrument::Kick => "res/sounds/kick.wav",
+    //         Instrument::OpenHihat => "res/sounds/open-hihat.wav",
+    //         Instrument::Ride=> "res/sounds/open-hihat.wav",
+    //     }
+    // }
+
     /// schedule should be run within each game tick to schedule the audio
     pub async fn schedule(self: &mut Self, voices: &Voices) -> Result<(), Box<dyn Error>> {
         self.print_if_new_beat();
@@ -135,6 +145,7 @@ impl Audio {
             (&voices.snare, "res/sounds/snare.wav"),
             (&voices.kick, "res/sounds/kick.wav"),
             (&voices.open_hihat, "res/sounds/open-hihat.wav"),
+            (&voices.ride, "res/sounds/ride.wav"),
         ] {
             let (voice, instrument_name) = pair;
             schedule_audio(

@@ -13,7 +13,7 @@ pub enum Instrument {
     Kick,
     OpenHihat,
     // PedalHiHat,
-    // Ride,
+    Ride,
     // RideBell,
     // LTom,
     // MTom,
@@ -44,6 +44,7 @@ pub struct Voices {
     pub snare: Vec<f64>,
     pub kick: Vec<f64>,
     pub open_hihat: Vec<f64>,
+    pub ride: Vec<f64>,
 }
 
 impl Voices {
@@ -53,34 +54,23 @@ impl Voices {
             snare: vec![],
             kick: vec![],
             open_hihat: vec![],
+            ride: vec![],
         }
     }
 
     pub fn toggle_beat(&mut self, row: f64, beat: f64) {
-        if row == 0. {
-            if let Some(pos) = self.closed_hihat.iter().position(|x| *x == beat) {
-                self.closed_hihat.remove(pos);
-            } else {
-                self.closed_hihat.push(beat);
-            }
-        } else if row == 1. {
-            if let Some(pos) = self.snare.iter().position(|x| *x == beat) {
-                self.snare.remove(pos);
-            } else {
-                self.snare.push(beat);
-            }
-        } else if row == 2. {
-            if let Some(pos) = self.kick.iter().position(|x| *x == beat) {
-                self.kick.remove(pos);
-            } else {
-                self.kick.push(beat);
-            }
-        } else if row == 3. {
-            if let Some(pos) = self.open_hihat.iter().position(|x| *x == beat) {
-                self.open_hihat.remove(pos);
-            } else {
-                self.open_hihat.push(beat);
-            }
+        let ins_vec = match row as usize {
+            0 => &mut self.closed_hihat,
+            1 => &mut self.snare,
+            2 => &mut self.kick,
+            3 => &mut self.open_hihat,
+            4 => &mut self.ride,
+            _ => panic!("invalid instrument idx"),
+        };
+        if let Some(pos) = ins_vec.iter().position(|x| *x == beat) {
+            ins_vec.remove(pos);
+        } else {
+            ins_vec.push(beat);
         }
     }
 }

@@ -2,9 +2,9 @@
 
 ## working on
 
-- [..] add better debugging for midi signals, so I can filter to important ones (e.g. can ignore polyphonic aftertouch 167 on changing HH pedal in terms of hitting notes on the beat)
-  - can translate to names from here https://midi.org/expanded-midi-1-0-messages-list, then log better
-  - proximate reason.. to figure out problem with closed HH not triggering
+- [ ] support more drum types (not just kick, snare, open/closed hat)
+  - ride, pedal HH, crash, 3 toms.. or arbitrary mappings
+  - hacking in RIDE, by following the compiler. Almost works except JSON is strict and missing field borks it. Can I avoid?
 
 ## asap
 
@@ -19,6 +19,10 @@ _what's very important to make it engaging to me?_
 - quick start + gets you into flow
   - idea: saves whatever loop, BPM you were doing last time -- recovers on next start
 - capture progress over time (graph it, etc)
+
+- [..] add better debugging for midi signals, so I can filter to important ones (e.g. can ignore polyphonic aftertouch 167 on changing HH pedal in terms of hitting notes on the beat)
+  - can translate to names from here https://midi.org/expanded-midi-1-0-messages-list, then log better
+  - proximate reason.. to figure out problem with closed HH not triggering
 
 ## soon
 
@@ -75,6 +79,7 @@ _what's very important to make it engaging to me?_
     - `slint`: https://github.com/slint-ui/slint
     - [..] try using Tauri and build a web UI
       - can we have a Rust "engine" (process keyboard/midi events, play sound, etc) with the FE (draw UI, etc)
+      - [..] Explore porting the "core" audio to Rust and UI in TS (https://tauri.app/)
 - cleanup input UI, which quickly gets noisy
   - [x] e.g. hacky is a button to reset -> press "r"
   - another idea is "fade out" by age (e.g. just keep last K loops, or actually fade over time until gone by Kth loop)
@@ -132,8 +137,6 @@ _what's very important to make it engaging to me?_
 - [ ] shipping artifacts
   - [ ] on git tag, ship a release in Github CI
 - [ ] Make "voices" data model more generic.
-  - [ ] support more drum types (not just kick, snare, open/closed hat)
-    - ride, pedal HH, crash, 3 toms.. or arbitrary mappings
   - [ ] support different numbers of voices (not just 4, as today)
   - [ ] capture loop config like tempo, length, etc. (++ for tempo ASAP)
   ```
@@ -151,7 +154,6 @@ _what's very important to make it engaging to me?_
 - [ ] show music as sheet music notation (e.g. https://github.com/jaredforth/lilypond-rs or various others)
 - [ ] explore improving Kira's interface around the clock and looping to support my sequencer like use-case
   - [ ] idea: editing clock while it's playing
-- [ ] Explore porting the "core" audio to Rust and UI in TS (https://tauri.app/)
 
 ## done
 
