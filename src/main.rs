@@ -79,19 +79,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let mut audio = Audio::new(&conf, tx.clone());
     let mut ui = UI::new();
 
-    // Design:
-    // Emit an event whenever a loop completes. [x]
-    // This event should include the loop's summary.
-    //
-    // Gold mode tracking maintains state of `num_consecutive_aces`
-    // If event was 100%, the `num_consecutive_aces += 1`
-    // else `num_consecutive_aces = 0`
-    // if num_consecutive_aces == GOLD_MODE_CORRECT_TAKES {
-    //      increase BPM
-    //      num_consecutive_aces = 0
-    //      // notify user in UI - "aced! BPM += {GOLD_MODE_BPM_STEP}" or similar
-    // }
-
     let mut gold_mode = GoldMode {
         correct_takes: 0,
         was_gold: false,
@@ -100,12 +87,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
     // debug
     let mut fps_tracker = FPS::new();
 
-    // event reader
-    // event writer
-
     // gameplay loop
     loop {
-        // println!("About to read events...");
         // read events
         loop {
             // TODO: handle different kinds of events. Enum it up!
