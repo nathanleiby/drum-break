@@ -131,25 +131,47 @@ impl LastLoopSummary {
         }
     }
 
+    fn get_score_tracker(self: &Self, instrument: &Instrument) -> &ScoreTracker {
+        match instrument {
+            Instrument::ClosedHihat => &self.hihat,
+            Instrument::Snare => &self.snare,
+            Instrument::Kick => &self.kick,
+            Instrument::OpenHihat => &self.open_hihat,
+            Instrument::Ride => &self.ride,
+        }
+    }
+
+    fn get_mut_score_tracker(self: &mut Self, instrument: &Instrument) -> &mut ScoreTracker {
+        match instrument {
+            Instrument::ClosedHihat => &mut self.hihat,
+            Instrument::Snare => &mut self.snare,
+            Instrument::Kick => &mut self.kick,
+            Instrument::OpenHihat => &mut self.open_hihat,
+            Instrument::Ride => &mut self.ride,
+        }
+    }
+
     pub fn total(self: Self) -> ScoreTracker {
         let mut combined = ScoreTracker::new();
 
-        combined.num_correct += self.hihat.num_correct;
-        combined.num_notes += self.hihat.num_notes;
-
-        combined.num_correct += self.snare.num_correct;
-        combined.num_notes += self.snare.num_notes;
-
-        combined.num_correct += self.kick.num_correct;
-        combined.num_notes += self.kick.num_notes;
-
-        combined.num_correct += self.open_hihat.num_correct;
-        combined.num_notes += self.open_hihat.num_notes;
-
-        combined.num_correct += self.ride.num_correct;
-        combined.num_notes += self.ride.num_notes;
+        for ins in ALL_INSTRUMENTS.iter() {
+            let st = self.get_score_tracker(ins);
+            combined.num_correct += st.num_correct;
+            combined.num_notes += st.num_correct;
+        }
 
         combined
+    }
+
+    pub fn set_result(
+        self: &mut Self,
+        instrument: &Instrument,
+        num_correct: usize,
+        num_notes: usize,
+    ) {
+        let to_update: &mut ScoreTracker = self.get_mut_score_tracker(instrument);
+        to_update.num_correct = num_correct;
+        to_update.num_notes = num_notes;
     }
 }
 
@@ -234,28 +256,7 @@ pub fn compute_last_loop_summary(
             }
         }
 
-        match instrument {
-            Instrument::ClosedHihat => {
-                out.hihat.num_correct = num_correct;
-                out.hihat.num_notes = desired_timings.len();
-            }
-            Instrument::Snare => {
-                out.snare.num_correct = num_correct;
-                out.snare.num_notes = desired_timings.len();
-            }
-            Instrument::Kick => {
-                out.kick.num_correct = num_correct;
-                out.kick.num_notes = desired_timings.len();
-            }
-            Instrument::OpenHihat => {
-                out.open_hihat.num_correct = num_correct;
-                out.open_hihat.num_notes = desired_timings.len();
-            }
-            Instrument::Ride => {
-                out.ride.num_correct = num_correct;
-                out.ride.num_notes = desired_timings.len();
-            }
-        }
+        out.set_result(instrument, num_correct, desired_timings.len());
     }
 
     out
