@@ -5,6 +5,7 @@
 - [..] support more drum types (not just kick, snare, open/closed hat)
   - ride, pedal HH, crash, 3 toms.. or arbitrary mappings
   - hacking in RIDE, by following the compiler. Almost works except JSON is strict and missing field borks it. Can I avoid?
+    - [ ] Add sounds for more instruments (ride, bell, pedal HH, crash, etc)
 
 ## asap
 
@@ -157,6 +158,7 @@ _what's very important to make it engaging to me?_
 
 ## done
 
+- [x] fix accuracy bug .. see score.rs unit tests -- not fixed but band-aid
 - [x] MVP: "golden" practice mode (play it perfectly N times and then speeds up by X bpm)
 - [x] MVP UX: display stats for (last loop, last 5 loops, since you started session) - showing last 3 loops as of now
 - [x] handle beat 0 edge case -- q: is this working already? -> seems like it

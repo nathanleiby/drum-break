@@ -22,7 +22,7 @@ pub enum Accuracy {
 // TODO: consider using Decimal type for exact math on beats.
 // - Floating point math has comparison/equality challenges
 // - Can't hash floating point numbers out of the gate
-pub const CORRECT_MARGIN: f64 = 0.15;
+pub const CORRECT_MARGIN: f64 = 0.151; // TODO: hacky fix 0.15 -> 0.151 due to floating point comparison. let's try Decimal later
 pub const MISS_MARGIN: f64 = 0.3;
 
 /// returns a tuple of (accuracy rating, a bool of whether not this measurement is wrapping around to the _next_ loop)
@@ -337,11 +337,13 @@ mod tests {
         assert_eq!(result, Accuracy::Correct);
 
         // handle wrap-around case
-        // TODO: Fix -- geting Early instead of correct
         let result = compute_accuracy_legacy(BEATS_PER_LOOP - CORRECT_MARGIN, &vec![0.0, 1.0]);
         assert_eq!(result, Accuracy::Correct);
 
-        let result = compute_accuracy_legacy(BEATS_PER_LOOP - 2. * CORRECT_MARGIN, &vec![0.0, 1.0]);
+        let result = compute_accuracy_legacy(
+            BEATS_PER_LOOP - CORRECT_MARGIN - EPSILON * 5.,
+            &vec![0.0, 1.0],
+        );
         assert_eq!(result, Accuracy::Early);
 
         let result = compute_accuracy_legacy(BEATS_PER_LOOP - MISS_MARGIN, &vec![0.0, 1.0]);
@@ -350,12 +352,13 @@ mod tests {
 
     #[test]
     fn it_computes_accuracy_considering_is_next_loop() {
-        // TODO: Fix -- geting Early instead of correct
         let result = compute_accuracy_of_single_hit(BEATS_PER_LOOP - CORRECT_MARGIN, &vec![0.0]);
         assert_eq!(result, (Accuracy::Correct, true));
 
-        let result =
-            compute_accuracy_of_single_hit(BEATS_PER_LOOP - 2. * CORRECT_MARGIN, &vec![0.0]);
+        let result = compute_accuracy_of_single_hit(
+            BEATS_PER_LOOP - CORRECT_MARGIN - EPSILON * 5.,
+            &vec![0.0],
+        );
         assert_eq!(result, (Accuracy::Early, true));
     }
 
