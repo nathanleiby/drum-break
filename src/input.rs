@@ -6,10 +6,7 @@ use std::collections::HashSet;
 
 use macroquad::prelude::*;
 
-use crate::{
-    config::InputConfigMidi, consts::*, midi::MidiInput, time::current_time_millis,
-    voices::Instrument, UserHit,
-};
+use crate::{consts::*, midi::MidiInput, time::current_time_millis, voices::Instrument, UserHit};
 
 pub enum Events {
     UserHit {
@@ -199,6 +196,14 @@ impl Input {
     }
 }
 
+struct InputConfigMidi {
+    pub kick: HashSet<u8>,
+    pub snare: HashSet<u8>,
+    pub closed_hi_hat: HashSet<u8>,
+    pub open_hi_hat: HashSet<u8>,
+    pub ride: HashSet<u8>,
+}
+
 fn get_midi_as_user_hits(midi_input: &MidiInput) -> Vec<UserHit> {
     let mut out: Vec<UserHit> = vec![];
 
@@ -243,7 +248,7 @@ fn get_midi_as_user_hits(midi_input: &MidiInput) -> Vec<UserHit> {
     for midi in pressed_midi {
         log::debug!("midi: {:?}", midi); // TODO: compare timestamps
         let timestamp = midi.timestamp as f64;
-        // TODO: refactor into match
+        // TODO: refactor into match?
         if ic_midi.closed_hi_hat.contains(&midi.note_number) {
             out.push(UserHit::new(Instrument::ClosedHihat, timestamp));
         }
