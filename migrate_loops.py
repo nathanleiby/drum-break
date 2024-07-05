@@ -1,7 +1,16 @@
+"""
+To run:
+
+python3 migrate_loops.py
+"""
+
+
 import os
 import json
 
 names = os.listdir("./res/loops")
+
+# This migration adds `voices.ride = []`
 
 print(names)
 for name in names:

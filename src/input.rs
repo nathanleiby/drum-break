@@ -31,6 +31,7 @@ pub enum Events {
     SetAudioLatency {
         delta: f64,
     },
+    ToggleDebugMode,
 }
 
 pub struct Input {
@@ -110,6 +111,13 @@ impl Input {
             });
         }
 
+        if is_key_pressed(KeyCode::B) {
+            events.push(Events::UserHit {
+                instrument: Instrument::Ride,
+                processing_delay,
+            });
+        }
+
         if is_key_pressed(KeyCode::Space) {
             events.push(Events::Pause)
         }
@@ -158,6 +166,10 @@ impl Input {
         // if is_key_pressed(KeyCode::M) {
         //     // TODO: pause metronome click sound
         // }
+
+        if is_key_pressed(KeyCode::D) {
+            events.push(Events::ToggleDebugMode);
+        }
 
         if is_key_pressed(KeyCode::Q) {
             events.push(Events::Quit)

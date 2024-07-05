@@ -14,7 +14,7 @@ use crate::{
         get_user_hit_timings_by_instrument, Accuracy, MISS_MARGIN,
     },
     voices::{Instrument, Loop},
-    GoldMode, UserHit, Voices,
+    Flags, GoldMode, UserHit, Voices,
 };
 
 use macroquad::{prelude::*, ui::*};
@@ -30,11 +30,12 @@ const BACKGROUND_COLOR: Color = Color {
     a: 1.0,
 };
 
-const ALL_INSTRUMENTS: [Instrument; 4] = [
+const ALL_INSTRUMENTS: [Instrument; 5] = [
     Instrument::ClosedHihat,
     Instrument::Snare,
     Instrument::Kick,
     Instrument::OpenHihat,
+    Instrument::Ride,
 ];
 
 pub struct UI {}
@@ -52,6 +53,7 @@ impl UI {
         audio: &mut Audio,
         loops: &Vec<(String, Loop)>,
         gold_mode: &GoldMode,
+        flags: &Flags,
     ) {
         let current_beat = audio.current_beat();
 
@@ -85,6 +87,10 @@ impl UI {
         draw_loop_choices(voices, audio, &loops);
 
         draw_gold_mode(gold_mode);
+
+        if flags.ui_debug_mode {
+            draw_debug_grid();
+        }
     }
 }
 
@@ -411,9 +417,40 @@ fn draw_gold_mode(gold_mode: &GoldMode) {
             gold_mode.correct_takes, gold_mode.was_gold
         )
         .as_str(),
-        420.,
-        360.,
+        500.,
+        432.,
         32.,
         BLACK,
     )
+}
+
+fn draw_debug_grid() {
+    let mut grid_color = GRAY;
+    grid_color.a = 0.5;
+
+    // horiz lines
+    let num_horiz = WINDOW_HEIGHT / 100 + 1;
+    for i in 0..=num_horiz {
+        let step = (i * 100) as f32;
+        draw_line(
+            0.,
+            step,
+            WINDOW_WIDTH as f32,
+            step,
+            if i % 5 == 0 { 3. } else { 1. },
+            grid_color,
+        );
+    }
+    let num_vertical = WINDOW_WIDTH / 100 + 1;
+    for i in 0..=num_vertical {
+        let step = (i * 100) as f32;
+        draw_line(
+            step,
+            0.,
+            step,
+            WINDOW_HEIGHT as f32,
+            if i % 5 == 0 { 3. } else { 1. },
+            grid_color,
+        );
+    }
 }

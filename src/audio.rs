@@ -145,7 +145,10 @@ impl Audio {
             (&voices.snare, "res/sounds/snare.wav"),
             (&voices.kick, "res/sounds/kick.wav"),
             (&voices.open_hihat, "res/sounds/open-hihat.wav"),
-            (&voices.ride, "res/sounds/ride.wav"),
+            // TODO: verify required sound files exist on startup- right now it fails during runtime
+            // TODO: Create sound files for new instruments like ride
+            // (&voices.ride, "res/sounds/ride.wav"),
+            (&voices.ride, "res/sounds/click.wav"),
         ] {
             let (voice, instrument_name) = pair;
             schedule_audio(

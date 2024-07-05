@@ -21,6 +21,7 @@ use crate::input::*;
 use crate::ui::*;
 use crate::voices::Voices;
 
+use consts::{WINDOW_HEIGHT, WINDOW_WIDTH};
 use score::compute_last_loop_summary;
 use simple_logger;
 
@@ -31,8 +32,8 @@ fn window_conf() -> Conf {
     Conf {
         window_title: "Macroix".to_owned(),
         // fullscreen: true,
-        window_width: 1280,
-        window_height: 720,
+        window_width: WINDOW_WIDTH,
+        window_height: WINDOW_HEIGHT,
         ..Default::default()
     }
 }
@@ -40,9 +41,21 @@ fn window_conf() -> Conf {
 const GOLD_MODE_BPM_STEP: f64 = 2.;
 const GOLD_MODE_CORRECT_TAKES: i32 = 3;
 
-struct GoldMode {
+pub struct GoldMode {
     correct_takes: i32,
     was_gold: bool,
+}
+
+pub struct Flags {
+    ui_debug_mode: bool,
+}
+
+impl Flags {
+    pub fn new() -> Self {
+        return Self {
+            ui_debug_mode: false,
+        };
+    }
 }
 
 #[macroquad::main(window_conf)]
@@ -55,6 +68,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let conf = AppConfig::new()?;
     log::debug!("{:?}", &conf);
 
+    let mut flags = Flags::new();
     let mut input = Input::new();
 
     // Setup game state
@@ -126,19 +140,15 @@ async fn main() -> Result<(), Box<dyn Error>> {
         let events = input.process();
 
         // change state
-        process_events(&mut voices, &mut audio, &events, &dir_name)?;
+        process_input_events(&mut voices, &mut audio, &mut flags, &events, &dir_name)?;
         audio.schedule(&voices).await?;
         fps_tracker.update();
 
         // render UI
-        ui.render(&mut voices, &mut audio, &loops, &gold_mode);
-        fps_tracker.render();
-
-        // // TODO: pass this deeper, but for now just send event here
-        // match tx.send(String::from("testing123")) {
-        //     Ok(_) => (),
-        //     Err(_) => warn!("error sending tx"),
-        // }
+        ui.render(&mut voices, &mut audio, &loops, &gold_mode, &flags);
+        if flags.ui_debug_mode {
+            fps_tracker.render();
+        }
 
         // wait for next frame from game engine
         next_frame().await
@@ -146,9 +156,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
 }
 
 /// update application state based on events (that came from user input)
-fn process_events(
+fn process_input_events(
     voices: &mut Voices,
     audio: &mut Audio,
+    flags: &mut Flags,
     events: &Vec<Events>,
     dir_name: &str,
 ) -> Result<(), Box<dyn Error>> {
@@ -204,6 +215,9 @@ fn process_events(
                     audio_latency_seconds: updated_val,
                 };
                 cfg.save()?;
+            }
+            Events::ToggleDebugMode => {
+                flags.ui_debug_mode = !flags.ui_debug_mode;
             }
         }
     }

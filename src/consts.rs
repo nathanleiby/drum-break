@@ -2,7 +2,10 @@
 // UI
 //
 
-pub const NUM_ROWS_IN_GRID: f64 = 4.;
+pub const WINDOW_WIDTH: i32 = 1280;
+pub const WINDOW_HEIGHT: i32 = 720;
+
+pub const NUM_ROWS_IN_GRID: f64 = 5.; // TODO: get this dynamically based on "active" instruments
 
 pub const BEATS_PER_LOOP: f64 = 16.;
 

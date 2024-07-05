@@ -73,7 +73,8 @@ pub fn compute_accuracy_of_single_hit(
             return (Accuracy::Miss, false);
         }
         Some((b, _)) => {
-            // log::info!("Target beat found: {:?}", b);
+            log::info!("Target beat found: {:?}", b);
+            println!("Target beat found: {:?}", b);
             let distance = user_beat_with_latency - b;
             let acc = match distance {
                 d if d.abs() > MISS_MARGIN => Accuracy::Miss,
@@ -336,6 +337,7 @@ mod tests {
         assert_eq!(result, Accuracy::Correct);
 
         // handle wrap-around case
+        // TODO: Fix -- geting Early instead of correct
         let result = compute_accuracy_legacy(BEATS_PER_LOOP - CORRECT_MARGIN, &vec![0.0, 1.0]);
         assert_eq!(result, Accuracy::Correct);
 
@@ -348,6 +350,7 @@ mod tests {
 
     #[test]
     fn it_computes_accuracy_considering_is_next_loop() {
+        // TODO: Fix -- geting Early instead of correct
         let result = compute_accuracy_of_single_hit(BEATS_PER_LOOP - CORRECT_MARGIN, &vec![0.0]);
         assert_eq!(result, (Accuracy::Correct, true));
 
