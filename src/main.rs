@@ -130,6 +130,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
                         audio.set_bpm(audio.get_bpm() + GOLD_MODE_BPM_STEP);
                         gold_mode.correct_takes = 0;
                         gold_mode.was_gold = true;
+                        // TODO: schedule a 1-off "success!" SFX to play
+                        // TOOD: Maybe -- clear existing noise from mistaken notes
                     }
                 }
                 Err(_) => break,
