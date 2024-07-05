@@ -2,7 +2,7 @@
 
 ## working on
 
-- [ ] support more drum types (not just kick, snare, open/closed hat)
+- [..] support more drum types (not just kick, snare, open/closed hat)
   - ride, pedal HH, crash, 3 toms.. or arbitrary mappings
   - hacking in RIDE, by following the compiler. Almost works except JSON is strict and missing field borks it. Can I avoid?
 

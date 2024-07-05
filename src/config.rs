@@ -25,4 +25,5 @@ pub struct InputConfigMidi {
     pub snare: HashSet<u8>,
     pub closed_hi_hat: HashSet<u8>,
     pub open_hi_hat: HashSet<u8>,
+    pub ride: HashSet<u8>,
 }

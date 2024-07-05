@@ -208,21 +208,23 @@ fn get_midi_as_user_hits(midi_input: &MidiInput) -> Vec<UserHit> {
         snare: HashSet::from_iter(vec![45, 49]),
         kick: HashSet::from_iter(vec![46, 50]),
         open_hi_hat: HashSet::from_iter(vec![47, 51]),
+        ride: HashSet::from_iter(vec![]),
     };
     let td17 = InputConfigMidi {
         closed_hi_hat: HashSet::from_iter(vec![42, 22]),
-        // closed_hi_hat: HashSet::from_iter(vec![51, 59, 53]), // TODO: add ride support-- I think this was ride
         snare: HashSet::from_iter(vec![38]),
         kick: HashSet::from_iter(vec![36]),
         // open_hi_hat: HashSet::from_iter(vec![46, 26]),
         open_hi_hat: HashSet::from_iter(vec![44]), // TODO: add pedal_hihat support
-                                                   // pedal_hi_hat: HashSet::from_iter(vec![44]),
+        // pedal_hi_hat: HashSet::from_iter(vec![44]),
+        ride: HashSet::from_iter(vec![51, 59, 53]),
     };
     let alesis_nitro = InputConfigMidi {
         closed_hi_hat: HashSet::from_iter(vec![42]),
         snare: HashSet::from_iter(vec![38]),
         kick: HashSet::from_iter(vec![36]),
         open_hi_hat: HashSet::from_iter(vec![46, 23]), // allow half-open (23)
+        ride: HashSet::from_iter(vec![]),
     };
 
     let ic_midi = match midi_input.get_device_name() {
