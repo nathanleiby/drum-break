@@ -30,14 +30,6 @@ const BACKGROUND_COLOR: Color = Color {
     a: 1.0,
 };
 
-const ALL_INSTRUMENTS: [Instrument; 5] = [
-    Instrument::ClosedHihat,
-    Instrument::Snare,
-    Instrument::Kick,
-    Instrument::OpenHihat,
-    Instrument::Ride,
-];
-
 pub struct UI {}
 
 impl UI {

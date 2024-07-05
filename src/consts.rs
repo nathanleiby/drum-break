@@ -2,6 +2,8 @@
 // UI
 //
 
+use crate::voices::Instrument;
+
 pub const WINDOW_WIDTH: i32 = 1280;
 pub const WINDOW_HEIGHT: i32 = 720;
 
@@ -22,3 +24,12 @@ pub const GRID_TOP_Y: f64 = 64.;
 // Audio
 //
 pub const TICK_SCHEDULE_AHEAD: f64 = 2.; // schedule audio this many (N) ticks ahead of time (i.e. N seconds ahead if at 60bpm)
+
+// General use
+pub const ALL_INSTRUMENTS: [Instrument; 5] = [
+    Instrument::ClosedHihat,
+    Instrument::Snare,
+    Instrument::Kick,
+    Instrument::OpenHihat,
+    Instrument::Ride,
+];

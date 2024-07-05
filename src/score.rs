@@ -5,7 +5,7 @@
 */
 
 use crate::{
-    consts::BEATS_PER_LOOP,
+    consts::{ALL_INSTRUMENTS, BEATS_PER_LOOP},
     voices::{Instrument, Voices},
     UserHit,
 };
@@ -146,6 +146,9 @@ impl LastLoopSummary {
         combined.num_correct += self.open_hihat.num_correct;
         combined.num_notes += self.open_hihat.num_notes;
 
+        combined.num_correct += self.ride.num_correct;
+        combined.num_notes += self.ride.num_notes;
+
         combined
     }
 }
@@ -217,13 +220,7 @@ pub fn compute_last_loop_summary(
 ) -> LastLoopSummary {
     let mut out = LastLoopSummary::new();
 
-    let instruments = [
-        Instrument::ClosedHihat,
-        Instrument::Snare,
-        Instrument::Kick,
-        Instrument::OpenHihat,
-    ];
-    for (_, instrument) in instruments.iter().enumerate() {
+    for (_, instrument) in ALL_INSTRUMENTS.iter().enumerate() {
         // get accuracy of hihat
         let user_timings = get_user_hit_timings_by_instrument(user_hits, *instrument);
         let desired_timings = get_desired_timings_by_instrument(instrument, desired_hits);

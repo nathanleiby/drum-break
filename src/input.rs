@@ -215,9 +215,9 @@ fn get_midi_as_user_hits(midi_input: &MidiInput) -> Vec<UserHit> {
         snare: HashSet::from_iter(vec![38]),
         kick: HashSet::from_iter(vec![36]),
         // open_hi_hat: HashSet::from_iter(vec![46, 26]),
-        open_hi_hat: HashSet::from_iter(vec![44]), // TODO: add pedal_hihat support
+        open_hi_hat: HashSet::from_iter(vec![44]), // TODO: add pedal_hihat support // TODO: 44 IS pedal hihat
         // pedal_hi_hat: HashSet::from_iter(vec![44]),
-        ride: HashSet::from_iter(vec![51, 59, 53]),
+        ride: HashSet::from_iter(vec![51, 53, 59]),
     };
     let alesis_nitro = InputConfigMidi {
         closed_hi_hat: HashSet::from_iter(vec![42]),
@@ -243,6 +243,7 @@ fn get_midi_as_user_hits(midi_input: &MidiInput) -> Vec<UserHit> {
     for midi in pressed_midi {
         log::debug!("midi: {:?}", midi); // TODO: compare timestamps
         let timestamp = midi.timestamp as f64;
+        // TODO: refactor into match
         if ic_midi.closed_hi_hat.contains(&midi.note_number) {
             out.push(UserHit::new(Instrument::ClosedHihat, timestamp));
         }
@@ -254,6 +255,9 @@ fn get_midi_as_user_hits(midi_input: &MidiInput) -> Vec<UserHit> {
         }
         if ic_midi.open_hi_hat.contains(&midi.note_number) {
             out.push(UserHit::new(Instrument::OpenHihat, timestamp));
+        }
+        if ic_midi.ride.contains(&midi.note_number) {
+            out.push(UserHit::new(Instrument::Ride, timestamp));
         }
     }
 
