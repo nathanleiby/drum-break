@@ -4,6 +4,8 @@
   This logic is pure, so it can be iterated independently of other game logic or audio system.
 */
 
+use std::collections::HashMap;
+
 use crate::{
     consts::{ALL_INSTRUMENTS, BEATS_PER_LOOP},
     voices::{Instrument, Voices},
@@ -113,31 +115,25 @@ impl ScoreTracker {
 
 #[derive(Debug)]
 pub struct LastLoopSummary {
-    hihat: ScoreTracker,
-    snare: ScoreTracker,
-    kick: ScoreTracker,
-    open_hihat: ScoreTracker,
-    ride: ScoreTracker,
+    data: HashMap<Instrument, ScoreTracker>,
 }
 
 impl LastLoopSummary {
     pub fn new() -> Self {
-        Self {
-            hihat: ScoreTracker::new(),
-            snare: ScoreTracker::new(),
-            kick: ScoreTracker::new(),
-            open_hihat: ScoreTracker::new(),
-            ride: ScoreTracker::new(),
+        let mut data = HashMap::new();
+        for ins in ALL_INSTRUMENTS.iter() {
+            data.insert(*ins, ScoreTracker::new());
         }
+
+        Self { data }
     }
 
     pub fn get_score_tracker(self: &Self, instrument: &Instrument) -> &ScoreTracker {
-        match instrument {
-            Instrument::ClosedHihat => &self.hihat,
-            Instrument::Snare => &self.snare,
-            Instrument::Kick => &self.kick,
-            Instrument::OpenHihat => &self.open_hihat,
-            Instrument::Ride => &self.ride,
+        let st = self.data.get(instrument);
+        if let Some(st) = st {
+            st
+        } else {
+            panic!("invalid -- ScoreTracker should be defined for all instruments at startup")
         }
     }
 
@@ -151,12 +147,11 @@ impl LastLoopSummary {
     }
 
     fn get_mut_score_tracker(self: &mut Self, instrument: &Instrument) -> &mut ScoreTracker {
-        match instrument {
-            Instrument::ClosedHihat => &mut self.hihat,
-            Instrument::Snare => &mut self.snare,
-            Instrument::Kick => &mut self.kick,
-            Instrument::OpenHihat => &mut self.open_hihat,
-            Instrument::Ride => &mut self.ride,
+        let st = self.data.get_mut(instrument);
+        if let Some(st) = st {
+            st
+        } else {
+            panic!("invalid -- ScoreTracker should be defined for all instruments at startup")
         }
     }
 
@@ -382,8 +377,8 @@ mod tests {
 
         let result = compute_last_loop_summary(&user_hits, &desired_hits, 0.0);
         assert_eq!(
-            result.kick,
-            ScoreTracker {
+            result.get_score_tracker(&Instrument::Kick),
+            &ScoreTracker {
                 num_correct: 1,
                 num_notes: 1,
             }
@@ -402,8 +397,8 @@ mod tests {
         };
         let result = compute_last_loop_summary(&user_hits, &desired_hits, 0.0);
         assert_eq!(
-            result.kick,
-            ScoreTracker {
+            result.get_score_tracker(&Instrument::Kick),
+            &ScoreTracker {
                 num_correct: 0,
                 num_notes: 1,
             }

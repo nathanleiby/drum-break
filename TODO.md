@@ -40,6 +40,7 @@ _what's very important to make it engaging to me?_
 
 ## future
 
+- [ ] (bug) ScoreTracker behaves strangely when you have >1 Correct user hit for a single desired note (e.g. 2/2 or 3/3 could refer to 2 desired notes, just in the latter case we have 3 correct notes total bc two hits were within the Correct margin)
 - [..] Capture EXACT timing of the midi note for use in timing.
   - [..] UserHit model should include real ClockTime and (computed from that) corresponding beat.. this way we can determine "age" of a beat and expire it if needed (from looping perspective). Currently, UserHit is just re-using `Voices` as its data model
   - high precision input https://github.com/not-fl3/macroquad/issues/1 vs per frame
