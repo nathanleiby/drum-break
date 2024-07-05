@@ -9,7 +9,7 @@ use crate::{
     audio::Audio,
     consts::*,
     score::{
-        compute_accuracy_of_single_hit, compute_last_loop_summary,
+        self, compute_accuracy_of_single_hit, compute_last_loop_summary,
         compute_loop_performance_for_voice, get_desired_timings_by_instrument,
         get_user_hit_timings_by_instrument, Accuracy, MISS_MARGIN,
     },
@@ -216,20 +216,9 @@ fn draw_loop_summary(
     if nth_loop == 1 {
         // Show summary to the right of each instrument row
         for (idx, instrument) in ALL_INSTRUMENTS.iter().enumerate() {
-            let num_correct = match instrument {
-                Instrument::ClosedHihat => summary_data.hihat.num_correct,
-                Instrument::Snare => summary_data.snare.num_correct,
-                Instrument::Kick => summary_data.kick.num_correct,
-                Instrument::OpenHihat => summary_data.open_hihat.num_correct,
-                Instrument::Ride => summary_data.ride.num_correct,
-            };
-            let num_notes = match instrument {
-                Instrument::ClosedHihat => summary_data.hihat.num_notes,
-                Instrument::Snare => summary_data.snare.num_notes,
-                Instrument::Kick => summary_data.kick.num_notes,
-                Instrument::OpenHihat => summary_data.open_hihat.num_notes,
-                Instrument::Ride => summary_data.ride.num_notes,
-            };
+            let score_tracker = summary_data.get_score_tracker(instrument);
+            let num_correct = score_tracker.num_correct;
+            let num_notes = score_tracker.num_notes;
 
             draw_text(
                 format!("{num_correct} / {:?}", num_notes).as_str(),

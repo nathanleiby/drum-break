@@ -113,11 +113,11 @@ impl ScoreTracker {
 
 #[derive(Debug)]
 pub struct LastLoopSummary {
-    pub hihat: ScoreTracker,
-    pub snare: ScoreTracker,
-    pub kick: ScoreTracker,
-    pub open_hihat: ScoreTracker,
-    pub ride: ScoreTracker,
+    hihat: ScoreTracker,
+    snare: ScoreTracker,
+    kick: ScoreTracker,
+    open_hihat: ScoreTracker,
+    ride: ScoreTracker,
 }
 
 impl LastLoopSummary {
@@ -131,7 +131,7 @@ impl LastLoopSummary {
         }
     }
 
-    fn get_score_tracker(self: &Self, instrument: &Instrument) -> &ScoreTracker {
+    pub fn get_score_tracker(self: &Self, instrument: &Instrument) -> &ScoreTracker {
         match instrument {
             Instrument::ClosedHihat => &self.hihat,
             Instrument::Snare => &self.snare,
@@ -139,6 +139,15 @@ impl LastLoopSummary {
             Instrument::OpenHihat => &self.open_hihat,
             Instrument::Ride => &self.ride,
         }
+    }
+
+    pub fn set_score_tracker(
+        self: &mut Self,
+        instrument: &Instrument,
+        score_tracker: ScoreTracker,
+    ) {
+        let to_update: &mut ScoreTracker = self.get_mut_score_tracker(instrument);
+        *to_update = score_tracker;
     }
 
     fn get_mut_score_tracker(self: &mut Self, instrument: &Instrument) -> &mut ScoreTracker {
@@ -161,17 +170,6 @@ impl LastLoopSummary {
         }
 
         combined
-    }
-
-    pub fn set_result(
-        self: &mut Self,
-        instrument: &Instrument,
-        num_correct: usize,
-        num_notes: usize,
-    ) {
-        let to_update: &mut ScoreTracker = self.get_mut_score_tracker(instrument);
-        to_update.num_correct = num_correct;
-        to_update.num_notes = num_notes;
     }
 }
 
@@ -256,7 +254,14 @@ pub fn compute_last_loop_summary(
             }
         }
 
-        out.set_result(instrument, num_correct, desired_timings.len());
+        let num_notes = desired_timings.len();
+        out.set_score_tracker(
+            instrument,
+            ScoreTracker {
+                num_correct,
+                num_notes,
+            },
+        );
     }
 
     out
