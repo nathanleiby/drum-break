@@ -134,7 +134,7 @@ fn draw_beat_grid(desired_hits: &Voices) {
             x,
             start_y,
             x,
-            start_y + ROW_HEIGHT * NUM_ROWS_IN_GRID,
+            start_y + ROW_HEIGHT * (NUM_ROWS_IN_GRID as f64),
             // if i % 4 == 0 { 6.0 } else { 4.0 },
             4.0,
             if i % 4 == 0 { BLACK } else { LINE_COLOR },
@@ -153,6 +153,7 @@ fn draw_beat_grid(desired_hits: &Voices) {
             Instrument::Kick => "Kick",
             Instrument::OpenHihat => "Open hi-hat",
             Instrument::Ride => "Ride",
+            Instrument::Crash => "Crash",
         };
 
         // Labels in top-left of grid
@@ -280,7 +281,14 @@ fn draw_position_line(current_beat: f64) {
 
     // draw a vertical line at the current positonj
     let x = start_x + current_beat * BEAT_WIDTH_PX;
-    draw_line_f64(x, start_y, x, start_y + ROW_HEIGHT * 5., 4.0, RED);
+    draw_line_f64(
+        x,
+        start_y,
+        x,
+        start_y + ROW_HEIGHT * (NUM_ROWS_IN_GRID as f64),
+        4.0,
+        RED,
+    );
 }
 
 fn draw_note(beats_offset: f64, row: usize) {
@@ -370,7 +378,9 @@ fn draw_pulse_beat(current_beat: f64) {
     }
 }
 
-const UI_TOP_LEFT: Vec2 = vec2(100., 400.);
+const BELOW_GRID_Y: f32 =
+    (GRID_TOP_Y as f32) + 32. + (((NUM_ROWS_IN_GRID as f64) * ROW_HEIGHT) as f32);
+const UI_TOP_LEFT: Vec2 = vec2(100., BELOW_GRID_Y);
 
 fn draw_loop_choices<'a, 'b: 'a>(
     voices: &'a mut Voices,
@@ -399,7 +409,7 @@ fn draw_gold_mode(gold_mode: &GoldMode) {
         )
         .as_str(),
         500.,
-        432.,
+        BELOW_GRID_Y,
         32.,
         BLACK,
     )

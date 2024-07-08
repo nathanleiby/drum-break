@@ -140,15 +140,18 @@ impl Audio {
             self.last_scheduled_tick,
             tick_to_schedule
         );
+
+        // TODO: Schedule by Instrument + beat, don't tie to Voices data model
         for pair in [
             (&voices.closed_hihat, "res/sounds/closed-hihat.wav"),
             (&voices.snare, "res/sounds/snare.wav"),
             (&voices.kick, "res/sounds/kick.wav"),
             (&voices.open_hihat, "res/sounds/open-hihat.wav"),
             // TODO: verify required sound files exist on startup- right now it fails during runtime
-            // TODO: Create sound files for new instruments like ride
+            // TODO: Create sound files for new instruments like ride and crash
             // (&voices.ride, "res/sounds/ride.wav"),
             (&voices.ride, "res/sounds/click.wav"),
+            (&voices.crash, "res/sounds/click.wav"),
         ] {
             let (voice, instrument_name) = pair;
             schedule_audio(

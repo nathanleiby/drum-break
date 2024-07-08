@@ -189,6 +189,7 @@ pub fn get_desired_timings_by_instrument<'a>(
         Instrument::Kick => &desired_hits.kick,
         Instrument::OpenHihat => &desired_hits.open_hihat,
         Instrument::Ride => &desired_hits.ride,
+        Instrument::Crash => &desired_hits.crash,
     };
     desired_timings
 }
@@ -272,7 +273,7 @@ mod tests {
             compute_accuracy_of_single_hit, compute_last_loop_summary, Accuracy, ScoreTracker,
             CORRECT_MARGIN, MISS_MARGIN,
         },
-        voices::Instrument,
+        voices::{Instrument, Voices},
         UserHit,
     };
 
@@ -367,13 +368,8 @@ mod tests {
     #[test]
     fn it_computes_last_loop_summary_for_correct_user_htis() {
         let user_hits = vec![UserHit::new(Instrument::Kick, 0.0)];
-        let desired_hits = crate::voices::Voices {
-            closed_hihat: vec![],
-            snare: vec![],
-            kick: vec![0.0],
-            open_hihat: vec![],
-            ride: vec![],
-        };
+        let mut desired_hits = Voices::new();
+        desired_hits.kick = vec![0.0];
 
         let result = compute_last_loop_summary(&user_hits, &desired_hits, 0.0);
         assert_eq!(
@@ -388,13 +384,9 @@ mod tests {
     #[test]
     fn it_computes_last_loop_summary_for_incorrect_user_hits() {
         let user_hits = vec![UserHit::new(Instrument::Kick, 0.5)];
-        let desired_hits = crate::voices::Voices {
-            closed_hihat: vec![],
-            snare: vec![],
-            kick: vec![0.0],
-            open_hihat: vec![],
-            ride: vec![],
-        };
+        let mut desired_hits = Voices::new();
+        desired_hits.kick = vec![0.0];
+
         let result = compute_last_loop_summary(&user_hits, &desired_hits, 0.0);
         assert_eq!(
             result.get_score_tracker(&Instrument::Kick),

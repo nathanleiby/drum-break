@@ -186,7 +186,7 @@ impl Input {
             // is on a beat?
             let beat = ((mouse_x as f64 - GRID_LEFT_X) / BEAT_WIDTH_PX).floor();
             let row = ((mouse_y as f64 - GRID_TOP_Y) / ROW_HEIGHT).floor();
-            if beat >= 0. && beat < BEATS_PER_LOOP && row >= 0. && row < NUM_ROWS_IN_GRID {
+            if beat >= 0. && beat < BEATS_PER_LOOP && row >= 0. && row < (NUM_ROWS_IN_GRID as f64) {
                 log::debug!("Clicked on row={}, beat={}", row, beat);
                 events.push(Events::ToggleBeat { row, beat });
             }
@@ -202,6 +202,7 @@ struct InputConfigMidi {
     pub closed_hi_hat: HashSet<u8>,
     pub open_hi_hat: HashSet<u8>,
     pub ride: HashSet<u8>,
+    pub crash: HashSet<u8>,
 }
 
 fn get_midi_as_user_hits(midi_input: &MidiInput) -> Vec<UserHit> {
@@ -214,6 +215,7 @@ fn get_midi_as_user_hits(midi_input: &MidiInput) -> Vec<UserHit> {
         kick: HashSet::from_iter(vec![46, 50]),
         open_hi_hat: HashSet::from_iter(vec![47, 51]),
         ride: HashSet::from_iter(vec![]),
+        crash: HashSet::from_iter(vec![]),
     };
     let td17 = InputConfigMidi {
         closed_hi_hat: HashSet::from_iter(vec![42, 22]),
@@ -223,6 +225,7 @@ fn get_midi_as_user_hits(midi_input: &MidiInput) -> Vec<UserHit> {
         open_hi_hat: HashSet::from_iter(vec![44]), // TODO: add pedal_hihat support // TODO: 44 IS pedal hihat
         // pedal_hi_hat: HashSet::from_iter(vec![44]),
         ride: HashSet::from_iter(vec![51, 53, 59]),
+        crash: HashSet::from_iter(vec![]),
     };
     let alesis_nitro = InputConfigMidi {
         closed_hi_hat: HashSet::from_iter(vec![42]),
@@ -230,6 +233,7 @@ fn get_midi_as_user_hits(midi_input: &MidiInput) -> Vec<UserHit> {
         kick: HashSet::from_iter(vec![36]),
         open_hi_hat: HashSet::from_iter(vec![46, 23]), // allow half-open (23)
         ride: HashSet::from_iter(vec![]),
+        crash: HashSet::from_iter(vec![]),
     };
 
     let ic_midi = match midi_input.get_device_name() {
@@ -248,7 +252,7 @@ fn get_midi_as_user_hits(midi_input: &MidiInput) -> Vec<UserHit> {
     for midi in pressed_midi {
         log::debug!("midi: {:?}", midi); // TODO: compare timestamps
         let timestamp = midi.timestamp as f64;
-        // TODO: refactor into match?
+        // TODO: refactor into match for better TypeSafety and easier iteration
         if ic_midi.closed_hi_hat.contains(&midi.note_number) {
             out.push(UserHit::new(Instrument::ClosedHihat, timestamp));
         }
@@ -263,6 +267,9 @@ fn get_midi_as_user_hits(midi_input: &MidiInput) -> Vec<UserHit> {
         }
         if ic_midi.ride.contains(&midi.note_number) {
             out.push(UserHit::new(Instrument::Ride, timestamp));
+        }
+        if ic_midi.crash.contains(&midi.note_number) {
+            out.push(UserHit::new(Instrument::Crash, timestamp));
         }
     }
 

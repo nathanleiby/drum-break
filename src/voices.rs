@@ -18,7 +18,7 @@ pub enum Instrument {
     // LTom,
     // MTom,
     // HTom,
-    // Crash,
+    Crash,
 }
 
 /// Voice represents the notes to be played on an instrument.
@@ -45,6 +45,7 @@ pub struct Voices {
     pub kick: Vec<f64>,
     pub open_hihat: Vec<f64>,
     pub ride: Vec<f64>,
+    pub crash: Vec<f64>,
 }
 
 impl Voices {
@@ -55,9 +56,11 @@ impl Voices {
             kick: vec![],
             open_hihat: vec![],
             ride: vec![],
+            crash: vec![],
         }
     }
 
+    // TODO: at this layer, should apss instrument instead of row IDX which is UI dependent
     pub fn toggle_beat(&mut self, row: f64, beat: f64) {
         let ins_vec = match row as usize {
             0 => &mut self.closed_hihat,
@@ -65,6 +68,7 @@ impl Voices {
             2 => &mut self.kick,
             3 => &mut self.open_hihat,
             4 => &mut self.ride,
+            5 => &mut self.crash,
             _ => panic!("invalid instrument idx"),
         };
         if let Some(pos) = ins_vec.iter().position(|x| *x == beat) {
