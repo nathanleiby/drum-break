@@ -221,7 +221,7 @@ fn get_midi_as_user_hits(midi_input: &MidiInput) -> Vec<UserHit> {
         open_hi_hat: HashSet::from_iter(vec![44]), // TODO: add pedal_hihat support // TODO: 44 IS pedal hihat
         // pedal_hi_hat: HashSet::from_iter(vec![44]),
         ride: HashSet::from_iter(vec![51, 53, 59]),
-        crash: HashSet::from_iter(vec![]),
+        crash: HashSet::from_iter(vec![49, 55, 57, 52]),
     };
     let alesis_nitro = InputConfigMidi {
         closed_hi_hat: HashSet::from_iter(vec![42]),
