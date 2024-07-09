@@ -393,7 +393,7 @@ fn draw_loop_choices<'a, 'b: 'a>(
         .ui(&mut *root_ui(), |ui| {
             voices_options.iter().for_each(|(name, new_loop)| {
                 if ui.button(None, format!("{:?} ({:?})", name.as_str(), new_loop.bpm)) {
-                    *voices = new_loop.voices.clone();
+                    *voices = Voices::new_from_voices_old_model(&new_loop.voices);
                     audio.set_bpm(new_loop.bpm as f64);
                     log::info!("Switched to {:?}", name);
                 }

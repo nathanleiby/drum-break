@@ -6,6 +6,8 @@ use std::error::Error;
 use macroquad::file::load_file;
 use serde::{Deserialize, Serialize};
 
+use crate::consts::ALL_INSTRUMENTS;
+
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Instrument {
     ClosedHihat,
@@ -22,26 +24,24 @@ pub enum Instrument {
 }
 
 /// Voice represents the notes to be played on an instrument.
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct Voice {
-    pub instrument: Instrument,
-    pub beat_timings: Vec<f64>,
+    instrument: Instrument,
+    beat_timings: Vec<f64>,
 }
 
 impl Voice {
-    pub fn new() -> Self {
+    pub fn new(instrument: Instrument) -> Self {
         Self {
-            instrument: Instrument::Snare,
+            instrument,
             beat_timings: vec![],
         }
     }
 }
 
-/// Voices represents the notes to be played on each instrument.
+/// VoicesOld represents the notes to be played on each instrument.
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Voices {
-    // TODO: make these private
-    // TODO: Refactor to table
+pub struct VoicesFromJSON {
     closed_hihat: Vec<f64>,
     snare: Vec<f64>,
     kick: Vec<f64>,
@@ -50,16 +50,38 @@ pub struct Voices {
     crash: Vec<f64>,
 }
 
+/// Voices represents the notes to be played on each instrument.
+#[derive(Debug, Clone)]
+pub struct Voices {
+    data: Vec<Voice>,
+}
+
 impl Voices {
     pub fn new() -> Self {
-        Self {
-            closed_hihat: vec![],
-            snare: vec![],
-            kick: vec![],
-            open_hihat: vec![],
-            ride: vec![],
-            crash: vec![],
+        let mut data = vec![];
+        for ins in ALL_INSTRUMENTS.iter() {
+            data.push(Voice::new(*ins))
         }
+        Self { data }
+    }
+
+    pub fn new_from_voices_old_model(vo: &VoicesFromJSON) -> Self {
+        let mut data = vec![];
+        for ins in ALL_INSTRUMENTS.iter() {
+            let beat_timings = match ins {
+                Instrument::ClosedHihat => vo.closed_hihat.clone(),
+                Instrument::Snare => vo.snare.clone(),
+                Instrument::Kick => vo.kick.clone(),
+                Instrument::OpenHihat => vo.open_hihat.clone(),
+                Instrument::Ride => vo.ride.clone(),
+                Instrument::Crash => vo.crash.clone(),
+            };
+            data.push(Voice {
+                instrument: *ins,
+                beat_timings,
+            });
+        }
+        Self { data }
     }
 
     pub fn toggle_beat(&mut self, ins: Instrument, beat: f64) {
@@ -72,24 +94,18 @@ impl Voices {
     }
 
     pub fn get_instrument_beats(self: &Self, ins: &Instrument) -> &Vec<f64> {
-        match ins {
-            Instrument::ClosedHihat => &self.closed_hihat,
-            Instrument::Snare => &self.snare,
-            Instrument::Kick => &self.kick,
-            Instrument::OpenHihat => &self.open_hihat,
-            Instrument::Ride => &self.ride,
-            Instrument::Crash => &self.crash,
+        if let Some(pos) = self.data.iter().position(|x| x.instrument == *ins) {
+            return &self.data[pos].beat_timings;
+        } else {
+            panic!("couldn't find instrument, though ALL_INSTRUMENTS should be present");
         }
     }
 
     pub fn get_instrument_beats_mut(self: &mut Self, ins: &Instrument) -> &mut Vec<f64> {
-        match ins {
-            Instrument::ClosedHihat => &mut self.closed_hihat,
-            Instrument::Snare => &mut self.snare,
-            Instrument::Kick => &mut self.kick,
-            Instrument::OpenHihat => &mut self.open_hihat,
-            Instrument::Ride => &mut self.ride,
-            Instrument::Crash => &mut self.crash,
+        if let Some(pos) = self.data.iter().position(|x| x.instrument == *ins) {
+            return &mut self.data[pos].beat_timings;
+        } else {
+            panic!("couldn't find instrument, though ALL_INSTRUMENTS should be present");
         }
     }
 
@@ -105,13 +121,24 @@ impl Voices {
             Instrument::Crash => "res/sounds/click.wav",
         }
     }
+
+    pub fn to_voices_old_model(&self) -> VoicesFromJSON {
+        VoicesFromJSON {
+            closed_hihat: self.get_instrument_beats(&Instrument::ClosedHihat).clone(),
+            snare: self.get_instrument_beats(&Instrument::Snare).clone(),
+            kick: self.get_instrument_beats(&Instrument::Kick).clone(),
+            open_hihat: self.get_instrument_beats(&Instrument::OpenHihat).clone(),
+            ride: self.get_instrument_beats(&Instrument::Ride).clone(),
+            crash: self.get_instrument_beats(&Instrument::Crash).clone(),
+        }
+    }
 }
 
 /// Loop is the full information required to play a loop. It can be read/written to a file.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Loop {
     pub bpm: usize,
-    pub voices: Voices,
+    pub voices: VoicesFromJSON,
 }
 
 impl Loop {
@@ -132,16 +159,22 @@ impl Loop {
 
 #[cfg(test)]
 mod tests {
-    use crate::voices::Loop;
+    use crate::voices::{Instrument, Loop, Voices};
 
     #[test]
     fn it_can_load_a_loop_from_file() {
         let result = Loop::new_from_file("res/loops/samba.json");
         let loop_data = result.unwrap();
         assert_eq!(loop_data.bpm, 120);
-        assert_eq!(loop_data.voices.closed_hihat.len(), 12);
-        assert_eq!(loop_data.voices.snare.len(), 7);
-        assert_eq!(loop_data.voices.kick.len(), 8);
-        assert_eq!(loop_data.voices.open_hihat.len(), 4);
+        let voices = Voices::new_from_voices_old_model(&loop_data.voices);
+        assert_eq!(
+            voices.get_instrument_beats(&Instrument::ClosedHihat).len(),
+            12
+        );
+        assert_eq!(voices.get_instrument_beats(&Instrument::Snare).len(), 7);
+
+        assert_eq!(voices.get_instrument_beats(&Instrument::Kick).len(), 8);
+        assert_eq!(voices.get_instrument_beats(&Instrument::OpenHihat).len(), 4);
+        assert_eq!(voices.get_instrument_beats(&Instrument::Ride).len(), 0);
     }
 }

@@ -192,7 +192,7 @@ fn process_input_events(
                 let mut writer = BufWriter::new(file);
                 let my_loop = Loop {
                     bpm: audio.get_bpm() as usize,
-                    voices: voices.clone(),
+                    voices: voices.to_voices_old_model(),
                 };
                 serde_json::to_writer(&mut writer, &my_loop)?;
                 writer.flush()?;
