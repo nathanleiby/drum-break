@@ -157,6 +157,7 @@ fn draw_beat_grid(desired_hits: &Voices) {
             Instrument::Tom1 => "Tom1 (High)",
             Instrument::Tom2 => "Tom2 (Med)",
             Instrument::Tom3 => "Tom3 (Low)",
+            Instrument::PedalHiHat => "Pedal Hi-hat",
         };
 
         // Labels in top-left of grid

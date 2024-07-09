@@ -8,13 +8,13 @@ use serde::{Deserialize, Serialize};
 
 use crate::consts::ALL_INSTRUMENTS;
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Instrument {
     ClosedHihat,
     Snare,
     Kick,
     OpenHihat,
-    // PedalHiHat,
+    PedalHiHat,
     Ride,
     // RideBell,
     Tom1,
@@ -78,6 +78,7 @@ impl Voices {
                 Instrument::Tom1 => vec![],
                 Instrument::Tom2 => vec![],
                 Instrument::Tom3 => vec![],
+                Instrument::PedalHiHat => vec![],
             };
             data.push(Voice {
                 instrument: *ins,
@@ -124,6 +125,7 @@ impl Voices {
             Instrument::Tom1 => "res/sounds/tom-hi.wav",
             Instrument::Tom2 => "res/sounds/tom-med.wav",
             Instrument::Tom3 => "res/sounds/tom-low.wav",
+            Instrument::PedalHiHat => "res/sounds/pedal-hihat.wav",
             // Instrument::Metronome => "res/sounds/click.wav",
         }
     }

@@ -304,6 +304,7 @@ async fn schedule_note(
             "res/sounds/tom-hi.wav" => StaticSoundSettings::new().volume(0.25),
             "res/sounds/tom-med.wav" => StaticSoundSettings::new().volume(0.25),
             "res/sounds/tom-low.wav" => StaticSoundSettings::new().volume(0.25),
+            "res/sounds/pedal-hihat.wav" => StaticSoundSettings::new().volume(0.5),
             _ => StaticSoundSettings::new(),
         }
         .start_time(ClockTime {

@@ -24,7 +24,7 @@ pub const GRID_TOP_Y: f64 = 64.;
 pub const TICK_SCHEDULE_AHEAD: f64 = 2.; // schedule audio this many (N) ticks ahead of time (i.e. N seconds ahead if at 60bpm)
 
 // General use
-pub const ALL_INSTRUMENTS: [Instrument; 9] = [
+pub const ALL_INSTRUMENTS: [Instrument; 10] = [
     Instrument::Crash,
     Instrument::Ride,
     Instrument::OpenHihat,
@@ -34,7 +34,7 @@ pub const ALL_INSTRUMENTS: [Instrument; 9] = [
     Instrument::Tom3,
     Instrument::Snare,
     Instrument::Kick,
-    // Pedal Hi-hat
+    Instrument::PedalHiHat,
 ];
 
 pub const NUM_ROWS_IN_GRID: usize = ALL_INSTRUMENTS.len();

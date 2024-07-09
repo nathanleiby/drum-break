@@ -81,17 +81,19 @@ impl Input {
         let processing_delay = 0.; // TODO: solve this for keyboard input, too.
                                    // Right now we don't know the delay between key press and frame start .. we could improve by guessing midway through the previous frame (1/2 frame duration) without any knowledge
 
-        for ins in ALL_INSTRUMENTS.iter() {
-            let key_code = match ins {
-                Instrument::ClosedHihat => KeyCode::A,
-                Instrument::Snare => KeyCode::S,
-                Instrument::Kick => KeyCode::D,
-                Instrument::OpenHihat => KeyCode::F,
-                Instrument::Ride => KeyCode::G,
-                Instrument::Crash => KeyCode::H,
-                Instrument::Tom1 => KeyCode::J,
-                Instrument::Tom2 => KeyCode::K,
-                Instrument::Tom3 => KeyCode::L,
+        for (idx, ins) in ALL_INSTRUMENTS.iter().enumerate() {
+            let key_code = match idx {
+                0 => KeyCode::A,
+                1 => KeyCode::S,
+                2 => KeyCode::D,
+                3 => KeyCode::F,
+                4 => KeyCode::G,
+                5 => KeyCode::H,
+                6 => KeyCode::J,
+                7 => KeyCode::K,
+                8 => KeyCode::L,
+                9 => KeyCode::Semicolon,
+                _ => panic!("more than hard-coded num instruments, failed to map key codes"),
             };
             if is_key_pressed(key_code) {
                 events.push(Events::UserHit {
@@ -194,6 +196,7 @@ struct InputConfigMidi {
     tom_1: HashSet<u8>,
     tom_2: HashSet<u8>,
     tom_3: HashSet<u8>,
+    pedal_hihat: HashSet<u8>,
 }
 
 impl InputConfigMidi {
@@ -208,6 +211,7 @@ impl InputConfigMidi {
             Instrument::Tom1 => &self.tom_1,
             Instrument::Tom2 => &self.tom_2,
             Instrument::Tom3 => &self.tom_3,
+            Instrument::PedalHiHat => &self.pedal_hihat,
         }
     }
 }
@@ -226,6 +230,7 @@ fn get_midi_as_user_hits(midi_input: &MidiInput) -> Vec<UserHit> {
         tom_1: HashSet::from_iter(vec![]),
         tom_2: HashSet::from_iter(vec![]),
         tom_3: HashSet::from_iter(vec![]),
+        pedal_hihat: HashSet::from_iter(vec![]),
     };
     let td17 = InputConfigMidi {
         closed_hi_hat: HashSet::from_iter(vec![42, 22]),
@@ -238,6 +243,7 @@ fn get_midi_as_user_hits(midi_input: &MidiInput) -> Vec<UserHit> {
         tom_1: HashSet::from_iter(vec![50, 48]),
         tom_2: HashSet::from_iter(vec![47, 45]),
         tom_3: HashSet::from_iter(vec![58, 43]),
+        pedal_hihat: HashSet::from_iter(vec![]),
     };
     let alesis_nitro = InputConfigMidi {
         closed_hi_hat: HashSet::from_iter(vec![42]),
@@ -249,6 +255,7 @@ fn get_midi_as_user_hits(midi_input: &MidiInput) -> Vec<UserHit> {
         tom_1: HashSet::from_iter(vec![]),
         tom_2: HashSet::from_iter(vec![]),
         tom_3: HashSet::from_iter(vec![]),
+        pedal_hihat: HashSet::from_iter(vec![]),
     };
 
     let ic_midi = match midi_input.get_device_name() {
