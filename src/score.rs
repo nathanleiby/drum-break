@@ -354,7 +354,7 @@ mod tests {
     fn it_computes_last_loop_summary_for_correct_user_htis() {
         let user_hits = vec![UserHit::new(Instrument::Kick, 0.0)];
         let mut desired_hits = Voices::new();
-        desired_hits.kick = vec![0.0];
+        desired_hits.toggle_beat(Instrument::Kick, 0.0);
 
         let result = compute_last_loop_summary(&user_hits, &desired_hits, 0.0);
         assert_eq!(
@@ -370,7 +370,7 @@ mod tests {
     fn it_computes_last_loop_summary_for_incorrect_user_hits() {
         let user_hits = vec![UserHit::new(Instrument::Kick, 0.5)];
         let mut desired_hits = Voices::new();
-        desired_hits.kick = vec![0.0];
+        desired_hits.toggle_beat(Instrument::Kick, 0.0);
 
         let result = compute_last_loop_summary(&user_hits, &desired_hits, 0.0);
         assert_eq!(

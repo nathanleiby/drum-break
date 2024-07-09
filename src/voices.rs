@@ -42,12 +42,12 @@ impl Voice {
 pub struct Voices {
     // TODO: make these private
     // TODO: Refactor to table
-    pub closed_hihat: Vec<f64>,
-    pub snare: Vec<f64>,
-    pub kick: Vec<f64>,
-    pub open_hihat: Vec<f64>,
-    pub ride: Vec<f64>,
-    pub crash: Vec<f64>,
+    closed_hihat: Vec<f64>,
+    snare: Vec<f64>,
+    kick: Vec<f64>,
+    open_hihat: Vec<f64>,
+    ride: Vec<f64>,
+    crash: Vec<f64>,
 }
 
 impl Voices {
@@ -62,17 +62,8 @@ impl Voices {
         }
     }
 
-    // TODO: at this layer, should apss instrument instead of row IDX which is UI dependent
-    pub fn toggle_beat(&mut self, row: f64, beat: f64) {
-        let ins_vec = match row as usize {
-            0 => &mut self.closed_hihat,
-            1 => &mut self.snare,
-            2 => &mut self.kick,
-            3 => &mut self.open_hihat,
-            4 => &mut self.ride,
-            5 => &mut self.crash,
-            _ => panic!("invalid instrument idx"),
-        };
+    pub fn toggle_beat(&mut self, ins: Instrument, beat: f64) {
+        let ins_vec = self.get_instrument_beats_mut(&ins);
         if let Some(pos) = ins_vec.iter().position(|x| *x == beat) {
             ins_vec.remove(pos);
         } else {
@@ -88,6 +79,17 @@ impl Voices {
             Instrument::OpenHihat => &self.open_hihat,
             Instrument::Ride => &self.ride,
             Instrument::Crash => &self.crash,
+        }
+    }
+
+    pub fn get_instrument_beats_mut(self: &mut Self, ins: &Instrument) -> &mut Vec<f64> {
+        match ins {
+            Instrument::ClosedHihat => &mut self.closed_hihat,
+            Instrument::Snare => &mut self.snare,
+            Instrument::Kick => &mut self.kick,
+            Instrument::OpenHihat => &mut self.open_hihat,
+            Instrument::Ride => &mut self.ride,
+            Instrument::Crash => &mut self.crash,
         }
     }
 

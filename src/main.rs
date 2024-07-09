@@ -26,7 +26,7 @@ use score::compute_last_loop_summary;
 use simple_logger;
 
 use macroquad::prelude::*;
-use voices::Loop;
+use voices::{Instrument, Loop};
 
 fn window_conf() -> Conf {
     Conf {
@@ -198,7 +198,17 @@ fn process_input_events(
                 writer.flush()?;
             }
             Events::ToggleBeat { row, beat } => {
-                voices.toggle_beat(*row, *beat);
+                // map from UI display to instrument
+                let ins = match *row as usize {
+                    0 => Instrument::ClosedHihat,
+                    1 => Instrument::Snare,
+                    2 => Instrument::Kick,
+                    3 => Instrument::OpenHihat,
+                    4 => Instrument::Ride,
+                    5 => Instrument::Crash,
+                    _ => panic!("invalid instrument idx"),
+                };
+                voices.toggle_beat(ins, *beat);
             }
             Events::TrackForCalibration => {
                 let updated_val = audio.track_for_calibration();
