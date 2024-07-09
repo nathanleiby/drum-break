@@ -41,7 +41,7 @@ impl UI {
         self: &mut Self,
 
         // TODO: consider bundling the below into a Game struct or similar
-        voices: &mut Voices,
+        desired_hits: &mut Voices,
         audio: &mut Audio,
         loops: &Vec<(String, Loop)>,
         gold_mode: &GoldMode,
@@ -53,13 +53,13 @@ impl UI {
         let bpm = audio.get_bpm();
 
         clear_background(BACKGROUND_COLOR);
-        draw_beat_grid(voices);
-        draw_user_hits(&audio.user_hits, &voices, audio_latency);
+        draw_beat_grid(desired_hits);
+        draw_user_hits(&audio.user_hits, &desired_hits, audio_latency);
         let loop_last_completed_beat = current_beat - MISS_MARGIN;
         let current_loop_hits = get_hits_from_nth_loop(&audio.user_hits, audio.current_loop());
         draw_note_successes(
             &current_loop_hits,
-            &voices,
+            &desired_hits,
             audio_latency,
             loop_last_completed_beat,
         );
@@ -70,13 +70,13 @@ impl UI {
 
         for i in 1..=3 {
             let last_loop_hits = get_hits_from_nth_loop(&audio.user_hits, audio.current_loop() - i);
-            draw_loop_summary(&last_loop_hits, &voices, audio_latency, i);
+            draw_loop_summary(&last_loop_hits, &desired_hits, audio_latency, i);
         }
 
         // TODO: toggle this on and off with a key for 'calibration' mode
         draw_pulse_beat(current_beat + audio_latency);
 
-        draw_loop_choices(voices, audio, &loops);
+        draw_loop_choices(desired_hits, audio, &loops);
 
         draw_gold_mode(gold_mode);
 
