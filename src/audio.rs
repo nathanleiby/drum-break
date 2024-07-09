@@ -11,7 +11,7 @@ use macroquad::prelude::*;
 
 use crate::{
     config::AppConfig,
-    consts::{BEATS_PER_LOOP, TICK_SCHEDULE_AHEAD},
+    consts::{ALL_INSTRUMENTS, BEATS_PER_LOOP, TICK_SCHEDULE_AHEAD},
     voices::Instrument,
     Voices,
 };
@@ -114,16 +114,6 @@ impl Audio {
         }
     }
 
-    // fn get_audio_file_for_instrument(ins: Instrument) -> &str {
-    //     match ins {
-    //         Instrument::ClosedHihat => "res/sounds/closed-hihat.wav",
-    //         Instrument::Snare => "res/sounds/snare.wav",
-    //         Instrument::Kick => "res/sounds/kick.wav",
-    //         Instrument::OpenHihat => "res/sounds/open-hihat.wav",
-    //         Instrument::Ride=> "res/sounds/open-hihat.wav",
-    //     }
-    // }
-
     /// schedule should be run within each game tick to schedule the audio
     pub async fn schedule(self: &mut Self, voices: &Voices) -> Result<(), Box<dyn Error>> {
         self.print_if_new_beat();
@@ -141,22 +131,12 @@ impl Audio {
             tick_to_schedule
         );
 
-        // TODO: Schedule by Instrument + beat, don't tie to Voices data model
-        for pair in [
-            (&voices.closed_hihat, "res/sounds/closed-hihat.wav"),
-            (&voices.snare, "res/sounds/snare.wav"),
-            (&voices.kick, "res/sounds/kick.wav"),
-            (&voices.open_hihat, "res/sounds/open-hihat.wav"),
-            // TODO: verify required sound files exist on startup- right now it fails during runtime
-            // TODO: Create sound files for new instruments like ride and crash
-            // (&voices.ride, "res/sounds/ride.wav"),
-            (&voices.ride, "res/sounds/click.wav"),
-            (&voices.crash, "res/sounds/click.wav"),
-        ] {
-            let (voice, instrument_name) = pair;
+        for ins in ALL_INSTRUMENTS.iter() {
+            let notes = voices.get_instrument_beats(ins);
+            let sound_path = Voices::get_audio_file_for_instrument(ins);
             schedule_audio(
-                &voice,
-                &instrument_name,
+                notes,
+                sound_path,
                 &mut self.manager,
                 &self.clock,
                 self.last_scheduled_tick,

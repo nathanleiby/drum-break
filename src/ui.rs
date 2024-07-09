@@ -9,9 +9,9 @@ use crate::{
     audio::Audio,
     consts::*,
     score::{
-        self, compute_accuracy_of_single_hit, compute_last_loop_summary,
-        compute_loop_performance_for_voice, get_desired_timings_by_instrument,
-        get_user_hit_timings_by_instrument, Accuracy, MISS_MARGIN,
+        compute_accuracy_of_single_hit, compute_last_loop_summary,
+        compute_loop_performance_for_voice, get_user_hit_timings_by_instrument, Accuracy,
+        MISS_MARGIN,
     },
     voices::{Instrument, Loop},
     Flags, GoldMode, UserHit, Voices,
@@ -148,10 +148,10 @@ fn draw_beat_grid(desired_hits: &Voices) {
 
     for (instrument_idx, instrument) in ALL_INSTRUMENTS.iter().enumerate() {
         let name = match *instrument {
-            Instrument::ClosedHihat => "Hihat",
+            Instrument::ClosedHihat => "Hi-hat",
             Instrument::Snare => "Snare",
             Instrument::Kick => "Kick",
-            Instrument::OpenHihat => "Open hi-hat",
+            Instrument::OpenHihat => "Open Hi-hat",
             Instrument::Ride => "Ride",
             Instrument::Crash => "Crash",
         };
@@ -165,7 +165,7 @@ fn draw_beat_grid(desired_hits: &Voices) {
             DARKGRAY,
         );
 
-        let desired = get_desired_timings_by_instrument(instrument, desired_hits);
+        let desired = desired_hits.get_instrument_beats(instrument);
         for note in desired.iter() {
             draw_note(*note, instrument_idx);
         }
@@ -175,7 +175,7 @@ fn draw_beat_grid(desired_hits: &Voices) {
 fn draw_user_hits(user_hits: &Vec<UserHit>, desired_hits: &Voices, audio_latency: f64) {
     for (instrument_idx, instrument) in ALL_INSTRUMENTS.iter().enumerate() {
         let user_notes = get_user_hit_timings_by_instrument(user_hits, *instrument);
-        let desired_notes = get_desired_timings_by_instrument(instrument, desired_hits);
+        let desired_notes = desired_hits.get_instrument_beats(instrument);
         for note in user_notes.iter() {
             draw_user_hit(*note, instrument_idx, audio_latency, desired_notes);
         }
@@ -196,7 +196,7 @@ fn draw_note_successes(
             .map(|note| note + audio_latency)
             .collect::<Vec<f64>>();
 
-        let desired = get_desired_timings_by_instrument(instrument, &desired_hits);
+        let desired = desired_hits.get_instrument_beats(instrument);
 
         let loop_perf =
             compute_loop_performance_for_voice(&actual_w_latency, &desired, loop_current_beat);

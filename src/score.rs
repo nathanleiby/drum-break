@@ -179,21 +179,6 @@ pub fn get_user_hit_timings_by_instrument(
         .collect::<Vec<f64>>()
 }
 
-pub fn get_desired_timings_by_instrument<'a>(
-    instrument: &Instrument,
-    desired_hits: &'a Voices,
-) -> &'a Vec<f64> {
-    let desired_timings = match instrument {
-        Instrument::ClosedHihat => &desired_hits.closed_hihat,
-        Instrument::Snare => &desired_hits.snare,
-        Instrument::Kick => &desired_hits.kick,
-        Instrument::OpenHihat => &desired_hits.open_hihat,
-        Instrument::Ride => &desired_hits.ride,
-        Instrument::Crash => &desired_hits.crash,
-    };
-    desired_timings
-}
-
 /// given timings for desired hits vs user hits, gives an accuracy for each desired hit
 /// the accuracy is based on the first user hit that's within "non miss" range of a desired hit
 /// TODO: This system doesn't work if beats are closer together than MISS_MARGIN (perhaps: 32nd notes?)
@@ -239,7 +224,7 @@ pub fn compute_last_loop_summary(
     for (_, instrument) in ALL_INSTRUMENTS.iter().enumerate() {
         // get accuracy of hihat
         let user_timings = get_user_hit_timings_by_instrument(user_hits, *instrument);
-        let desired_timings = get_desired_timings_by_instrument(instrument, desired_hits);
+        let desired_timings = desired_hits.get_instrument_beats(instrument);
 
         // compare that to desired hits for hihat
         let mut num_correct: usize = 0;

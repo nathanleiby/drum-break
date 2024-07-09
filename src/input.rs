@@ -80,39 +80,22 @@ impl Input {
         // Playing the drums //
         let processing_delay = 0.; // TODO: solve this for keyboard input, too.
                                    // Right now we don't know the delay between key press and frame start .. we could improve by guessing midway through the previous frame (1/2 frame duration) without any knowledge
-        if is_key_pressed(KeyCode::Z) {
-            events.push(Events::UserHit {
-                instrument: Instrument::ClosedHihat,
-                processing_delay,
-            });
-        }
 
-        if is_key_pressed(KeyCode::X) {
-            events.push(Events::UserHit {
-                instrument: Instrument::Snare,
-                processing_delay,
-            });
-        }
-
-        if is_key_pressed(KeyCode::C) {
-            events.push(Events::UserHit {
-                instrument: Instrument::Kick,
-                processing_delay,
-            });
-        }
-
-        if is_key_pressed(KeyCode::V) {
-            events.push(Events::UserHit {
-                instrument: Instrument::OpenHihat,
-                processing_delay,
-            });
-        }
-
-        if is_key_pressed(KeyCode::B) {
-            events.push(Events::UserHit {
-                instrument: Instrument::Ride,
-                processing_delay,
-            });
+        for ins in ALL_INSTRUMENTS.iter() {
+            let key_code = match ins {
+                Instrument::ClosedHihat => KeyCode::Z,
+                Instrument::Snare => KeyCode::X,
+                Instrument::Kick => KeyCode::C,
+                Instrument::OpenHihat => KeyCode::V,
+                Instrument::Ride => KeyCode::B,
+                Instrument::Crash => KeyCode::N,
+            };
+            if is_key_pressed(key_code) {
+                events.push(Events::UserHit {
+                    instrument: *ins,
+                    processing_delay,
+                });
+            }
         }
 
         if is_key_pressed(KeyCode::Space) {
@@ -197,12 +180,25 @@ impl Input {
 }
 
 struct InputConfigMidi {
-    pub kick: HashSet<u8>,
-    pub snare: HashSet<u8>,
-    pub closed_hi_hat: HashSet<u8>,
-    pub open_hi_hat: HashSet<u8>,
-    pub ride: HashSet<u8>,
-    pub crash: HashSet<u8>,
+    kick: HashSet<u8>,
+    snare: HashSet<u8>,
+    closed_hi_hat: HashSet<u8>,
+    open_hi_hat: HashSet<u8>,
+    ride: HashSet<u8>,
+    crash: HashSet<u8>,
+}
+
+impl InputConfigMidi {
+    pub fn get_note_numbers(self: &Self, ins: &Instrument) -> &HashSet<u8> {
+        match ins {
+            Instrument::ClosedHihat => &self.closed_hi_hat,
+            Instrument::Snare => &self.snare,
+            Instrument::Kick => &self.kick,
+            Instrument::OpenHihat => &self.open_hi_hat,
+            Instrument::Ride => &self.ride,
+            Instrument::Crash => &self.crash,
+        }
+    }
 }
 
 fn get_midi_as_user_hits(midi_input: &MidiInput) -> Vec<UserHit> {
@@ -252,24 +248,10 @@ fn get_midi_as_user_hits(midi_input: &MidiInput) -> Vec<UserHit> {
     for midi in pressed_midi {
         log::debug!("midi: {:?}", midi); // TODO: compare timestamps
         let timestamp = midi.timestamp as f64;
-        // TODO: refactor into match for better TypeSafety and easier iteration
-        if ic_midi.closed_hi_hat.contains(&midi.note_number) {
-            out.push(UserHit::new(Instrument::ClosedHihat, timestamp));
-        }
-        if ic_midi.snare.contains(&midi.note_number) {
-            out.push(UserHit::new(Instrument::Snare, timestamp));
-        }
-        if ic_midi.kick.contains(&midi.note_number) {
-            out.push(UserHit::new(Instrument::Kick, timestamp));
-        }
-        if ic_midi.open_hi_hat.contains(&midi.note_number) {
-            out.push(UserHit::new(Instrument::OpenHihat, timestamp));
-        }
-        if ic_midi.ride.contains(&midi.note_number) {
-            out.push(UserHit::new(Instrument::Ride, timestamp));
-        }
-        if ic_midi.crash.contains(&midi.note_number) {
-            out.push(UserHit::new(Instrument::Crash, timestamp));
+        for ins in ALL_INSTRUMENTS.iter() {
+            if ic_midi.get_note_numbers(ins).contains(&midi.note_number) {
+                out.push(UserHit::new(*ins, timestamp));
+            }
         }
     }
 

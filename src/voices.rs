@@ -40,6 +40,8 @@ impl Voice {
 /// Voices represents the notes to be played on each instrument.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Voices {
+    // TODO: make these private
+    // TODO: Refactor to table
     pub closed_hihat: Vec<f64>,
     pub snare: Vec<f64>,
     pub kick: Vec<f64>,
@@ -75,6 +77,30 @@ impl Voices {
             ins_vec.remove(pos);
         } else {
             ins_vec.push(beat);
+        }
+    }
+
+    pub fn get_instrument_beats(self: &Self, ins: &Instrument) -> &Vec<f64> {
+        match ins {
+            Instrument::ClosedHihat => &self.closed_hihat,
+            Instrument::Snare => &self.snare,
+            Instrument::Kick => &self.kick,
+            Instrument::OpenHihat => &self.open_hihat,
+            Instrument::Ride => &self.ride,
+            Instrument::Crash => &self.crash,
+        }
+    }
+
+    pub fn get_audio_file_for_instrument(ins: &Instrument) -> &str {
+        // TODO: verify required sound files exist on startup- right now it fails during runtime
+        match ins {
+            Instrument::ClosedHihat => "res/sounds/closed-hihat.wav",
+            Instrument::Snare => "res/sounds/snare.wav",
+            Instrument::Kick => "res/sounds/kick.wav",
+            Instrument::OpenHihat => "res/sounds/open-hihat.wav",
+            // TODO: Create sound files for new instruments like ride and crash
+            Instrument::Ride => "res/sounds/click.wav",
+            Instrument::Crash => "res/sounds/click.wav",
         }
     }
 }
