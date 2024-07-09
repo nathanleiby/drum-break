@@ -9,7 +9,7 @@ pub const WINDOW_HEIGHT: i32 = 720;
 
 pub const BEATS_PER_LOOP: f64 = 16.;
 
-pub const BEAT_WIDTH_PX: f64 = 64.0;
+pub const BEAT_WIDTH_PX: f64 = 48.0;
 pub const BEAT_PADDING: f64 = 4.;
 
 pub const GRID_WIDTH: f64 = BEAT_WIDTH_PX * 16.;
@@ -25,15 +25,16 @@ pub const TICK_SCHEDULE_AHEAD: f64 = 2.; // schedule audio this many (N) ticks a
 
 // General use
 pub const ALL_INSTRUMENTS: [Instrument; 9] = [
-    Instrument::ClosedHihat,
-    Instrument::Snare,
-    Instrument::Kick,
-    Instrument::OpenHihat,
-    Instrument::Ride,
     Instrument::Crash,
+    Instrument::Ride,
+    Instrument::OpenHihat,
+    Instrument::ClosedHihat,
     Instrument::Tom1,
     Instrument::Tom2,
     Instrument::Tom3,
+    Instrument::Snare,
+    Instrument::Kick,
+    // Pedal Hi-hat
 ];
 
 pub const NUM_ROWS_IN_GRID: usize = ALL_INSTRUMENTS.len();

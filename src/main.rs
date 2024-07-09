@@ -21,7 +21,7 @@ use crate::input::*;
 use crate::ui::*;
 use crate::voices::Voices;
 
-use consts::{WINDOW_HEIGHT, WINDOW_WIDTH};
+use consts::{ALL_INSTRUMENTS, WINDOW_HEIGHT, WINDOW_WIDTH};
 use score::compute_last_loop_summary;
 use simple_logger;
 
@@ -199,19 +199,16 @@ fn process_input_events(
             }
             Events::ToggleBeat { row, beat } => {
                 // map from UI display to instrument
-                let ins = match *row as usize {
-                    0 => Instrument::ClosedHihat,
-                    1 => Instrument::Snare,
-                    2 => Instrument::Kick,
-                    3 => Instrument::OpenHihat,
-                    4 => Instrument::Ride,
-                    5 => Instrument::Crash,
-                    6 => Instrument::Tom1,
-                    7 => Instrument::Tom2,
-                    8 => Instrument::Tom3,
-                    _ => panic!("invalid instrument idx"),
+                let res = ALL_INSTRUMENTS
+                    .iter()
+                    .enumerate()
+                    .find(|x| x.0 == *row as usize);
+                let ins = match res {
+                    Some(x) => x.1,
+                    None => panic!("invalid instrument idx"),
                 };
-                voices.toggle_beat(ins, *beat);
+
+                voices.toggle_beat(*ins, *beat);
             }
             Events::TrackForCalibration => {
                 let updated_val = audio.track_for_calibration();

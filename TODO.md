@@ -2,10 +2,10 @@
 
 ## working on
 
-- [..] support more drum types (not just kick, snare, open/closed hat)
+- [x] support more drum types (not just kick, snare, open/closed hat)
   - [x] ride, pedal HH, [x] crash, 3 toms.. or arbitrary mappings
   - hacking in RIDE, by following the compiler. Almost works except JSON is strict and missing field borks it. Can I avoid?
-  - [ ] Add sounds for more instruments (ride, bell, pedal HH, crash, etc)
+  - [x] Add sounds for more instruments (ride, bell, pedal HH, crash, etc)
   - samples MVP: https://www.reddit.com/r/edmproduction/comments/4ew9ut/free_sample_pack_of_my_acoustic_drum_kit_real/
     - https://www.dropbox.com/scl/fi/60funlj95o1i8hg/Real-Drums-Vol.-1.zip
 
