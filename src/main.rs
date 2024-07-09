@@ -26,7 +26,7 @@ use score::compute_last_loop_summary;
 use simple_logger;
 
 use macroquad::prelude::*;
-use voices::{Instrument, Loop};
+use voices::{Loop};
 
 fn window_conf() -> Conf {
     Conf {
