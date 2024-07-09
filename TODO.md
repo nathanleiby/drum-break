@@ -3,24 +3,23 @@
 ## working on
 
 - [..] support more drum types (not just kick, snare, open/closed hat)
-  - ride, pedal HH, crash, 3 toms.. or arbitrary mappings
+  - [x] ride, pedal HH, [x] crash, 3 toms.. or arbitrary mappings
   - hacking in RIDE, by following the compiler. Almost works except JSON is strict and missing field borks it. Can I avoid?
-    - [ ] Add sounds for more instruments (ride, bell, pedal HH, crash, etc)
+  - [ ] Add sounds for more instruments (ride, bell, pedal HH, crash, etc)
+  - samples MVP: https://www.reddit.com/r/edmproduction/comments/4ew9ut/free_sample_pack_of_my_acoustic_drum_kit_real/
+    - https://www.dropbox.com/scl/fi/60funlj95o1i8hg/Real-Drums-Vol.-1.zip
 
 ## asap
 
-_what's must-have to make it useful to me?_
+(_what's must-have to make it useful to me? what's very important to make it engaging to me?_)
 
-- make gold reachable
+- [ ] (bug) GOLDEN MODE logic is broken. Denominator seems to be correct user_hits instead of desired notes
+- [ ] make gold reachable
   - tweak strictness .. just a lil more generous on timing?
   - fix poor signaling of closed HH -- often triggers as MISSED (didn't hit? was Open HH due to midi)
-
-_what's very important to make it engaging to me?_
-
-- quick start + gets you into flow
+- [ ] quick start + gets you into flow
   - idea: saves whatever loop, BPM you were doing last time -- recovers on next start
 - capture progress over time (graph it, etc)
-
 - [..] add better debugging for midi signals, so I can filter to important ones (e.g. can ignore polyphonic aftertouch 167 on changing HH pedal in terms of hitting notes on the beat)
   - can translate to names from here https://midi.org/expanded-midi-1-0-messages-list, then log better
   - proximate reason.. to figure out problem with closed HH not triggering

@@ -83,12 +83,15 @@ impl Input {
 
         for ins in ALL_INSTRUMENTS.iter() {
             let key_code = match ins {
-                Instrument::ClosedHihat => KeyCode::Z,
-                Instrument::Snare => KeyCode::X,
-                Instrument::Kick => KeyCode::C,
-                Instrument::OpenHihat => KeyCode::V,
-                Instrument::Ride => KeyCode::B,
-                Instrument::Crash => KeyCode::N,
+                Instrument::ClosedHihat => KeyCode::A,
+                Instrument::Snare => KeyCode::S,
+                Instrument::Kick => KeyCode::D,
+                Instrument::OpenHihat => KeyCode::F,
+                Instrument::Ride => KeyCode::G,
+                Instrument::Crash => KeyCode::H,
+                Instrument::Tom1 => KeyCode::J,
+                Instrument::Tom2 => KeyCode::K,
+                Instrument::Tom3 => KeyCode::L,
             };
             if is_key_pressed(key_code) {
                 events.push(Events::UserHit {
@@ -147,7 +150,8 @@ impl Input {
         //     // TODO: pause metronome click sound
         // }
 
-        if is_key_pressed(KeyCode::D) {
+        if is_key_pressed(KeyCode::Z) {
+            debug!("Key press: toggle debug mode");
             events.push(Events::ToggleDebugMode);
         }
 
@@ -159,7 +163,8 @@ impl Input {
             events.push(Events::ResetHits)
         }
 
-        if is_key_pressed(KeyCode::S) {
+        if is_key_pressed(KeyCode::X) {
+            debug!("Key press: save loop");
             events.push(Events::SaveLoop);
         }
 
@@ -186,6 +191,9 @@ struct InputConfigMidi {
     open_hi_hat: HashSet<u8>,
     ride: HashSet<u8>,
     crash: HashSet<u8>,
+    tom_1: HashSet<u8>,
+    tom_2: HashSet<u8>,
+    tom_3: HashSet<u8>,
 }
 
 impl InputConfigMidi {
@@ -197,6 +205,9 @@ impl InputConfigMidi {
             Instrument::OpenHihat => &self.open_hi_hat,
             Instrument::Ride => &self.ride,
             Instrument::Crash => &self.crash,
+            Instrument::Tom1 => &self.tom_1,
+            Instrument::Tom2 => &self.tom_2,
+            Instrument::Tom3 => &self.tom_3,
         }
     }
 }
@@ -212,24 +223,32 @@ fn get_midi_as_user_hits(midi_input: &MidiInput) -> Vec<UserHit> {
         open_hi_hat: HashSet::from_iter(vec![47, 51]),
         ride: HashSet::from_iter(vec![]),
         crash: HashSet::from_iter(vec![]),
+        tom_1: HashSet::from_iter(vec![]),
+        tom_2: HashSet::from_iter(vec![]),
+        tom_3: HashSet::from_iter(vec![]),
     };
     let td17 = InputConfigMidi {
         closed_hi_hat: HashSet::from_iter(vec![42, 22]),
         snare: HashSet::from_iter(vec![38]),
         kick: HashSet::from_iter(vec![36]),
-        // open_hi_hat: HashSet::from_iter(vec![46, 26]),
-        open_hi_hat: HashSet::from_iter(vec![44]), // TODO: add pedal_hihat support // TODO: 44 IS pedal hihat
+        open_hi_hat: HashSet::from_iter(vec![46, 26]),
         // pedal_hi_hat: HashSet::from_iter(vec![44]),
         ride: HashSet::from_iter(vec![51, 53, 59]),
         crash: HashSet::from_iter(vec![49, 55, 57, 52]),
+        tom_1: HashSet::from_iter(vec![50, 48]),
+        tom_2: HashSet::from_iter(vec![47, 45]),
+        tom_3: HashSet::from_iter(vec![58, 43]),
     };
     let alesis_nitro = InputConfigMidi {
         closed_hi_hat: HashSet::from_iter(vec![42]),
         snare: HashSet::from_iter(vec![38]),
         kick: HashSet::from_iter(vec![36]),
-        open_hi_hat: HashSet::from_iter(vec![46, 23]), // allow half-open (23)
+        open_hi_hat: HashSet::from_iter(vec![46, 23]),
         ride: HashSet::from_iter(vec![]),
         crash: HashSet::from_iter(vec![]),
+        tom_1: HashSet::from_iter(vec![]),
+        tom_2: HashSet::from_iter(vec![]),
+        tom_3: HashSet::from_iter(vec![]),
     };
 
     let ic_midi = match midi_input.get_device_name() {

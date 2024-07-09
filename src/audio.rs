@@ -298,8 +298,12 @@ async fn schedule_note(
     let sound = StaticSoundData::from_cursor(
         Cursor::new(f),
         match sound_path {
-            // TODO: why are we playing hihat sound more quietly?
             "res/sounds/open-hihat.wav" => StaticSoundSettings::new().volume(0.5),
+            "res/sounds/ride.wav" => StaticSoundSettings::new().volume(0.15),
+            "res/sounds/crash.wav" => StaticSoundSettings::new().volume(0.4),
+            "res/sounds/tom-hi.wav" => StaticSoundSettings::new().volume(0.25),
+            "res/sounds/tom-med.wav" => StaticSoundSettings::new().volume(0.25),
+            "res/sounds/tom-low.wav" => StaticSoundSettings::new().volume(0.25),
             _ => StaticSoundSettings::new(),
         }
         .start_time(ClockTime {

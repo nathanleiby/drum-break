@@ -206,6 +206,9 @@ fn process_input_events(
                     3 => Instrument::OpenHihat,
                     4 => Instrument::Ride,
                     5 => Instrument::Crash,
+                    6 => Instrument::Tom1,
+                    7 => Instrument::Tom2,
+                    8 => Instrument::Tom3,
                     _ => panic!("invalid instrument idx"),
                 };
                 voices.toggle_beat(ins, *beat);

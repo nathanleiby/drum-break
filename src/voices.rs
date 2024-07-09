@@ -17,9 +17,9 @@ pub enum Instrument {
     // PedalHiHat,
     Ride,
     // RideBell,
-    // LTom,
-    // MTom,
-    // HTom,
+    Tom1,
+    Tom2,
+    Tom3,
     Crash,
 }
 
@@ -75,6 +75,9 @@ impl Voices {
                 Instrument::OpenHihat => vo.open_hihat.clone(),
                 Instrument::Ride => vo.ride.clone(),
                 Instrument::Crash => vo.crash.clone(),
+                Instrument::Tom1 => vec![],
+                Instrument::Tom2 => vec![],
+                Instrument::Tom3 => vec![],
             };
             data.push(Voice {
                 instrument: *ins,
@@ -116,9 +119,12 @@ impl Voices {
             Instrument::Snare => "res/sounds/snare.wav",
             Instrument::Kick => "res/sounds/kick.wav",
             Instrument::OpenHihat => "res/sounds/open-hihat.wav",
-            // TODO: Create sound files for new instruments like ride and crash
-            Instrument::Ride => "res/sounds/click.wav",
-            Instrument::Crash => "res/sounds/click.wav",
+            Instrument::Ride => "res/sounds/ride.wav",
+            Instrument::Crash => "res/sounds/crash.wav",
+            Instrument::Tom1 => "res/sounds/tom-hi.wav",
+            Instrument::Tom2 => "res/sounds/tom-med.wav",
+            Instrument::Tom3 => "res/sounds/tom-low.wav",
+            // Instrument::Metronome => "res/sounds/click.wav",
         }
     }
 
