@@ -2,12 +2,7 @@
 
 ## working on
 
-- [x] support more drum types (not just kick, snare, open/closed hat)
-  - [x] ride, pedal HH, [x] crash, 3 toms.. or arbitrary mappings
-  - hacking in RIDE, by following the compiler. Almost works except JSON is strict and missing field borks it. Can I avoid?
-  - [x] Add sounds for more instruments (ride, bell, pedal HH, crash, etc)
-  - samples MVP: https://www.reddit.com/r/edmproduction/comments/4ew9ut/free_sample_pack_of_my_acoustic_drum_kit_real/
-    - https://www.dropbox.com/scl/fi/60funlj95o1i8hg/Real-Drums-Vol.-1.zip
+TBD
 
 ## asap
 
@@ -39,19 +34,17 @@
 
 ## future
 
+- [ ] make extra BeatGrid rows less distracting -- allow show/hide in UI for unused rows
+- [ ] add a "swing" meter like in Funklet https://machine.funklet.com/funklet.html
+  - in Funklet, this is a setting from 0 to 12 that pushes beats 2 and 4 slightly later (from 0% to 95% or something). I suspect this is how "% swing" works in other apps, too.
+  - there is a data encoding for their beats.. maybe I can reverse engineer to port over the samples easily?
+    - https://goodhertz.com/funklet/machine?vals=3232323232323220323232323232323232323232323232203232323232323232;0000400201004000000040020200400200004002010040000000400201000002;3404000000040030340400000004040034040000000400403404000000403400&mods=..............1................................1&b=91&s=1&jd=0,0,0&r=1,1,1&a=000#
 - [ ] (bug) ScoreTracker behaves strangely when you have >1 Correct user hit for a single desired note (e.g. 2/2 or 3/3 could refer to 2 desired notes, just in the latter case we have 3 correct notes total bc two hits were within the Correct margin)
 - [..] Capture EXACT timing of the midi note for use in timing.
   - [..] UserHit model should include real ClockTime and (computed from that) corresponding beat.. this way we can determine "age" of a beat and expire it if needed (from looping perspective). Currently, UserHit is just re-using `Voices` as its data model
   - high precision input https://github.com/not-fl3/macroquad/issues/1 vs per frame
     - maybe could PR this? https://github.com/not-fl3/miniquad/issues/117
     - maybe separate thread for midi is enough, if i capture timing .. I have `raw_input.timestamp` in `midi.rs` .. could compare that vs frame start time
-- [ ] refactor so i don't need explicit branches for each of 4 instruments everywhere..
-      e.g. in `voices.rs`, moving from `Voices` to `Voice`
-      e.g. for `config.rs`:
-  ```
-  // TODO: Use a hashmap of {instrument : HashSet } instead of hard-coded list of instruments
-  // type GeneralizedInputConfigMidi = HashMap<Instrument, HashSet<u8>>;
-  ```
 - [ ] unit tests
   - [ ] consider + document which pieces can be unit tested (and iterated on more effectively than manual testing)
     - [ ] ex. write unit tests re: the accuracy summary metric
@@ -158,6 +151,20 @@
 
 ## done
 
+- [x] refactor so i don't need explicit branches for each of 4 instruments everywhere..
+      e.g. in `voices.rs`, moving from `Voices` to `Voice`
+      e.g. for `config.rs`.
+      note.. I didn't fix this last suggestion re: Midi config but shrug..
+  ```
+  // TODO: Use a hashmap of {instrument : HashSet } instead of hard-coded list of instruments
+  // type GeneralizedInputConfigMidi = HashMap<Instrument, HashSet<u8>>;
+  ```
+- [x] support more drum types (not just kick, snare, open/closed hat)
+  - [x] ride, pedal HH, [x] crash, 3 toms.. or arbitrary mappings
+  - hacking in RIDE, by following the compiler. Almost works except JSON is strict and missing field borks it. Can I avoid?
+  - [x] Add sounds for more instruments (ride, bell, pedal HH, crash, etc)
+  - samples MVP: https://www.reddit.com/r/edmproduction/comments/4ew9ut/free_sample_pack_of_my_acoustic_drum_kit_real/
+    - https://www.dropbox.com/scl/fi/60funlj95o1i8hg/Real-Drums-Vol.-1.zip
 - [x] fix accuracy bug .. see score.rs unit tests -- not fixed but band-aid
 - [x] MVP: "golden" practice mode (play it perfectly N times and then speeds up by X bpm)
 - [x] MVP UX: display stats for (last loop, last 5 loops, since you started session) - showing last 3 loops as of now
