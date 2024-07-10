@@ -83,16 +83,16 @@ impl Input {
 
         for (idx, ins) in ALL_INSTRUMENTS.iter().enumerate() {
             let key_code = match idx {
-                0 => KeyCode::A,
-                1 => KeyCode::S,
-                2 => KeyCode::D,
-                3 => KeyCode::F,
-                4 => KeyCode::G,
-                5 => KeyCode::H,
-                6 => KeyCode::J,
-                7 => KeyCode::K,
-                8 => KeyCode::L,
-                9 => KeyCode::Semicolon,
+                0 => KeyCode::Key1,
+                1 => KeyCode::Key2,
+                2 => KeyCode::Key3,
+                3 => KeyCode::Key4,
+                4 => KeyCode::Key5,
+                5 => KeyCode::Key6,
+                6 => KeyCode::Key7,
+                7 => KeyCode::Key8,
+                8 => KeyCode::Key9,
+                9 => KeyCode::Key0,
                 _ => panic!("more than hard-coded num instruments, failed to map key codes"),
             };
             if is_key_pressed(key_code) {
