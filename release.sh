@@ -1,11 +1,12 @@
 # !/bin/bash
 
+# exit on error
+set -e
+
 # prep
 rustup target add x86_64-apple-darwin
 rustup target add aarch64-apple-darwin
-
 mkdir -p release
-
 
 # build: x86
 target=x86_64-apple-darwin
@@ -18,12 +19,6 @@ chmod 700 ./release/$final_binary_name
 cargo build --release --target aarch64-apple-darwin
 cp target/aarch64-apple-darwin/release/macroix ./release/macroix-aarch64
 chmod 700 ./release/macroix-aarch64
-
-# build: universal (TBD: not working)
-cargo install universal2
-cargo universal2
-cp target/universal2-apple-darwin/macroix ./release/macroix-universal
-chmod 700 ./release/macroix-universal
 
 # add assets
 cp -r res/ ./release/res/
