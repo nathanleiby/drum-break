@@ -237,13 +237,12 @@ fn get_midi_as_user_hits(midi_input: &MidiInput) -> Vec<UserHit> {
         snare: HashSet::from_iter(vec![38]),
         kick: HashSet::from_iter(vec![36]),
         open_hi_hat: HashSet::from_iter(vec![46, 26]),
-        // pedal_hi_hat: HashSet::from_iter(vec![44]),
         ride: HashSet::from_iter(vec![51, 53, 59]),
         crash: HashSet::from_iter(vec![49, 55, 57, 52]),
         tom_1: HashSet::from_iter(vec![50, 48]),
         tom_2: HashSet::from_iter(vec![47, 45]),
         tom_3: HashSet::from_iter(vec![58, 43]),
-        pedal_hihat: HashSet::from_iter(vec![]),
+        pedal_hihat: HashSet::from_iter(vec![44]),
     };
     let alesis_nitro = InputConfigMidi {
         closed_hi_hat: HashSet::from_iter(vec![42]),
