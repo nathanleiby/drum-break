@@ -12,7 +12,7 @@ mod voices;
 use std::error::Error;
 use std::fs::File;
 use std::io::{BufWriter, Write};
-use std::sync::mpsc;
+use std::sync::mpsc::{self, Receiver};
 
 use crate::audio::*;
 use crate::config::AppConfig;
@@ -103,49 +103,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     // gameplay loop
     loop {
-        // read events
-        loop {
-            // TODO: handle different kinds of events. Enum it up!
-            match rx.try_recv() {
-                Ok(msg) => {
-                    println!("[event] {:?}", msg);
-                    match msg {
-                        TxMsg::AudioNew => (),
-                        TxMsg::StartingLoop(loop_num) => {
-                            // TODO: UPDATE TO ONLY RUN THIS CODE FOR "on loop complete" events
-                            let last_loop_hits =
-                                get_hits_from_nth_loop(&audio.user_hits, audio.current_loop() - 1);
-                            let audio_latency = audio.get_configured_audio_latency_seconds();
-                            let summary_data =
-                                compute_last_loop_summary(&last_loop_hits, &voices, audio_latency);
-                            println!("last loop summary = {:?}", summary_data);
-                            let totals = summary_data.total();
-
-                            gold_mode.was_gold = false;
-                            if totals.ratio() == 1. {
-                                gold_mode.correct_takes += 1;
-                            } else {
-                                gold_mode.correct_takes = 0;
-                            }
-
-                            if gold_mode.correct_takes == GOLD_MODE_CORRECT_TAKES {
-                                audio.set_bpm(audio.get_bpm() + GOLD_MODE_BPM_STEP);
-                                gold_mode.correct_takes = 0;
-                                gold_mode.was_gold = true;
-                                // TODO: schedule a 1-off "success!" SFX to play
-                                // TOOD: Maybe -- clear existing noise from mistaken notes
-                            }
-                        }
-                    }
-                }
-                Err(_) => break,
-            }
-        }
-
-        // process input
+        // read user's input and translate to events
         let events = input.process();
 
         // change state
+        process_system_events(&rx, &mut audio, &voices, &mut gold_mode);
         process_input_events(&mut voices, &mut audio, &mut flags, &events, &dir_name)?;
         audio.schedule(&voices).await?;
         fps_tracker.update();
@@ -156,8 +118,65 @@ async fn main() -> Result<(), Box<dyn Error>> {
             fps_tracker.render();
         }
 
+        draw_text_ex(
+            "Macroix",
+            0.,
+            32.,
+            TextParams {
+                font: Some(&font),
+                color: GREEN,
+                font_size: 32,
+                ..Default::default()
+            },
+        );
+
         // wait for next frame from game engine
         next_frame().await
+    }
+}
+
+fn process_system_events(
+    rx: &Receiver<TxMsg>,
+    audio: &mut Audio,
+    voices: &Voices,
+    gold_mode: &mut GoldMode,
+) {
+    // read events
+    loop {
+        match rx.try_recv() {
+            Ok(msg) => {
+                println!("[event] {:?}", msg);
+                match msg {
+                    TxMsg::AudioNew => (),
+                    TxMsg::StartingLoop(loop_num) => {
+                        // TODO: UPDATE TO ONLY RUN THIS CODE FOR "on loop complete" events
+                        let last_loop_hits =
+                            get_hits_from_nth_loop(&audio.user_hits, audio.current_loop() - 1);
+                        let audio_latency = audio.get_configured_audio_latency_seconds();
+                        let summary_data =
+                            compute_last_loop_summary(&last_loop_hits, &voices, audio_latency);
+                        info!("last loop summary = {:?}", summary_data);
+                        let totals = summary_data.total();
+
+                        gold_mode.was_gold = false;
+                        if totals.ratio() == 1. {
+                            gold_mode.correct_takes += 1;
+                        } else {
+                            gold_mode.correct_takes = 0;
+                        }
+
+                        if gold_mode.correct_takes == GOLD_MODE_CORRECT_TAKES {
+                            audio.set_bpm(audio.get_bpm() + GOLD_MODE_BPM_STEP);
+                            gold_mode.correct_takes = 0;
+                            gold_mode.was_gold = true;
+                            // TODO: schedule a 1-off "success!" SFX to play
+                            // TOOD: Maybe -- clear existing noise from mistaken notes
+                        }
+                    }
+                }
+            }
+            Err(_) => break,
+        }
     }
 }
 

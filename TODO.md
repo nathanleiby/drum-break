@@ -2,7 +2,8 @@
 
 ## working on
 
-TBD
+- [ ] make gold reachable
+  - tweak strictness .. just a lil more generous on timing?
 
 ## asap
 

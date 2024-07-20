@@ -75,8 +75,7 @@ pub fn compute_accuracy_of_single_hit(
             return (Accuracy::Miss, false);
         }
         Some((b, _)) => {
-            log::info!("Target beat found: {:?}", b);
-            println!("Target beat found: {:?}", b);
+            log::debug!("Target beat found: {:?}", b);
             let distance = user_beat_with_latency - b;
             let acc = match distance {
                 d if d.abs() > MISS_MARGIN => Accuracy::Miss,
