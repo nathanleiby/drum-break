@@ -11,7 +11,7 @@ use macroquad::prelude::*;
 
 use crate::{
     config::AppConfig,
-    consts::{ALL_INSTRUMENTS, BEATS_PER_LOOP, TICK_SCHEDULE_AHEAD},
+    consts::{TxMsg, ALL_INSTRUMENTS, BEATS_PER_LOOP, TICK_SCHEDULE_AHEAD},
     voices::Instrument,
     Voices,
 };
@@ -49,7 +49,7 @@ pub struct Audio {
     calibration_input: VecDeque<f64>,
     configured_audio_latency_seconds: f64,
 
-    tx: Sender<String>,
+    tx: Sender<TxMsg>,
 
     // debug only
     last_beat: i32,
@@ -60,7 +60,7 @@ const MIN_BPM: f64 = 40.;
 const MAX_BPM: f64 = 240.;
 
 impl Audio {
-    pub fn new(conf: &AppConfig, tx: Sender<String>) -> Self {
+    pub fn new(conf: &AppConfig, tx: Sender<TxMsg>) -> Self {
         let mut manager =
             AudioManager::<DefaultBackend>::new(AudioManagerSettings::default()).unwrap();
         let clock = manager
@@ -68,7 +68,7 @@ impl Audio {
             .add_clock(ClockSpeed::TicksPerMinute(DEFAULT_BPM * 2. as f64))
             .unwrap();
 
-        tx.send(String::from("Audio::new")).unwrap();
+        tx.send(TxMsg::AudioNew).unwrap();
 
         Self {
             manager,
@@ -104,10 +104,7 @@ impl Audio {
             // if new loop, print that too
             if current_beat == 0 {
                 self.tx
-                    .send(String::from(format!(
-                        "Starting loop num #{:?}",
-                        self.current_loop()
-                    )))
+                    .send(TxMsg::StartingLoop(self.current_loop()))
                     .unwrap();
                 // log::debug!("Starting loop num #{:?}", self.current_loop());
             }

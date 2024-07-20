@@ -38,3 +38,11 @@ pub const ALL_INSTRUMENTS: [Instrument; 10] = [
 ];
 
 pub const NUM_ROWS_IN_GRID: usize = ALL_INSTRUMENTS.len();
+
+// Message passing
+
+#[derive(Debug)]
+pub enum TxMsg {
+    AudioNew,
+    StartingLoop(i32),
+}

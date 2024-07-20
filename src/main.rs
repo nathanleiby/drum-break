@@ -21,12 +21,12 @@ use crate::input::*;
 use crate::ui::*;
 use crate::voices::Voices;
 
-use consts::{ALL_INSTRUMENTS, WINDOW_HEIGHT, WINDOW_WIDTH};
+use consts::{TxMsg, ALL_INSTRUMENTS, WINDOW_HEIGHT, WINDOW_WIDTH};
 use score::compute_last_loop_summary;
 use simple_logger;
 
 use macroquad::prelude::*;
-use voices::{Loop};
+use voices::Loop;
 
 fn window_conf() -> Conf {
     Conf {
@@ -108,30 +108,34 @@ async fn main() -> Result<(), Box<dyn Error>> {
             // TODO: handle different kinds of events. Enum it up!
             match rx.try_recv() {
                 Ok(msg) => {
-                    println!("[event] {msg}");
+                    println!("[event] {:?}", msg);
+                    match msg {
+                        TxMsg::AudioNew => (),
+                        TxMsg::StartingLoop(loop_num) => {
+                            // TODO: UPDATE TO ONLY RUN THIS CODE FOR "on loop complete" events
+                            let last_loop_hits =
+                                get_hits_from_nth_loop(&audio.user_hits, audio.current_loop() - 1);
+                            let audio_latency = audio.get_configured_audio_latency_seconds();
+                            let summary_data =
+                                compute_last_loop_summary(&last_loop_hits, &voices, audio_latency);
+                            println!("last loop summary = {:?}", summary_data);
+                            let totals = summary_data.total();
 
-                    // TODO: UPDATE TO ONLY RUN THIS CODE FOR "on loop complete" events
-                    let last_loop_hits =
-                        get_hits_from_nth_loop(&audio.user_hits, audio.current_loop() - 1);
-                    let audio_latency = audio.get_configured_audio_latency_seconds();
-                    let summary_data =
-                        compute_last_loop_summary(&last_loop_hits, &voices, audio_latency);
-                    println!("last loop summary = {:?}", summary_data);
-                    let totals = summary_data.total();
+                            gold_mode.was_gold = false;
+                            if totals.ratio() == 1. {
+                                gold_mode.correct_takes += 1;
+                            } else {
+                                gold_mode.correct_takes = 0;
+                            }
 
-                    gold_mode.was_gold = false;
-                    if totals.ratio() == 1. {
-                        gold_mode.correct_takes += 1;
-                    } else {
-                        gold_mode.correct_takes = 0;
-                    }
-
-                    if gold_mode.correct_takes == GOLD_MODE_CORRECT_TAKES {
-                        audio.set_bpm(audio.get_bpm() + GOLD_MODE_BPM_STEP);
-                        gold_mode.correct_takes = 0;
-                        gold_mode.was_gold = true;
-                        // TODO: schedule a 1-off "success!" SFX to play
-                        // TOOD: Maybe -- clear existing noise from mistaken notes
+                            if gold_mode.correct_takes == GOLD_MODE_CORRECT_TAKES {
+                                audio.set_bpm(audio.get_bpm() + GOLD_MODE_BPM_STEP);
+                                gold_mode.correct_takes = 0;
+                                gold_mode.was_gold = true;
+                                // TODO: schedule a 1-off "success!" SFX to play
+                                // TOOD: Maybe -- clear existing noise from mistaken notes
+                            }
+                        }
                     }
                 }
                 Err(_) => break,

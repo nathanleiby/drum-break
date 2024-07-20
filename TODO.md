@@ -50,6 +50,7 @@ TBD
   - assuming each beat in grid is a 16th note, it should be BPM \* 2 (so 120 = 60)
   - I think ideally the data model for user_hits and desired_hits aligns nicely, i.e. 1.0 is beat 1, 2.0 is beat 2. So e.g. 16th notes are 0.25 in length
 - [ ] File open UX -- open a loop from a file
+- [ ] Refactor message passing .. should be typed (see `main.rs` in `rx.try_recv`)
 - [ ] make extra BeatGrid rows less distracting -- allow show/hide in UI for unused rows
 - [ ] add a "swing" meter like in Funklet https://machine.funklet.com/funklet.html
   - in Funklet, this is a setting from 0 to 12 that pushes beats 2 and 4 slightly later (from 0% to 95% or something). I suspect this is how "% swing" works in other apps, too.
