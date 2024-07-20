@@ -8,19 +8,31 @@ TBD
 
 (_what's must-have to make it useful to me? what's very important to make it engaging to me?_)
 
-- [ ] (bug) GOLDEN MODE logic is broken. Denominator seems to be correct user_hits instead of desired notes
+**Golden mode so I can jam with it**
+
 - [ ] make gold reachable
   - tweak strictness .. just a lil more generous on timing?
   - fix poor signaling of closed HH -- often triggers as MISSED (didn't hit? was Open HH due to midi)
+
+**Look good for energizing dev**
+
+- [ ] Make UI look nice-ish
+  - [ ] do a pass in Figma
+  - [ ] better font
+  - [ ] funklet inspired colors and look
+  - [ ] show/hide noisy stuff
+
+## soon
+
 - [ ] quick start + gets you into flow
   - idea: saves whatever loop, BPM you were doing last time -- recovers on next start
 - capture progress over time (graph it, etc)
 - [..] add better debugging for midi signals, so I can filter to important ones (e.g. can ignore polyphonic aftertouch 167 on changing HH pedal in terms of hitting notes on the beat)
+
   - can translate to names from here https://midi.org/expanded-midi-1-0-messages-list, then log better
   - proximate reason.. to figure out problem with closed HH not triggering
 
-## soon
-
+- commit UI prototypes (tauri, iced) to Github (optionally, migrate into macroix repo if reasonable to centralize)
 - (bug) explore triggering
   - [ ] double triggering of some TD17 notes (e.g. 2x hihat hits or 2x open hihat hits, esp on hard hits?)
   - [ ] non triggering (hit too soft? event getting dropped?)
@@ -30,10 +42,14 @@ TBD
     - could be a slider. could be config file adjustment
     - see `CORRECT_MARGIN` in `score.rs`
 - In "golden" practice mode.. you can tweak knobs for shiny-ness of gold (N and X) -- could be consts at start
-  - idea: try https://docs.rs/cvars/latest/cvars/ to allow changing these in the UI during development
+  - idea: try https://docs.rs/cvars/latest/cvars/ to allow changing these in the UI during development (or EGUI [overlay](https://rodneylab.com/macroquad-egui-devtools/))
 
 ## future
 
+- [ ] fix BPM
+  - assuming each beat in grid is a 16th note, it should be BPM \* 2 (so 120 = 60)
+  - I think ideally the data model for user_hits and desired_hits aligns nicely, i.e. 1.0 is beat 1, 2.0 is beat 2. So e.g. 16th notes are 0.25 in length
+- [ ] File open UX -- open a loop from a file
 - [ ] make extra BeatGrid rows less distracting -- allow show/hide in UI for unused rows
 - [ ] add a "swing" meter like in Funklet https://machine.funklet.com/funklet.html
   - in Funklet, this is a setting from 0 to 12 that pushes beats 2 and 4 slightly later (from 0% to 95% or something). I suspect this is how "% swing" works in other apps, too.
@@ -60,20 +76,24 @@ TBD
 - [ ] easily import midi
   - [ ] e.g. from Groove Scribe
 - [..] explore Rust GUI options
-  - [..] convert input to Event-based model .. better for new UI layer migration
+  - [x] convert input to Event-based model .. better for new UI layer migration
   - [ ] egui https://www.egui.rs/ .. https://github.com/optozorax/egui-macroquad
+    - [ ] dig into EGUI more https://rodneylab.com/macroquad-egui-devtools/
+    - [ ] example of styled egui
+      - https://app.rerun.io
+      - https://github.com/grantshandy/egui-themer
     - had trouble getting egui-macroquad to build due to audio lib issues. version outdated? tried to pull in file and build locally, but had trouble with that too b/c of macroquad/miniquad version mismatch
-    - [..] `iced` https://lib.rs/crates/iced (.. with `coffee` game engine too? https://github.com/hecrj/coffee .. or not that part, it's 4y old)
-      - custom widget for the sequencer
-        - https://github.com/iced-rs/iced/blob/master/examples/custom_widget/src/main.rs`
-        - https://discourse.iced.rs/t/custom-widget-for-chess-board/325
-      - input subscription https://www.reddit.com/r/rust/comments/wtzkx6/need_help_iced_subscriptions/ .. rdev has some MacOS permissions [caveats](https://crates.io/crates/rdev)
-      - minimal audio focused app https://github.com/AWBroch/metronome/blob/main/src/main.rs .. could use kira for clock instead of iced's `time::every` which supports this metronome
-        - static audio data to include it binary seems handy
+  - [..] `iced` https://lib.rs/crates/iced (.. with `coffee` game engine too? https://github.com/hecrj/coffee .. or not that part, it's 4y old)
+    - custom widget for the sequencer
+      - https://github.com/iced-rs/iced/blob/master/examples/custom_widget/src/main.rs`
+      - https://discourse.iced.rs/t/custom-widget-for-chess-board/325
+    - input subscription https://www.reddit.com/r/rust/comments/wtzkx6/need_help_iced_subscriptions/ .. rdev has some MacOS permissions [caveats](https://crates.io/crates/rdev)
+    - minimal audio focused app https://github.com/AWBroch/metronome/blob/main/src/main.rs .. could use kira for clock instead of iced's `time::every` which supports this metronome
+      - static audio data to include it binary seems handy
     - `slint`: https://github.com/slint-ui/slint
-    - [..] try using Tauri and build a web UI
-      - can we have a Rust "engine" (process keyboard/midi events, play sound, etc) with the FE (draw UI, etc)
-      - [..] Explore porting the "core" audio to Rust and UI in TS (https://tauri.app/)
+  - [..] try using Tauri and build a web UI
+    - can we have a Rust "engine" (process keyboard/midi events, play sound, etc) with the FE (draw UI, etc)
+    - [..] Explore porting the "core" audio to Rust and UI in TS (https://tauri.app/)
 - cleanup input UI, which quickly gets noisy
   - [x] e.g. hacky is a button to reset -> press "r"
   - another idea is "fade out" by age (e.g. just keep last K loops, or actually fade over time until gone by Kth loop)
@@ -102,7 +122,7 @@ TBD
   - [ ] https://computermusicresource.com/MIDI.Commands.html
 - [ ] Explore macroquad featureset, including [experimental](https://docs.rs/macroquad/latest/macroquad/experimental/index.html) like state machine and scenes
   - [ ] Also explore community extension https://github.com/ozkriff/awesome-quads
-  - [ ] tune config w cvars approach? https://github.com/martin-t/cvars
+  - [ ] tune config dynamically w cvars approach? https://github.com/martin-t/cvars or egui debug overlay
 - [ ] Explore similar existing offerings
   - [ ] Drum specific..
     - [ ] https://www.mutedrums.com/ / https://www.playdrumsonline.com/ (https://www.playdrumsonline.com/songs/create)
@@ -151,6 +171,7 @@ TBD
 
 ## done
 
+- [x] (bug) GOLDEN MODE logic is broken. Denominator seems to be correct user_hits instead of desired notes
 - [x] refactor so i don't need explicit branches for each of 4 instruments everywhere..
       e.g. in `voices.rs`, moving from `Voices` to `Voice`
       e.g. for `config.rs`.
