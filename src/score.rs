@@ -161,7 +161,7 @@ impl LastLoopSummary {
         for ins in ALL_INSTRUMENTS.iter() {
             let st = self.get_score_tracker(ins);
             combined.num_correct += st.num_correct;
-            combined.num_notes += st.num_correct;
+            combined.num_notes += st.num_notes;
         }
 
         combined
