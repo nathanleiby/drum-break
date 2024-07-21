@@ -60,6 +60,10 @@ impl Flags {
 
 #[macroquad::main(window_conf)]
 async fn main() -> Result<(), Box<dyn Error>> {
+    let font = load_ttf_font("./res/fonts/Rubik/static/Rubik-Regular.ttf")
+        .await
+        .unwrap();
+
     // simple_logger::init_with_level(log::Level::Info).unwrap();
     simple_logger::init_with_env().unwrap();
     let version = include_str!("../VERSION");
