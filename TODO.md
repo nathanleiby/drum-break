@@ -3,7 +3,8 @@
 ## working on
 
 - [ ] make gold reachable
-  - tweak strictness .. just a lil more generous on timing?
+  - tweak strictness .. just a lil more generous on timing? ... Dial it it!
+    Could add sliders for (1) num correct (2) Bpm step (3) Correctness sensitivity
 
 ## asap
 
@@ -186,6 +187,34 @@
     - [ ] idea: color for each note (e.g. red for bad, green for good .. could also have a color to indicate early/late/miss trends)
   - [ ] since you started (press a button to reset)
   - [ ] all time
+- visualize beat as sheet music
+  - stretch: highlight the active note
+  - stretch: moving bar
+- support other meters
+  - Implied 4/4 now.. What about 6/8?
+  - Also, could relate to ability to fine tune note positions
+- improve "save loop" UX
+  - Make sure it's clear when you save! I hit "s" a few times thinking I saved things, but I didn't. Maybe add a save button to UI?
+  - Alow editing name of loop. I often want to keep track of a real beat.
+  - Allow grouping/tagging
+    - folder system, tags, etc...
+    - ex: all beats related to a single song.
+    - ex: all beats building up to a more complex beat .. a practice sequence
+    - ex: by genre, artist, etc
+- sync saved loops across devices - I'm using 2 devices for dev + practice flow today.
+  - How?
+    - read from remote DB? Firebase, Dexie, etc
+    - Simplest CRUD possible
+    - consider abstract DB backend for opensource flexibility
+- Extract drums from a song (ML), then translate to a loop to practice
+- Handle wrong/extra hits (ignored right now)
+- layer on complexity
+  - for example: https://photos.app.goo.gl/ALXpmdq2ztNAwWY6A
+  - Could generate increasingly complex exercises, potentially incorporating skills you need.
+    New drums to hit
+    New displacement
+    Flams
+    Whatever
 
 ## done
 
