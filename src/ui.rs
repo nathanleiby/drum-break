@@ -80,6 +80,8 @@ impl UI {
 
         draw_gold_mode(gold_mode);
 
+        draw_metronome(audio);
+
         if flags.ui_debug_mode {
             draw_debug_grid();
         }
@@ -402,6 +404,21 @@ fn draw_loop_choices<'a, 'b: 'a>(
                     log::info!("Switched to {:?}", name);
                 }
             });
+        });
+}
+
+fn draw_metronome<'a>(audio: &'a mut Audio) {
+    widgets::Window::new(hash!(), UI_TOP_LEFT + vec2(0., 200.), vec2(320., 200.))
+        .label("Metronome")
+        .titlebar(true)
+        .ui(&mut *root_ui(), |ui| {
+            if ui.button(
+                None,
+                format!("Metronome {:?}", audio.is_metronome_enabled()),
+            ) {
+                log::info!("toggle metronome");
+                audio.toggle_metronome();
+            }
         });
 }
 

@@ -44,6 +44,7 @@ pub struct Audio {
     clock: ClockHandle,
     last_scheduled_tick: f64,
     bpm: f64,
+    metronome_enabled: bool,
 
     pub user_hits: Vec<UserHit>,
     calibration_input: VecDeque<f64>,
@@ -75,6 +76,7 @@ impl Audio {
             clock,
             last_scheduled_tick: -1.,
             bpm: DEFAULT_BPM,
+            metronome_enabled: false,
 
             user_hits: vec![],
             calibration_input: VecDeque::new(),
@@ -142,8 +144,21 @@ impl Audio {
             .await?;
         }
 
-        // if metronome on, schedule it
-        // (&voices.metronome, "res/sounds/click.wav"),
+        if self.is_metronome_enabled() {
+            // TODO: play a different sound at start of each measure
+            // clicks on quarter notes
+            let metronome_notes = vec![0., 2., 4., 6., 8., 10., 12., 14.];
+            let sound_path = "res/sounds/click.wav";
+            schedule_audio(
+                &metronome_notes,
+                sound_path,
+                &mut self.manager,
+                &self.clock,
+                self.last_scheduled_tick,
+                tick_to_schedule,
+            )
+            .await?;
+        }
 
         self.last_scheduled_tick = tick_to_schedule;
 
@@ -183,6 +198,14 @@ impl Audio {
         } else {
             self.clock.start().unwrap();
         }
+    }
+
+    pub fn toggle_metronome(self: &mut Self) {
+        self.metronome_enabled = !self.metronome_enabled;
+    }
+
+    pub fn is_metronome_enabled(self: &Self) -> bool {
+        self.metronome_enabled
     }
 
     /// saves a user's hits, so they can be displayed and checked for accuracy

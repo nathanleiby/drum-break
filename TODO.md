@@ -6,10 +6,6 @@
   - tweak strictness .. just a lil more generous on timing? ... Dial it it!
     Could add sliders for (1) num correct (2) Bpm step (3) Correctness sensitivity
 
-## asap
-
-(_what's must-have to make it useful to me? what's very important to make it engaging to me?_)
-
 **Golden mode so I can jam with it**
 
 - [ ] make gold reachable
@@ -18,23 +14,14 @@
 
 **Look good for energizing dev**
 
-- [ ] Make UI look nice-ish
-  - [ ] do a pass in Figma
-  - [ ] better font
-  - [ ] funklet inspired colors and look
-  - [ ] show/hide noisy stuff
-
 ## soon
 
 - [ ] quick start + gets you into flow
   - idea: saves whatever loop, BPM you were doing last time -- recovers on next start
-- capture progress over time (graph it, etc)
+  - capture progress over time (graph it, etc)
 - [..] add better debugging for midi signals, so I can filter to important ones (e.g. can ignore polyphonic aftertouch 167 on changing HH pedal in terms of hitting notes on the beat)
-
   - can translate to names from here https://midi.org/expanded-midi-1-0-messages-list, then log better
   - proximate reason.. to figure out problem with closed HH not triggering
-
-- commit UI prototypes (tauri, iced) to Github (optionally, migrate into macroix repo if reasonable to centralize)
 - (bug) explore triggering
   - [ ] double triggering of some TD17 notes (e.g. 2x hihat hits or 2x open hihat hits, esp on hard hits?)
   - [ ] non triggering (hit too soft? event getting dropped?)
@@ -60,6 +47,12 @@
     - [x] e.g. hacky is a button to reset -> press "r"
   - another idea is "fade out" by age (e.g. just keep last K loops, or actually fade over time until gone by Kth loop)
 - UX v2: Design
+  - commit UI prototypes (tauri, iced) to Github (optionally, migrate into macroix repo if reasonable to centralize)
+  - [ ] Make UI look nice-ish
+    - [ ] do a pass in Figma
+    - [ ] better font
+    - [ ] funklet inspired colors and look
+    - [ ] show/hide noisy stuff
   - prototype in Figma: core interactions, colors, layout, etc
     - might we show music as sheet music notation (e.g. https://github.com/jaredforth/lilypond-rs or various others)
   - Explore similar existing offerings
@@ -91,7 +84,7 @@
   - [ ] fix BPM
     - assuming each beat in grid is a 16th note, it should be BPM \* 2 (so 120 = 60)
     - I think ideally the data model for user_hits and desired_hits aligns nicely, i.e. 1.0 is beat 1, 2.0 is beat 2. So e.g. 16th notes are 0.25 in length
-  - [ ] Refactor message passing .. should be typed (see `main.rs` in `rx.try_recv`)
+  - [x] Refactor message passing .. should be typed (see `main.rs` in `rx.try_recv`)
   - [ ] unit tests
     - consider + document which pieces can be unit tested (and iterated on more effectively than manual testing)
       - ex. write unit tests re: the accuracy summary metric
@@ -126,8 +119,6 @@
   - [x] support >1 midi value per voice
   - [ ] allow easy rebinding within the app
   - [ ] save calibrated offset (latency) config per connected midi device / system (TD17 = -0.01) .. i have multiple for testing
-- Feature: Metronome
-  - [ ] toggle metronome on/off
 - Feature: Volume control
   - [ ] global
   - [ ] per voice (inl metronome)
@@ -218,6 +209,8 @@
 
 ## done
 
+- Feature: Metronome
+  - [x] toggle metronome on/off
 - [x] log levels that allow easy filtering
 - [x] (bug) GOLDEN MODE logic is broken. Denominator seems to be correct user_hits instead of desired notes
 - [x] refactor so i don't need explicit branches for each of 4 instruments everywhere..
