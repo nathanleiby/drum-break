@@ -112,6 +112,10 @@ impl UIState {
         self.selector_vec = selector_vec;
         self
     }
+
+    pub fn set_is_playing(&mut self, is_playing: bool) {
+        self.is_playing = is_playing;
+    }
 }
 
 // fn ui_example_system(mut contexts: EguiContexts, mut game_state: ResMut<GameState>) {

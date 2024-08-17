@@ -200,6 +200,10 @@ impl Audio {
         }
     }
 
+    pub fn is_paused(self: &Self) -> bool {
+        self.clock.ticking()
+    }
+
     pub fn toggle_metronome(self: &mut Self) {
         self.metronome_enabled = !self.metronome_enabled;
     }

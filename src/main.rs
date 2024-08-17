@@ -104,7 +104,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     };
 
     let selector_vec = loops.iter().map(|(name, _)| name.to_string()).collect();
-    let mut game_state = UIState::default().selector_vec(selector_vec);
+    let mut ui_state = UIState::default().selector_vec(selector_vec);
 
     // debug
     let mut fps_tracker = FPS::new();
@@ -113,13 +113,21 @@ async fn main() -> Result<(), Box<dyn Error>> {
     loop {
         // read user's input and translate to events
         let events = input.process();
+        // TODO: just add to events?
         let ui_events = ui.flush_events();
 
         // change state
-        process_system_events(&rx, &mut audio, &voices, &mut gold_mode);
-        process_input_events(&mut voices, &mut audio, &mut flags, &events, &dir_name)?;
-        // TODO: just add to events?
-        process_input_events(&mut voices, &mut audio, &mut flags, &ui_events, &dir_name)?;
+        process_system_events(&rx, &mut audio, &voices, &mut gold_mode, &mut ui_state);
+        for e in [&events, &ui_events] {
+            process_input_events(
+                &mut voices,
+                &mut audio,
+                &mut flags,
+                &e,
+                &dir_name,
+                &mut ui_state,
+            )?;
+        }
 
         audio.schedule(&voices).await?;
         fps_tracker.update();
@@ -131,7 +139,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             &loops,
             &gold_mode,
             &flags,
-            &mut game_state,
+            &mut ui_state,
         );
         if flags.ui_debug_mode {
             fps_tracker.render();
@@ -147,6 +155,7 @@ fn process_system_events(
     audio: &mut Audio,
     voices: &Voices,
     gold_mode: &mut GoldMode,
+    ui_state: &mut UIState,
 ) {
     // read events
     loop {
@@ -194,6 +203,7 @@ fn process_input_events(
     flags: &mut Flags,
     events: &Vec<Events>,
     dir_name: &str,
+    ui_state: &mut UIState,
 ) -> Result<(), Box<dyn Error>> {
     for event in events {
         info!("Processing event: {:?}", event);
@@ -206,6 +216,7 @@ fn process_input_events(
             }
             Events::Pause => {
                 audio.toggle_pause();
+                ui_state.set_is_playing(audio.is_paused());
             }
             Events::ChangeBPM { delta } => {
                 audio.set_bpm(audio.get_bpm() + delta);
