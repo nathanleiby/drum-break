@@ -35,6 +35,7 @@ fn window_conf() -> Conf {
         // fullscreen: true,
         window_width: WINDOW_WIDTH,
         window_height: WINDOW_HEIGHT,
+        high_dpi: true,
         ..Default::default()
     }
 }
