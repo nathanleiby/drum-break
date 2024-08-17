@@ -28,4 +28,13 @@ version="$(cat VERSION)"
 zip_file=release-$version.zip
 zip -r $zip_file release
 
+echo "About to upload release version '$version' to Github ..."
+read -p "Are you sure? (y/n) " -n 1 -r
+echo    # (optional) move to a new line
+if ! [[ $REPLY =~ ^[Yy]$ ]]
+then
+    echo "Canceled release."
+    exit 0;
+fi
+
 gh release create $version $zip_file --prerelease --notes "$version"
