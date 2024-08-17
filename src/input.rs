@@ -232,9 +232,11 @@ fn get_midi_as_user_hits(midi_input: &MidiInput) -> Vec<UserHit> {
         tom_3: HashSet::from_iter(vec![]),
         pedal_hihat: HashSet::from_iter(vec![]),
     };
+
+    // https://support.roland.com/hc/en-us/articles/360005173411-TD-17-Default-Factory-MIDI-Note-Map
     let td17 = InputConfigMidi {
         closed_hi_hat: HashSet::from_iter(vec![42, 22]),
-        snare: HashSet::from_iter(vec![38]),
+        snare: HashSet::from_iter(vec![38, 40, 37]),
         kick: HashSet::from_iter(vec![36]),
         open_hi_hat: HashSet::from_iter(vec![46, 26]),
         ride: HashSet::from_iter(vec![51, 53, 59]),
@@ -244,6 +246,21 @@ fn get_midi_as_user_hits(midi_input: &MidiInput) -> Vec<UserHit> {
         tom_3: HashSet::from_iter(vec![58, 43]),
         pedal_hihat: HashSet::from_iter(vec![44]),
     };
+
+    // https://support.roland.com/hc/en-us/articles/4407474950811-TD-27-Default-MIDI-Note-Map
+    let td27 = InputConfigMidi {
+        closed_hi_hat: HashSet::from_iter(vec![42, 22]),
+        snare: HashSet::from_iter(vec![38, 40, 37]),
+        kick: HashSet::from_iter(vec![36]),
+        open_hi_hat: HashSet::from_iter(vec![46, 26]),
+        ride: HashSet::from_iter(vec![51, 53, 59]),
+        crash: HashSet::from_iter(vec![49, 55, 57, 52]),
+        tom_1: HashSet::from_iter(vec![50, 48]),
+        tom_2: HashSet::from_iter(vec![47, 45]),
+        tom_3: HashSet::from_iter(vec![58, 43]),
+        pedal_hihat: HashSet::from_iter(vec![44]),
+    };
+
     let alesis_nitro = InputConfigMidi {
         closed_hi_hat: HashSet::from_iter(vec![42]),
         snare: HashSet::from_iter(vec![38]),
@@ -260,10 +277,11 @@ fn get_midi_as_user_hits(midi_input: &MidiInput) -> Vec<UserHit> {
     let ic_midi = match midi_input.get_device_name() {
         s if s == "MPK Mini Mk II" => mpk_mini_mk_ii,
         s if s.contains("TD-17") => td17,
+        s if s.contains("TD-27") => td27,
         s if s.contains("Nitro") => alesis_nitro,
         _ => {
-            log::warn!("warning: unknown midi device, using default of 'alesis nitro'");
-            alesis_nitro
+            log::warn!("warning: unknown midi device, using default of 'td27'");
+            td27
         }
     };
 
