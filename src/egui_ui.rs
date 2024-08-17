@@ -5,6 +5,8 @@ use egui::{self, emath, pos2, Color32};
 use egui_plot::{Legend, Line, Plot};
 use log::info;
 
+use crate::events::Events;
+
 // fn main() {
 //     App::new()
 //         .init_resource::<GameState>()
@@ -21,7 +23,7 @@ const GRID_COLS: usize = 16;
 const BEATS_PER_LOOP: f32 = 8.;
 
 // This resource holds information about the game:
-pub struct GameState {
+pub struct UIState {
     selector_vec: Vec<String>,
     selected_idx: usize,
 
@@ -72,7 +74,7 @@ pub struct GameState {
 //     }
 // }
 
-impl Default for GameState {
+impl Default for UIState {
     // TODO: due to serialization, weird behavior can occur on app reload..
     // Need to sepaerate out things that should save to disk (settings? user state that should resume?) vs things that need to reset or be overwritten.
     // From debugging on web, running `localStorage.clear()` is sufficient to reset.
@@ -105,11 +107,22 @@ impl Default for GameState {
     }
 }
 
+impl UIState {
+    pub fn selector_vec(mut self, selector_vec: Vec<String>) -> Self {
+        self.selector_vec = selector_vec;
+        self
+    }
+}
+
 // fn ui_example_system(mut contexts: EguiContexts, mut game_state: ResMut<GameState>) {
 // fn ui_example_system(mut contexts: EguiContexts, mut game_state: ResMut<GameState>) {
 // let ctx = contexts.ctx_mut();
 
-pub fn ui_example_system(ctx: &egui_macroquad::egui::Context, mut game_state: GameState) {
+pub fn ui_example_system(
+    ctx: &egui_macroquad::egui::Context,
+    game_state: &mut UIState,
+    events: &mut Vec<Events>,
+) {
     egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
         // The top panel is often a good place for a menu bar:
 
@@ -128,9 +141,11 @@ pub fn ui_example_system(ctx: &egui_macroquad::egui::Context, mut game_state: Ga
             ui.add(egui::Label::new("BPM"));
             ui.add(egui::Slider::new(&mut game_state.bpm, 40.0..=240.0));
             if ui.button("-").clicked() {
+                events.push(Events::ChangeBPM { delta: -1. });
                 game_state.bpm -= 1.;
             }
             if ui.button("+").clicked() {
+                events.push(Events::ChangeBPM { delta: 1. });
                 game_state.bpm += 1.;
             }
 
@@ -258,7 +273,7 @@ pub fn ui_example_system(ctx: &egui_macroquad::egui::Context, mut game_state: Ga
         // The central panel the region left after adding TopPanel's and SidePanel's
         ui.heading("Macroix");
 
-        draw_beat_grid(&mut game_state, ui);
+        draw_beat_grid(game_state, ui);
     });
 }
 
@@ -267,7 +282,7 @@ const VIRTUAL_HEIGHT: f32 = 1000.;
 
 // TODO: convert mouse click to beat
 
-fn draw_beat_grid(app: &mut GameState, ui: &mut egui::Ui) {
+fn draw_beat_grid(app: &mut UIState, ui: &mut egui::Ui) {
     let (response, painter) = ui.allocate_painter(
         egui::Vec2::new(ui.available_width(), ui.available_height()),
         egui::Sense::hover(),

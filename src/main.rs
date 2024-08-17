@@ -2,6 +2,7 @@ mod audio;
 mod config;
 mod consts;
 mod egui_ui;
+mod events;
 mod fps;
 mod input;
 mod midi;
@@ -23,6 +24,8 @@ use crate::ui::*;
 use crate::voices::Voices;
 
 use consts::{TxMsg, ALL_INSTRUMENTS, WINDOW_HEIGHT, WINDOW_WIDTH};
+use egui_ui::UIState;
+use events::Events;
 use score::compute_last_loop_summary;
 use simple_logger;
 
@@ -62,10 +65,6 @@ impl Flags {
 
 #[macroquad::main(window_conf)]
 async fn main() -> Result<(), Box<dyn Error>> {
-    let font = load_ttf_font("./res/fonts/Rubik/static/Rubik-Regular.ttf")
-        .await
-        .unwrap();
-
     // simple_logger::init_with_level(log::Level::Info).unwrap();
     simple_logger::init_with_env().unwrap();
     let version = include_str!("../VERSION");
@@ -104,6 +103,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
         was_gold: false,
     };
 
+    let selector_vec = loops.iter().map(|(name, _)| name.to_string()).collect();
+    let mut game_state = UIState::default().selector_vec(selector_vec);
+
     // debug
     let mut fps_tracker = FPS::new();
 
@@ -111,30 +113,29 @@ async fn main() -> Result<(), Box<dyn Error>> {
     loop {
         // read user's input and translate to events
         let events = input.process();
+        let ui_events = ui.flush_events();
 
         // change state
         process_system_events(&rx, &mut audio, &voices, &mut gold_mode);
         process_input_events(&mut voices, &mut audio, &mut flags, &events, &dir_name)?;
+        // TODO: just add to events?
+        process_input_events(&mut voices, &mut audio, &mut flags, &ui_events, &dir_name)?;
+
         audio.schedule(&voices).await?;
         fps_tracker.update();
 
         // render UI
-        ui.render(&mut voices, &mut audio, &loops, &gold_mode, &flags);
+        ui.render(
+            &mut voices,
+            &mut audio,
+            &loops,
+            &gold_mode,
+            &flags,
+            &mut game_state,
+        );
         if flags.ui_debug_mode {
             fps_tracker.render();
         }
-
-        draw_text_ex(
-            "Macroix",
-            0.,
-            32.,
-            TextParams {
-                font,
-                color: GREEN,
-                font_size: 32,
-                ..Default::default()
-            },
-        );
 
         // wait for next frame from game engine
         next_frame().await
@@ -195,6 +196,7 @@ fn process_input_events(
     dir_name: &str,
 ) -> Result<(), Box<dyn Error>> {
     for event in events {
+        info!("Processing event: {:?}", event);
         match event {
             Events::UserHit {
                 instrument,

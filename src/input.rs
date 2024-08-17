@@ -6,30 +6,10 @@ use std::collections::HashSet;
 
 use macroquad::prelude::*;
 
-use crate::{consts::*, midi::MidiInput, time::current_time_millis, voices::Instrument, UserHit};
-
-pub enum Events {
-    UserHit {
-        instrument: Instrument,
-        processing_delay: f64,
-    },
-    Pause,
-    ChangeBPM {
-        delta: f64,
-    },
-    Quit,
-    ResetHits,
-    SaveLoop,
-    ToggleBeat {
-        row: f64,
-        beat: f64,
-    },
-    TrackForCalibration,
-    SetAudioLatency {
-        delta: f64,
-    },
-    ToggleDebugMode,
-}
+use crate::{
+    consts::*, events::Events, midi::MidiInput, time::current_time_millis, voices::Instrument,
+    UserHit,
+};
 
 pub struct Input {
     midi_input: Option<MidiInput>,
@@ -170,6 +150,7 @@ impl Input {
             events.push(Events::SaveLoop);
         }
 
+        // TODO: capture from UI instead and emit an event!
         if is_mouse_button_pressed(MouseButton::Left) {
             // TODO: doesn't work on initial window load.. but if i alt-tab away and back it does work?!
             let (mouse_x, mouse_y) = mouse_position();

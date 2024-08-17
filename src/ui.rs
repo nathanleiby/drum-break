@@ -8,7 +8,8 @@
 use crate::{
     audio::Audio,
     consts::*,
-    egui_ui::{ui_example_system, GameState},
+    egui_ui::{ui_example_system, UIState},
+    events::Events,
     score::{
         compute_accuracy_of_single_hit, compute_last_loop_summary,
         compute_loop_performance_for_voice, get_user_hit_timings_by_instrument, Accuracy,
@@ -31,11 +32,13 @@ const BACKGROUND_COLOR: Color = Color {
     a: 1.0,
 };
 
-pub struct UI {}
+pub struct UI {
+    events: Vec<Events>,
+}
 
 impl UI {
     pub fn new() -> Self {
-        Self {}
+        Self { events: vec![] }
     }
 
     pub fn render(
@@ -47,49 +50,56 @@ impl UI {
         loops: &Vec<(String, Loop)>,
         gold_mode: &GoldMode,
         flags: &Flags,
+
+        game_state: &mut UIState,
     ) {
-        let current_beat = audio.current_beat();
+        // let current_beat = audio.current_beat();
 
-        let audio_latency = audio.get_configured_audio_latency_seconds();
-        let bpm = audio.get_bpm();
+        // let audio_latency = audio.get_configured_audio_latency_seconds();
+        // let bpm = audio.get_bpm();
 
-        clear_background(BACKGROUND_COLOR);
-        draw_beat_grid(desired_hits);
-        draw_user_hits(&audio.user_hits, &desired_hits, audio_latency);
-        let loop_last_completed_beat = current_beat - MISS_MARGIN;
-        let current_loop_hits = get_hits_from_nth_loop(&audio.user_hits, audio.current_loop());
-        draw_note_successes(
-            &current_loop_hits,
-            &desired_hits,
-            audio_latency,
-            loop_last_completed_beat,
-        );
-        draw_position_line(current_beat + audio_latency);
+        // clear_background(BACKGROUND_COLOR);
+        // draw_beat_grid(desired_hits);
+        // draw_user_hits(&audio.user_hits, &desired_hits, audio_latency);
+        // let loop_last_completed_beat = current_beat - MISS_MARGIN;
+        // let current_loop_hits = get_hits_from_nth_loop(&audio.user_hits, audio.current_loop());
+        // draw_note_successes(
+        //     &current_loop_hits,
+        //     &desired_hits,
+        //     audio_latency,
+        //     loop_last_completed_beat,
+        // );
+        // draw_position_line(current_beat + audio_latency);
 
-        // TODO: render current loop considering audio latency
-        draw_status(bpm, current_beat / 2., audio.current_loop(), audio_latency);
+        // // TODO: render current loop considering audio latency
+        // draw_status(bpm, current_beat / 2., audio.current_loop(), audio_latency);
 
-        for i in 1..=3 {
-            let last_loop_hits = get_hits_from_nth_loop(&audio.user_hits, audio.current_loop() - i);
-            draw_loop_summary(&last_loop_hits, &desired_hits, audio_latency, i);
-        }
+        // for i in 1..=3 {
+        //     let last_loop_hits = get_hits_from_nth_loop(&audio.user_hits, audio.current_loop() - i);
+        //     draw_loop_summary(&last_loop_hits, &desired_hits, audio_latency, i);
+        // }
 
-        // TODO: toggle this on and off with a key for 'calibration' mode
-        draw_pulse_beat(current_beat + audio_latency);
+        // // TODO: toggle this on and off with a key for 'calibration' mode
+        // draw_pulse_beat(current_beat + audio_latency);
 
-        draw_loop_choices(desired_hits, audio, &loops);
+        // draw_loop_choices(desired_hits, audio, &loops);
 
-        draw_gold_mode(gold_mode);
+        // draw_gold_mode(gold_mode);
 
-        draw_metronome(audio);
+        // draw_metronome(audio);
 
-        if flags.ui_debug_mode {
-            draw_debug_grid();
-        }
+        // if flags.ui_debug_mode {
+        //     draw_debug_grid();
+        // }
 
-        let gs = GameState::default();
-        egui_macroquad::ui(|egui_ctx| ui_example_system(egui_ctx, gs));
+        egui_macroquad::ui(|egui_ctx| ui_example_system(egui_ctx, game_state, &mut self.events));
         egui_macroquad::draw();
+    }
+
+    pub fn flush_events(&mut self) -> Vec<Events> {
+        let out = self.events.clone();
+        self.events = vec![];
+        out
     }
 }
 
