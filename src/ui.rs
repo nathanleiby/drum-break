@@ -8,6 +8,7 @@
 use crate::{
     audio::Audio,
     consts::*,
+    egui_ui::{ui_example_system, GameState},
     score::{
         compute_accuracy_of_single_hit, compute_last_loop_summary,
         compute_loop_performance_for_voice, get_user_hit_timings_by_instrument, Accuracy,
@@ -85,6 +86,10 @@ impl UI {
         if flags.ui_debug_mode {
             draw_debug_grid();
         }
+
+        let gs = GameState::default();
+        egui_macroquad::ui(|egui_ctx| ui_example_system(egui_ctx, gs));
+        egui_macroquad::draw();
     }
 }
 

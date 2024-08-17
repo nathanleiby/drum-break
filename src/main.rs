@@ -1,6 +1,7 @@
 mod audio;
 mod config;
 mod consts;
+mod egui_ui;
 mod fps;
 mod input;
 mod midi;
@@ -127,7 +128,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             0.,
             32.,
             TextParams {
-                font: Some(&font),
+                font,
                 color: GREEN,
                 font_size: 32,
                 ..Default::default()
