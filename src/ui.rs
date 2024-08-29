@@ -8,7 +8,7 @@
 use crate::{
     audio::Audio,
     consts::*,
-    egui_ui::{ui_example_system, UIState},
+    egui_ui::{draw_ui, UIState},
     events::Events,
     score::{
         compute_accuracy_of_single_hit, compute_last_loop_summary,
@@ -51,7 +51,7 @@ impl UI {
         gold_mode: &GoldMode,
         flags: &Flags,
 
-        game_state: &mut UIState,
+        ui_state: &mut UIState,
     ) {
         // let current_beat = audio.current_beat();
 
@@ -92,7 +92,7 @@ impl UI {
         //     draw_debug_grid();
         // }
 
-        egui_macroquad::ui(|egui_ctx| ui_example_system(egui_ctx, game_state, &mut self.events));
+        egui_macroquad::ui(|egui_ctx| draw_ui(egui_ctx, ui_state, &mut self.events));
         egui_macroquad::draw();
     }
 

@@ -122,9 +122,9 @@ impl UIState {
 // fn ui_example_system(mut contexts: EguiContexts, mut game_state: ResMut<GameState>) {
 // let ctx = contexts.ctx_mut();
 
-pub fn ui_example_system(
+pub fn draw_ui(
     ctx: &egui_macroquad::egui::Context,
-    game_state: &mut UIState,
+    ui_state: &mut UIState,
     events: &mut Vec<Events>,
 ) {
     egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
@@ -143,25 +143,25 @@ pub fn ui_example_system(
                 ui.add_space(16.0);
             }
             ui.add(egui::Label::new("BPM"));
-            ui.add(egui::Slider::new(&mut game_state.bpm, 40.0..=240.0));
+            ui.add(egui::Slider::new(&mut ui_state.bpm, 40.0..=240.0));
             if ui.button("-").clicked() {
                 events.push(Events::ChangeBPM { delta: -1. });
-                game_state.bpm -= 1.;
+                ui_state.bpm -= 1.;
             }
             if ui.button("+").clicked() {
                 events.push(Events::ChangeBPM { delta: 1. });
-                game_state.bpm += 1.;
+                ui_state.bpm += 1.;
             }
 
             ui.separator();
 
             ui.add(egui::Slider::new(
-                &mut game_state.current_beat,
+                &mut ui_state.current_beat,
                 0.0..=BEATS_PER_LOOP,
             ));
             ui.add(
                 // egui::ProgressBar::new(game_state.progress)
-                egui::ProgressBar::new(game_state.current_beat / BEATS_PER_LOOP)
+                egui::ProgressBar::new(ui_state.current_beat / BEATS_PER_LOOP)
                     // .fill(Color32::BROWN)
                     .show_percentage(),
             );
@@ -177,25 +177,22 @@ pub fn ui_example_system(
                 ui.heading("Left Panel");
             });
 
-            let button_text = match game_state.is_playing {
+            let button_text = match ui_state.is_playing {
                 true => "Pause",
                 false => "Play",
             };
             if ui.button(button_text).clicked() {
-                game_state.is_playing = !game_state.is_playing;
+                ui_state.is_playing = !ui_state.is_playing;
             }
 
             ui.separator();
 
             ui.add(egui::Label::new("**Volume**"));
             ui.add(egui::Label::new("Metronome"));
-            ui.add(egui::Slider::new(
-                &mut game_state.volume_metronome,
-                0.0..=1.0,
-            ));
+            ui.add(egui::Slider::new(&mut ui_state.volume_metronome, 0.0..=1.0));
             ui.add(egui::Label::new("Target Notes"));
             ui.add(egui::Slider::new(
-                &mut game_state.volume_target_notes,
+                &mut ui_state.volume_target_notes,
                 0.0..=1.0,
             ));
 
@@ -203,9 +200,9 @@ pub fn ui_example_system(
 
             ui.add(egui::Label::new("**Loop Status**"));
             ui.add(egui::Label::new("Current Loop"));
-            ui.add(egui::Label::new(format!("{}", game_state.current_loop)));
+            ui.add(egui::Label::new(format!("{}", ui_state.current_loop)));
             ui.add(egui::Label::new("Current Beat"));
-            ui.add(egui::Label::new(format!("{}", game_state.current_beat)));
+            ui.add(egui::Label::new(format!("{}", ui_state.current_beat)));
 
             ui.separator();
 
@@ -222,19 +219,16 @@ pub fn ui_example_system(
             });
 
             egui::ComboBox::from_label("Choose Loop")
-                .selected_text(format!(
-                    "{}",
-                    &game_state.selector_vec[game_state.selected_idx]
-                ))
+                .selected_text(format!("{}", &ui_state.selector_vec[ui_state.selected_idx]))
                 .show_ui(ui, |ui| {
-                    for i in 0..game_state.selector_vec.len() {
+                    for i in 0..ui_state.selector_vec.len() {
                         let value = ui.selectable_value(
-                            &mut &game_state.selector_vec[i],
-                            &game_state.selector_vec[game_state.selected_idx],
-                            &game_state.selector_vec[i],
+                            &mut &ui_state.selector_vec[i],
+                            &ui_state.selector_vec[ui_state.selected_idx],
+                            &ui_state.selector_vec[i],
                         );
                         if value.clicked() {
-                            game_state.selected_idx = i;
+                            ui_state.selected_idx = i;
                             // TODO: load the relevant loop's data
                         }
                     }
@@ -245,14 +239,14 @@ pub fn ui_example_system(
             ui.group(|ui| {
                 ui.add(egui::Label::new("Latency Offset (ms)"));
                 ui.add(egui::Slider::new(
-                    &mut game_state.latency_offset,
+                    &mut ui_state.latency_offset,
                     -1000.0..=1000.0,
                 ));
                 if ui.button("-").clicked() {
-                    game_state.latency_offset -= 5.;
+                    ui_state.latency_offset -= 5.;
                 }
                 if ui.button("+").clicked() {
-                    game_state.latency_offset += 5.;
+                    ui_state.latency_offset += 5.;
                 }
             });
 
@@ -277,7 +271,7 @@ pub fn ui_example_system(
         // The central panel the region left after adding TopPanel's and SidePanel's
         ui.heading("Macroix");
 
-        draw_beat_grid(game_state, ui);
+        draw_beat_grid(ui_state, ui);
     });
 }
 

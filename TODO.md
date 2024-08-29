@@ -2,20 +2,19 @@
 
 ## working on
 
-- [ ] make gold reachable
-  - tweak strictness .. just a lil more generous on timing? ... Dial it it!
-    Could add sliders for (1) num correct (2) Bpm step (3) Correctness sensitivity
+Make it look good, so it's more motivating to build and share!
 
-**Golden mode so I can jam with it**
-
-- [ ] make gold reachable
-  - tweak strictness .. just a lil more generous on timing?
-  - fix poor signaling of closed HH -- often triggers as MISSED (didn't hit? was Open HH due to midi)
-
-**Look good for energizing dev**
+- [ ] migrate UI to use egui
+  - [..] pass state to UI
+  - [ ] render correct beat position <--
+  - [ ] render correct beats
 
 ## soon
 
+- [ ] make gold reachable
+  - tweak strictness .. just a lil more generous on timing? ... Dial it it!
+    Could add sliders for (1) num correct (2) Bpm step (3) Correctness sensitivity
+  - fix poor signaling of closed HH -- often triggers as MISSED (didn't hit? was Open HH due to midi)
 - [ ] quick start + gets you into flow
   - idea: saves whatever loop, BPM you were doing last time -- recovers on next start
   - capture progress over time (graph it, etc)
