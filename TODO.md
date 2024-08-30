@@ -12,7 +12,7 @@ Make it look good, so it's more motivating to build and share!
   - [x] show configured latency
   - [x] events only -- pass non mutable UI state
   - [x] show instrument names
-  - [ ] show user hits
+  - [x] show user hits
   - [ ] show note correctness color
   - [ ] ensure audio offset is considered (current beat, pulse beat)
   - [ ] show gold mode status

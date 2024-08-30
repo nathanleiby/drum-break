@@ -126,16 +126,6 @@ fn draw_status(bpm: f64, current_beat: f64, current_loop: i32, audio_latency: f6
     );
 }
 
-fn draw_user_hits(user_hits: &Vec<UserHit>, desired_hits: &Voices, audio_latency: f64) {
-    for (instrument_idx, instrument) in ALL_INSTRUMENTS.iter().enumerate() {
-        let user_notes = get_user_hit_timings_by_instrument(user_hits, *instrument);
-        let desired_notes = desired_hits.get_instrument_beats(instrument);
-        for note in user_notes.iter() {
-            draw_user_hit(*note, instrument_idx, audio_latency, desired_notes);
-        }
-    }
-}
-
 fn draw_note_successes(
     user_hits: &Vec<UserHit>,
     desired_hits: &Voices,
@@ -277,37 +267,6 @@ fn draw_note_success(beats_offset: f64, row: usize, acc: Accuracy) {
         BEAT_WIDTH_PX * beat_duration - BEAT_PADDING,
         BEAT_WIDTH_PX - BEAT_PADDING,
         color,
-    );
-}
-
-fn draw_user_hit(user_beat: f64, row: usize, audio_latency: f64, desired_hits: &Vec<f64>) {
-    let user_beat_with_latency = user_beat + audio_latency;
-
-    let (acc, is_next_loop) = compute_accuracy_of_single_hit(user_beat_with_latency, desired_hits);
-
-    let beat_duration = 0.1 as f64; // make it thin for easier overlap, for now
-
-    // with audio latency
-    let x = if is_next_loop {
-        GRID_LEFT_X + (user_beat_with_latency - BEATS_PER_LOOP) * BEAT_WIDTH_PX
-    } else {
-        GRID_LEFT_X + user_beat_with_latency * BEAT_WIDTH_PX
-    };
-
-    let y = GRID_TOP_Y + row as f64 * ROW_HEIGHT;
-
-    draw_rectangle_f64(
-        x + BEAT_PADDING / 2.,
-        y + BEAT_PADDING / 2.,
-        BEAT_WIDTH_PX * beat_duration - BEAT_PADDING,
-        BEAT_WIDTH_PX - BEAT_PADDING,
-        match acc {
-            Accuracy::Early => ORANGE,
-            Accuracy::Late => PURPLE,
-            Accuracy::Correct => GREEN,
-            Accuracy::Miss => RED,
-            Accuracy::Unknown => GRAY,
-        },
     );
 }
 

@@ -1,19 +1,25 @@
 // mod app;
 
-use egui::{self, emath, pos2, Color32, Rgba, Widget};
+use egui::{
+    self,
+    emath::{self, RectTransform},
+    pos2, Color32, Rgba, Shape, Widget,
+};
 // EguiContexts, EguiPlugin,
 use egui_plot::{Legend, Line, Plot};
 use log::info;
+use macroquad::color::{GRAY, GREEN, ORANGE, PURPLE, RED};
 
 use crate::{
-    consts::ALL_INSTRUMENTS,
+    consts::{ALL_INSTRUMENTS, BEATS_PER_LOOP},
     events::Events,
+    score::{compute_accuracy_of_single_hit, get_user_hit_timings_by_instrument, Accuracy},
     voices::{Instrument, Voices},
+    UserHit,
 };
 
 pub const GRID_ROWS: usize = 10;
 pub const GRID_COLS: usize = 16;
-const BEATS_PER_LOOP: f32 = 16.;
 
 // This resource holds information about the game:
 pub struct UIState {
@@ -31,7 +37,10 @@ pub struct UIState {
 
     enabled_beats: [[bool; GRID_COLS]; GRID_ROWS],
 
-    latency_offset: f32,
+    latency_offset_ms: f32,
+
+    user_hits: Vec<UserHit>,
+    desired_hits: Voices,
 }
 
 impl Default for UIState {
@@ -57,9 +66,12 @@ impl Default for UIState {
             volume_metronome: 0.75,
             volume_target_notes: 0.75,
 
-            latency_offset: 100.,
+            latency_offset_ms: 100.,
 
             enabled_beats: [[false; GRID_COLS]; GRID_ROWS],
+
+            user_hits: vec![],
+            desired_hits: Voices::new(),
         }
     }
 }
@@ -88,7 +100,15 @@ impl UIState {
     }
 
     pub fn set_latency_offset(&mut self, offset: f32) {
-        self.latency_offset = offset;
+        self.latency_offset_ms = offset;
+    }
+
+    pub fn set_user_hits(&mut self, hits: &Vec<UserHit>) {
+        self.user_hits = hits.clone();
+    }
+
+    pub fn set_desired_hits(&mut self, voices: &Voices) {
+        self.desired_hits = voices.clone();
     }
 }
 
@@ -127,7 +147,7 @@ pub fn draw_ui(ctx: &egui_macroquad::egui::Context, ui_state: &UIState, events: 
 
             ui.add(
                 // egui::ProgressBar::new(game_state.progress)
-                egui::ProgressBar::new(ui_state.current_beat / BEATS_PER_LOOP)
+                egui::ProgressBar::new(ui_state.current_beat / BEATS_PER_LOOP as f32)
                     // .fill(Color32::BROWN)
                     .show_percentage(),
             );
@@ -210,7 +230,7 @@ pub fn draw_ui(ctx: &egui_macroquad::egui::Context, ui_state: &UIState, events: 
 
             ui.group(|ui| {
                 ui.add(egui::Label::new("Latency Offset (ms)"));
-                ui.label(format!("{:?}", ui_state.latency_offset));
+                ui.label(format!("{:?}", ui_state.latency_offset_ms));
                 // TODO
                 // ui.add(egui::Slider::new(
                 //     &mut ui_state.latency_offset,
@@ -252,6 +272,8 @@ pub fn draw_ui(ctx: &egui_macroquad::egui::Context, ui_state: &UIState, events: 
 
 const VIRTUAL_WIDTH: f32 = 800.;
 const VIRTUAL_HEIGHT: f32 = 1000.;
+const WIDTH_SCALE: f32 = VIRTUAL_WIDTH / GRID_COLS as f32;
+const HEIGHT_SCALE: f32 = VIRTUAL_HEIGHT / GRID_ROWS as f32;
 
 fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events>) {
     let (response, painter) = ui.allocate_painter(
@@ -305,36 +327,6 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
         }
     });
 
-    // TODO: Add instrument names
-    // for (instrument_idx, instrument) in ALL_INSTRUMENTS.iter().enumerate() {
-    //     let name = match *instrument {
-    //         Instrument::ClosedHihat => "Hi-hat",
-    //         Instrument::Snare => "Snare",
-    //         Instrument::Kick => "Kick",
-    //         Instrument::OpenHihat => "Open Hi-hat",
-    //         Instrument::Ride => "Ride",
-    //         Instrument::Crash => "Crash",
-    //         Instrument::Tom1 => "Tom1 (High)",
-    //         Instrument::Tom2 => "Tom2 (Med)",
-    //         Instrument::Tom3 => "Tom3 (Low)",
-    //         Instrument::PedalHiHat => "Pedal Hi-hat",
-    //     };
-
-    //     // Labels in top-left of grid
-    //     draw_text(
-    //         name,
-    //         20.0,
-    //         (GRID_TOP_Y + ROW_HEIGHT * (instrument_idx as f64 + 0.5)) as f32,
-    //         20.0,
-    //         DARKGRAY,
-    //     );
-
-    //     let desired = desired_hits.get_instrument_beats(instrument);
-    //     for note in desired.iter() {
-    //         draw_note(*note, instrument_idx);
-    //     }
-    // }
-
     let beat_fill_color = if ui.visuals().dark_mode {
         Color32::from_rgba_premultiplied(200, 200, 200, 128)
     } else {
@@ -342,16 +334,14 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
     };
 
     let mut shapes = vec![];
-    let width_scale = VIRTUAL_WIDTH / GRID_COLS as f32;
-    let height_scale = VIRTUAL_HEIGHT / GRID_ROWS as f32;
     for row in 0..GRID_ROWS {
         for col in 0..GRID_COLS {
-            let base_pos = pos2(col as f32 * width_scale, row as f32 * height_scale);
+            let base_pos = pos2(col as f32 * WIDTH_SCALE, row as f32 * HEIGHT_SCALE);
 
             // TODO: fix scaling to always draw a nicer looking square based grid
             let t_rect = to_screen.transform_rect(egui::Rect {
                 min: base_pos,
-                max: base_pos + egui::Vec2::new(width_scale * 0.95, height_scale * 0.95),
+                max: base_pos + egui::Vec2::new(WIDTH_SCALE * 0.95, HEIGHT_SCALE * 0.95),
             });
 
             if col == 0 {
@@ -391,7 +381,34 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
         }
     }
 
-    let base_pos = pos2((ui_state.current_beat / BEATS_PER_LOOP) * VIRTUAL_WIDTH, 0.);
+    // Draw User Hits
+    draw_user_hits(ui_state, to_screen, &mut shapes);
+
+    // Draw Note Successes
+    // let loop_last_completed_beat = current_beat - MISS_MARGIN;
+    // let current_loop_hits = get_hits_from_nth_loop(&audio.user_hits, audio.current_loop());
+    // draw_note_successes(
+    //     &current_loop_hits,
+    //     &desired_hits,
+    //     audio_latency,
+    //     loop_last_completed_beat,
+    // );
+
+    // ---
+
+    draw_current_beat(ui_state.current_beat, to_screen, ui, &mut shapes);
+
+    // render them
+    painter.extend(shapes);
+}
+
+fn draw_current_beat(
+    current_beat: f32,
+    to_screen: RectTransform,
+    ui: &mut egui::Ui,
+    shapes: &mut Vec<Shape>,
+) {
+    let base_pos = pos2((current_beat / BEATS_PER_LOOP as f32) * VIRTUAL_WIDTH, 0.);
     let t_rect = to_screen.transform_rect(egui::Rect {
         min: base_pos,
         max: base_pos + egui::Vec2::new(2., VIRTUAL_HEIGHT),
@@ -404,9 +421,71 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
     };
     let shape = egui::Shape::rect_filled(t_rect, egui::Rounding::default(), bar_color);
     shapes.push(shape);
+}
 
-    // render them
-    painter.extend(shapes);
+fn draw_user_hits(ui_state: &UIState, to_screen: RectTransform, shapes: &mut Vec<Shape>) {
+    for (instrument_idx, instrument) in ALL_INSTRUMENTS.iter().enumerate() {
+        let user_notes = get_user_hit_timings_by_instrument(&ui_state.user_hits, *instrument);
+        let desired_notes = ui_state.desired_hits.get_instrument_beats(instrument);
+        for note in user_notes.iter() {
+            draw_user_hit(
+                *note,
+                instrument_idx,
+                ui_state.latency_offset_ms as f64,
+                desired_notes,
+                to_screen,
+                shapes,
+            );
+        }
+    }
+}
+
+fn draw_user_hit(
+    user_beat: f64,
+    row: usize,
+    audio_latency_ms: f64,
+    desired_hits: &Vec<f64>,
+    to_screen: RectTransform,
+    shapes: &mut Vec<Shape>,
+) {
+    // TODO: Want audio latency in terms of BEATS
+    let user_beat_with_latency = user_beat + (audio_latency_ms / 1000.);
+
+    let (acc, is_next_loop) = compute_accuracy_of_single_hit(user_beat_with_latency, desired_hits);
+
+    // with audio latency and is_next_loop
+    // TODO(bug): hit a note on every beat of 16. Then toggle on and off a note on only beat 1 for that instrument. it causes buggy display of hit timings where the 2nd half (beats 9-16) aren't shown .. bercause it's closer to beat 1 than any other beat, I guess?.
+    // TODO(ui): can't see "before" hits because there's no space to left anymore
+    let x = if is_next_loop {
+        ((user_beat_with_latency as f32 - BEATS_PER_LOOP as f32) / BEATS_PER_LOOP as f32)
+            * VIRTUAL_WIDTH
+    } else {
+        (user_beat_with_latency as f32 / BEATS_PER_LOOP as f32) * VIRTUAL_WIDTH
+    };
+
+    let base_pos = pos2(x as f32, row as f32 * HEIGHT_SCALE);
+    let t_rect = to_screen.transform_rect(egui::Rect {
+        min: base_pos,
+        max: base_pos + egui::Vec2::new(2., HEIGHT_SCALE * 0.95),
+    });
+
+    info!("Drawing user hit at {:?}", t_rect);
+
+    let bar_color = match acc {
+        Accuracy::Early => ORANGE,
+        Accuracy::Late => PURPLE,
+        Accuracy::Correct => GREEN,
+        Accuracy::Miss => RED,
+        Accuracy::Unknown => GRAY,
+    };
+    let bar_color_32 = Color32::from_rgb(
+        (bar_color.r * 256.) as u8,
+        (bar_color.g * 256.) as u8,
+        (bar_color.b * 256.) as u8,
+    );
+
+    let shape = egui::Shape::rect_filled(t_rect, egui::Rounding::default(), bar_color_32);
+    shapes.push(shape);
 }
 
 fn gold_mode(ui: &mut egui::Ui) {
