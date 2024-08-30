@@ -177,8 +177,10 @@ fn process_system_events(
                     TxMsg::AudioNew => (),
                     TxMsg::StartingLoop(loop_num) => {
                         // TODO: UPDATE TO ONLY RUN THIS CODE FOR "on loop complete" events
-                        let last_loop_hits =
-                            get_hits_from_nth_loop(&audio.user_hits, audio.current_loop() - 1);
+                        let last_loop_hits = get_hits_from_nth_loop(
+                            &audio.user_hits,
+                            (audio.current_loop() - 1) as usize,
+                        );
                         let audio_latency = audio.get_configured_audio_latency_seconds();
                         let summary_data =
                             compute_last_loop_summary(&last_loop_hits, &voices, audio_latency);

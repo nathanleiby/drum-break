@@ -13,7 +13,7 @@ Make it look good, so it's more motivating to build and share!
   - [x] events only -- pass non mutable UI state
   - [x] show instrument names
   - [x] show user hits
-  - [ ] show note correctness color
+  - [x] show note correctness color
   - [ ] ensure audio offset is considered (current beat, pulse beat)
   - [ ] show gold mode status
     - maybe use colored emojis via https://crates.io/crates/egui-twemoji

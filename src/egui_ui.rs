@@ -13,6 +13,7 @@ use macroquad::color::{GRAY, GREEN, ORANGE, PURPLE, RED};
 use crate::{
     consts::{ALL_INSTRUMENTS, BEATS_PER_LOOP},
     events::Events,
+    get_hits_from_nth_loop,
     score::{
         compute_accuracy_of_single_hit, compute_loop_performance_for_voice,
         get_user_hit_timings_by_instrument, Accuracy, MISS_MARGIN,
@@ -347,13 +348,7 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
     let mut shapes = vec![];
     for row in 0..GRID_ROWS {
         for col in 0..GRID_COLS {
-            let base_pos = pos2(col as f32 * WIDTH_SCALE, row as f32 * HEIGHT_SCALE);
-
-            // TODO: fix scaling to always draw a nicer looking square based grid
-            let t_rect = to_screen.transform_rect(egui::Rect {
-                min: base_pos,
-                max: base_pos + egui::Vec2::new(WIDTH_SCALE * 0.95, HEIGHT_SCALE * 0.95),
-            });
+            let t_rect = rect_for_col_row(col, row, to_screen);
 
             if col == 0 {
                 let name = match ALL_INSTRUMENTS[row] {
@@ -396,14 +391,16 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
     draw_user_hits(ui_state, to_screen, &mut shapes);
 
     // Draw Note Successes
-    // let loop_last_completed_beat = ui_state.current_beat - MISS_MARGIN as f32;
-    // let current_loop_hits = get_hits_from_nth_loop(ui_state.user_hits, ui_state.current_loop);
-    // draw_note_successes(
-    //     &current_loop_hits,
-    //     &desired_hits,
-    //     audio_latency,
-    //     loop_last_completed_beat,
-    // );
+    let loop_last_completed_beat = ui_state.current_beat - MISS_MARGIN as f32;
+    let current_loop_hits = get_hits_from_nth_loop(&ui_state.user_hits, ui_state.current_loop);
+    draw_note_successes(
+        &current_loop_hits,
+        &ui_state.desired_hits,
+        (ui_state.latency_offset_ms / 1000.) as f64,
+        loop_last_completed_beat as f64,
+        to_screen,
+        &mut shapes,
+    );
 
     // ---
 
@@ -411,6 +408,17 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
 
     // render them
     painter.extend(shapes);
+}
+
+fn rect_for_col_row(col: usize, row: usize, to_screen: RectTransform) -> egui::Rect {
+    let base_pos = pos2(col as f32 * WIDTH_SCALE, row as f32 * HEIGHT_SCALE);
+
+    // TODO: fix scaling to always draw a nicer looking square based grid
+    let t_rect = to_screen.transform_rect(egui::Rect {
+        min: base_pos,
+        max: base_pos + egui::Vec2::new(WIDTH_SCALE * 0.95, HEIGHT_SCALE * 0.95),
+    });
+    t_rect
 }
 
 fn draw_current_beat(
@@ -504,6 +512,8 @@ fn draw_note_successes(
     desired_hits: &Voices,
     audio_latency: f64,
     loop_current_beat: f64,
+    to_screen: RectTransform,
+    shapes: &mut Vec<Shape>,
 ) {
     for (instrument_idx, instrument) in ALL_INSTRUMENTS.iter().enumerate() {
         let actual = get_user_hit_timings_by_instrument(user_hits, *instrument);
@@ -518,31 +528,35 @@ fn draw_note_successes(
         let loop_perf =
             compute_loop_performance_for_voice(&actual_w_latency, &desired, loop_current_beat);
         for (note_idx, note) in desired.iter().enumerate() {
-            draw_note_success(*note, instrument_idx, loop_perf[note_idx]);
+            let shape = note_success_shape(*note, instrument_idx, loop_perf[note_idx], to_screen);
+            shapes.push(shape);
         }
     }
 }
 
-fn draw_note_success(beats_offset: f64, row: usize, acc: Accuracy) {
-    // let beat_duration = 1 as f64;
-    // let x = GRID_LEFT_X + beats_offset * BEAT_WIDTH_PX;
-    // let y = GRID_TOP_Y + row as f64 * ROW_HEIGHT;
-    // let mut color = match acc {
-    //     Accuracy::Early => ORANGE,
-    //     Accuracy::Late => PURPLE,
-    //     Accuracy::Correct => GREEN,
-    //     Accuracy::Miss => RED,
-    //     Accuracy::Unknown => GRAY,
-    // };
-    // color.a = 0.5;
+fn note_success_shape(
+    beats_offset: f64,
+    row: usize,
+    acc: Accuracy,
+    to_screen: RectTransform,
+) -> Shape {
+    let col = beats_offset as usize; // TODO: truncate, for now
+    let rect = rect_for_col_row(col, row, to_screen);
 
-    // draw_rectangle_f64(
-    //     x + BEAT_PADDING / 2.,
-    //     y + BEAT_PADDING / 2.,
-    //     BEAT_WIDTH_PX * beat_duration - BEAT_PADDING,
-    //     BEAT_WIDTH_PX - BEAT_PADDING,
-    //     color,
-    // );
+    let bar_color = match acc {
+        Accuracy::Early => ORANGE,
+        Accuracy::Late => PURPLE,
+        Accuracy::Correct => GREEN,
+        Accuracy::Miss => RED,
+        Accuracy::Unknown => GRAY,
+    };
+    let bar_color_32 = Color32::from_rgb(
+        (bar_color.r * 256.) as u8,
+        (bar_color.g * 256.) as u8,
+        (bar_color.b * 256.) as u8,
+    );
+
+    egui::Shape::rect_filled(rect, egui::Rounding::default(), bar_color_32)
 }
 
 fn gold_mode(ui: &mut egui::Ui) {
