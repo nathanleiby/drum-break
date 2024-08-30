@@ -41,25 +41,13 @@ impl UI {
         Self { events: vec![] }
     }
 
-    pub fn render(
-        self: &mut Self,
-
-        // TODO: consider bundling the below into a Game struct or similar
-        desired_hits: &mut Voices,
-        audio: &mut Audio,
-        loops: &Vec<(String, Loop)>,
-        gold_mode: &GoldMode,
-        flags: &Flags,
-
-        ui_state: &mut UIState,
-    ) {
+    pub fn render(self: &mut Self, ui_state: &mut UIState) {
         // let current_beat = audio.current_beat();
 
         // let audio_latency = audio.get_configured_audio_latency_seconds();
         // let bpm = audio.get_bpm();
 
         // clear_background(BACKGROUND_COLOR);
-        // draw_beat_grid(desired_hits);
         // draw_user_hits(&audio.user_hits, &desired_hits, audio_latency);
         // let loop_last_completed_beat = current_beat - MISS_MARGIN;
         // let current_loop_hits = get_hits_from_nth_loop(&audio.user_hits, audio.current_loop());
@@ -138,59 +126,6 @@ fn draw_status(bpm: f64, current_beat: f64, current_loop: i32, audio_latency: f6
         30.0,
         DARKGRAY,
     );
-}
-
-fn draw_beat_grid(desired_hits: &Voices) {
-    let start_x = GRID_LEFT_X;
-    let start_y = GRID_TOP_Y;
-
-    // draw vertical lines every beats
-    for i in 0..=(BEATS_PER_LOOP as i32) {
-        let x = start_x + i as f64 * BEAT_WIDTH_PX;
-        draw_line_f64(
-            x,
-            start_y,
-            x,
-            start_y + ROW_HEIGHT * (NUM_ROWS_IN_GRID as f64),
-            // if i % 4 == 0 { 6.0 } else { 4.0 },
-            4.0,
-            if i % 4 == 0 { BLACK } else { LINE_COLOR },
-        );
-    }
-
-    for i in 0..=(NUM_ROWS_IN_GRID as usize) {
-        let y = start_y + i as f64 * ROW_HEIGHT;
-        draw_line_f64(start_x, y, start_x + GRID_WIDTH, y, 4.0, BLACK);
-    }
-
-    for (instrument_idx, instrument) in ALL_INSTRUMENTS.iter().enumerate() {
-        let name = match *instrument {
-            Instrument::ClosedHihat => "Hi-hat",
-            Instrument::Snare => "Snare",
-            Instrument::Kick => "Kick",
-            Instrument::OpenHihat => "Open Hi-hat",
-            Instrument::Ride => "Ride",
-            Instrument::Crash => "Crash",
-            Instrument::Tom1 => "Tom1 (High)",
-            Instrument::Tom2 => "Tom2 (Med)",
-            Instrument::Tom3 => "Tom3 (Low)",
-            Instrument::PedalHiHat => "Pedal Hi-hat",
-        };
-
-        // Labels in top-left of grid
-        draw_text(
-            name,
-            20.0,
-            (GRID_TOP_Y + ROW_HEIGHT * (instrument_idx as f64 + 0.5)) as f32,
-            20.0,
-            DARKGRAY,
-        );
-
-        let desired = desired_hits.get_instrument_beats(instrument);
-        for note in desired.iter() {
-            draw_note(*note, instrument_idx);
-        }
-    }
 }
 
 fn draw_user_hits(user_hits: &Vec<UserHit>, desired_hits: &Voices, audio_latency: f64) {

@@ -6,7 +6,10 @@ use std::error::Error;
 use macroquad::file::load_file;
 use serde::{Deserialize, Serialize};
 
-use crate::consts::ALL_INSTRUMENTS;
+use crate::{
+    consts::{ALL_INSTRUMENTS, BEATS_PER_LOOP},
+    egui_ui::{GRID_COLS, GRID_ROWS},
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Instrument {
@@ -139,6 +142,22 @@ impl Voices {
             ride: self.get_instrument_beats(&Instrument::Ride).clone(),
             crash: self.get_instrument_beats(&Instrument::Crash).clone(),
         }
+    }
+
+    pub fn to_enabled_beats(&self) -> [[bool; GRID_COLS]; GRID_ROWS] {
+        let mut out = [[false; GRID_COLS]; GRID_ROWS];
+
+        for (instrument_idx, instrument) in ALL_INSTRUMENTS.iter().enumerate() {
+            for beat in self.get_instrument_beats(instrument) {
+                for val in 0..(BEATS_PER_LOOP as usize) {
+                    if *beat == (val as f64) {
+                        out[instrument_idx][val] = true;
+                    }
+                }
+            }
+        }
+
+        out
     }
 }
 

@@ -5,7 +5,10 @@ use egui::{self, emath, pos2, Color32};
 use egui_plot::{Legend, Line, Plot};
 use log::info;
 
-use crate::events::Events;
+use crate::{
+    events::Events,
+    voices::{Instrument, Voices},
+};
 
 // fn main() {
 //     App::new()
@@ -18,9 +21,9 @@ use crate::events::Events;
 //         .run();
 // }
 
-const GRID_ROWS: usize = 10;
-const GRID_COLS: usize = 16;
-const BEATS_PER_LOOP: f32 = 8.;
+pub const GRID_ROWS: usize = 10;
+pub const GRID_COLS: usize = 16;
+const BEATS_PER_LOOP: f32 = 16.;
 
 // This resource holds information about the game:
 pub struct UIState {
@@ -108,6 +111,7 @@ impl Default for UIState {
 }
 
 impl UIState {
+    // TODO: rename related to choosing a loop
     pub fn selector_vec(mut self, selector_vec: Vec<String>) -> Self {
         self.selector_vec = selector_vec;
         self
@@ -115,6 +119,14 @@ impl UIState {
 
     pub fn set_is_playing(&mut self, is_playing: bool) {
         self.is_playing = is_playing;
+    }
+
+    pub fn set_current_beat(&mut self, beat: f64) {
+        self.current_beat = beat as f32;
+    }
+
+    pub fn set_enabled_beats(&mut self, voices: &Voices) {
+        self.enabled_beats = voices.to_enabled_beats();
     }
 }
 
@@ -271,7 +283,7 @@ pub fn draw_ui(
         // The central panel the region left after adding TopPanel's and SidePanel's
         ui.heading("Macroix");
 
-        draw_beat_grid(ui_state, ui);
+        draw_beat_grid(ui_state, ui, events);
     });
 }
 
@@ -280,7 +292,7 @@ const VIRTUAL_HEIGHT: f32 = 1000.;
 
 // TODO: convert mouse click to beat
 
-fn draw_beat_grid(app: &mut UIState, ui: &mut egui::Ui) {
+fn draw_beat_grid(ui_state: &mut UIState, ui: &mut egui::Ui, events: &mut Vec<Events>) {
     let (response, painter) = ui.allocate_painter(
         egui::Vec2::new(ui.available_width(), ui.available_height()),
         egui::Sense::hover(),
@@ -321,12 +333,47 @@ fn draw_beat_grid(app: &mut UIState, ui: &mut egui::Ui) {
                         "click at position = {:?} [[tpos = {:?}]] (row={:?}, col={:?})",
                         pos, tpos, row, col,
                     );
-                    app.enabled_beats[row][col] = !app.enabled_beats[row][col];
+                    // TODO: emit an event to enable this beat
+                    events.push(Events::ToggleBeat {
+                        row: row as f64,
+                        beat: col as f64,
+                    });
+                    // ui_state.enabled_beats[row][col] = !ui_state.enabled_beats[row][col];
                 }
                 _ => (),
             }
         }
     });
+
+    // TODO: Add instrument names
+    // for (instrument_idx, instrument) in ALL_INSTRUMENTS.iter().enumerate() {
+    //     let name = match *instrument {
+    //         Instrument::ClosedHihat => "Hi-hat",
+    //         Instrument::Snare => "Snare",
+    //         Instrument::Kick => "Kick",
+    //         Instrument::OpenHihat => "Open Hi-hat",
+    //         Instrument::Ride => "Ride",
+    //         Instrument::Crash => "Crash",
+    //         Instrument::Tom1 => "Tom1 (High)",
+    //         Instrument::Tom2 => "Tom2 (Med)",
+    //         Instrument::Tom3 => "Tom3 (Low)",
+    //         Instrument::PedalHiHat => "Pedal Hi-hat",
+    //     };
+
+    //     // Labels in top-left of grid
+    //     draw_text(
+    //         name,
+    //         20.0,
+    //         (GRID_TOP_Y + ROW_HEIGHT * (instrument_idx as f64 + 0.5)) as f32,
+    //         20.0,
+    //         DARKGRAY,
+    //     );
+
+    //     let desired = desired_hits.get_instrument_beats(instrument);
+    //     for note in desired.iter() {
+    //         draw_note(*note, instrument_idx);
+    //     }
+    // }
 
     let mut shapes = vec![];
     let width_scale = VIRTUAL_WIDTH / GRID_COLS as f32;
@@ -342,7 +389,7 @@ fn draw_beat_grid(app: &mut UIState, ui: &mut egui::Ui) {
             });
 
             // if this beat is enabled (row is instrument, col is beat)..
-            if app.enabled_beats[row][col] {
+            if ui_state.enabled_beats[row][col] {
                 let shape =
                     egui::Shape::rect_filled(t_rect, egui::Rounding::default(), Color32::GRAY);
                 shapes.push(shape)
@@ -357,7 +404,7 @@ fn draw_beat_grid(app: &mut UIState, ui: &mut egui::Ui) {
         }
     }
 
-    let base_pos = pos2((app.current_beat / BEATS_PER_LOOP) * VIRTUAL_WIDTH, 0.);
+    let base_pos = pos2((ui_state.current_beat / BEATS_PER_LOOP) * VIRTUAL_WIDTH, 0.);
     let t_rect = to_screen.transform_rect(egui::Rect {
         min: base_pos,
         max: base_pos + egui::Vec2::new(2., VIRTUAL_HEIGHT),

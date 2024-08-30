@@ -104,7 +104,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
     };
 
     let selector_vec = loops.iter().map(|(name, _)| name.to_string()).collect();
+    // initialize UI state
     let mut ui_state = UIState::default().selector_vec(selector_vec);
+    //  // TODO: consider bundling the below into a Game struct or similar
+    //  desired_hits: &mut Voices
+    //  audio: &mut Audio
+    //  loops: &Vec<(String, Loop)>
+    //  gold_mode: &GoldMode
+    //  flags: &Flags
 
     // debug
     let mut fps_tracker = FPS::new();
@@ -116,8 +123,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
         // TODO: just add to events?
         let ui_events = ui.flush_events();
 
-        // change state
-        process_system_events(&rx, &mut audio, &voices, &mut gold_mode, &mut ui_state);
+        // change game state
+        process_system_events(&rx, &mut audio, &voices, &mut gold_mode);
         for e in [&events, &ui_events] {
             process_input_events(
                 &mut voices,
@@ -130,18 +137,15 @@ async fn main() -> Result<(), Box<dyn Error>> {
         }
 
         audio.schedule(&voices).await?;
-        fps_tracker.update();
 
         // render UI
-        ui.render(
-            &mut voices,
-            &mut audio,
-            &loops,
-            &gold_mode,
-            &flags,
-            &mut ui_state,
-        );
+        // TODO: synchronize UI with game state -- UI actually needs access to some mutable values.. ugh
+        ui_state.set_current_beat(audio.current_beat());
+        ui_state.set_enabled_beats(&voices);
+
+        ui.render(&mut ui_state);
         if flags.ui_debug_mode {
+            fps_tracker.update();
             fps_tracker.render();
         }
 
@@ -155,7 +159,6 @@ fn process_system_events(
     audio: &mut Audio,
     voices: &Voices,
     gold_mode: &mut GoldMode,
-    ui_state: &mut UIState,
 ) {
     // read events
     loop {
@@ -250,6 +253,7 @@ fn process_input_events(
                     None => panic!("invalid instrument idx"),
                 };
 
+                info!("toggling beat: {:?} {:?}", *ins, *beat);
                 voices.toggle_beat(*ins, *beat);
             }
             Events::TrackForCalibration => {
