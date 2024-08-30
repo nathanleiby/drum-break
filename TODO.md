@@ -11,6 +11,14 @@ Make it look good, so it's more motivating to build and share!
   - [x] handle play/pause
   - [x] show configured latency
   - [x] events only -- pass non mutable UI state
+  - [ ] show instrument names
+  - [ ] show user hits
+  - [ ] show note correctness color
+  - [ ] ensure audio offset is considered (current beat, pulse beat)
+  - [ ] show gold mode status
+    - maybe use colored emojis via https://crates.io/crates/egui-twemoji
+  - [ ] show gold mode chart
+  - (maybe) draw_pulse_beat for latency calibration
 
 ## soon
 

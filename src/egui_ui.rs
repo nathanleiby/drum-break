@@ -10,17 +10,6 @@ use crate::{
     voices::{Instrument, Voices},
 };
 
-// fn main() {
-//     App::new()
-//         .init_resource::<GameState>()
-//         .add_plugins(DefaultPlugins)
-//         .add_plugins(EguiPlugin)
-//         // Systems that create Egui widgets should be run during the `CoreSet::Update` set,
-//         // or after the `EguiSet::BeginFrame` system (which belongs to the `CoreSet::PreUpdate` set).
-//         .add_systems(Update, ui_example_system)
-//         .run();
-// }
-
 pub const GRID_ROWS: usize = 10;
 pub const GRID_COLS: usize = 16;
 const BEATS_PER_LOOP: f32 = 16.;
@@ -44,43 +33,7 @@ pub struct UIState {
     latency_offset: f32,
 }
 
-// impl Default for GameState {
-//     // TODO: due to serialization, weird behavior can occur on app reload..
-//     // Need to sepaerate out things that should save to disk (settings? user state that should resume?) vs things that need to reset or be overwritten.
-//     // From debugging on web, running `localStorage.clear()` is sufficient to reset.
-//     fn default() -> Self {
-//         Self {
-//             // Example stuff:
-//             is_playing: false,
-
-//             selector_vec: vec![
-//                 // TODO: String::from() vs .. "".to_owned() ?
-//                 String::from("Rock"),
-//                 String::from("Breakbeat"),
-//                 String::from("Samba"),
-//             ],
-//             selected_idx: 0,
-
-//             current_loop: 2,
-//             current_beat: 2.3,
-
-//             bpm: 120.,
-
-//             is_metronome_enabled: false,
-//             volume_metronome: 0.75,
-//             volume_target_notes: 0.75,
-
-//             latency_offset: 100.,
-
-//             enabled_beats: [[false; GRID_COLS]; GRID_ROWS],
-//         }
-//     }
-// }
-
 impl Default for UIState {
-    // TODO: due to serialization, weird behavior can occur on app reload..
-    // Need to sepaerate out things that should save to disk (settings? user state that should resume?) vs things that need to reset or be overwritten.
-    // From debugging on web, running `localStorage.clear()` is sufficient to reset.
     fn default() -> Self {
         Self {
             // Example stuff:
@@ -137,10 +90,6 @@ impl UIState {
         self.latency_offset = offset;
     }
 }
-
-// fn ui_example_system(mut contexts: EguiContexts, mut game_state: ResMut<GameState>) {
-// fn ui_example_system(mut contexts: EguiContexts, mut game_state: ResMut<GameState>) {
-// let ctx = contexts.ctx_mut();
 
 pub fn draw_ui(ctx: &egui_macroquad::egui::Context, ui_state: &UIState, events: &mut Vec<Events>) {
     egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
@@ -303,8 +252,6 @@ pub fn draw_ui(ctx: &egui_macroquad::egui::Context, ui_state: &UIState, events: 
 const VIRTUAL_WIDTH: f32 = 800.;
 const VIRTUAL_HEIGHT: f32 = 1000.;
 
-// TODO: convert mouse click to beat
-
 fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events>) {
     let (response, painter) = ui.allocate_painter(
         egui::Vec2::new(ui.available_width(), ui.available_height()),
@@ -326,6 +273,7 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
         ),
     );
 
+    // capture mouse clicks and toggle relevant beat
     ui.input(|i| {
         for event in &i.raw.events {
             match event {
@@ -346,12 +294,10 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
                         "click at position = {:?} [[tpos = {:?}]] (row={:?}, col={:?})",
                         pos, tpos, row, col,
                     );
-                    // TODO: emit an event to enable this beat
                     events.push(Events::ToggleBeat {
                         row: row as f64,
                         beat: col as f64,
                     });
-                    // ui_state.enabled_beats[row][col] = !ui_state.enabled_beats[row][col];
                 }
                 _ => (),
             }
