@@ -1,6 +1,6 @@
 // mod app;
 
-use egui::{self, emath, pos2, Color32};
+use egui::{self, emath, pos2, Color32, Widget};
 // EguiContexts, EguiPlugin,
 use egui_plot::{Legend, Line, Plot};
 use log::info;
@@ -128,6 +128,10 @@ impl UIState {
     pub fn set_enabled_beats(&mut self, voices: &Voices) {
         self.enabled_beats = voices.to_enabled_beats();
     }
+
+    pub fn set_bpm(&mut self, bpm: f32) {
+        self.bpm = bpm;
+    }
 }
 
 // fn ui_example_system(mut contexts: EguiContexts, mut game_state: ResMut<GameState>) {
@@ -155,7 +159,12 @@ pub fn draw_ui(
                 ui.add_space(16.0);
             }
             ui.add(egui::Label::new("BPM"));
-            ui.add(egui::Slider::new(&mut ui_state.bpm, 40.0..=240.0));
+
+            let bpm_slider = egui::Slider::new(&mut ui_state.bpm, 40.0..=240.0);
+            let bpm_slider_resp = bpm_slider.ui(ui);
+            if bpm_slider_resp.changed() {
+                events.push(Events::SetBPM(ui_state.bpm as f64));
+            }
             if ui.button("-").clicked() {
                 events.push(Events::ChangeBPM { delta: -1. });
                 ui_state.bpm -= 1.;

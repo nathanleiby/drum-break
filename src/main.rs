@@ -126,14 +126,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         // change game state
         process_system_events(&rx, &mut audio, &voices, &mut gold_mode);
         for e in [&events, &ui_events] {
-            process_input_events(
-                &mut voices,
-                &mut audio,
-                &mut flags,
-                &e,
-                &dir_name,
-                &mut ui_state,
-            )?;
+            process_input_events(&mut voices, &mut audio, &mut flags, &e, &dir_name)?;
         }
 
         audio.schedule(&voices).await?;
@@ -142,6 +135,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
         // TODO: synchronize UI with game state -- UI actually needs access to some mutable values.. ugh
         ui_state.set_current_beat(audio.current_beat());
         ui_state.set_enabled_beats(&voices);
+        ui_state.set_is_playing(!audio.is_paused());
+        ui_state.set_bpm(audio.get_bpm() as f32);
 
         ui.render(&mut ui_state);
         if flags.ui_debug_mode {
@@ -206,7 +201,6 @@ fn process_input_events(
     flags: &mut Flags,
     events: &Vec<Events>,
     dir_name: &str,
-    ui_state: &mut UIState,
 ) -> Result<(), Box<dyn Error>> {
     for event in events {
         info!("Processing event: {:?}", event);
@@ -219,10 +213,12 @@ fn process_input_events(
             }
             Events::Pause => {
                 audio.toggle_pause();
-                ui_state.set_is_playing(audio.is_paused());
             }
             Events::ChangeBPM { delta } => {
                 audio.set_bpm(audio.get_bpm() + delta);
+            }
+            Events::SetBPM(val) => {
+                audio.set_bpm(*val);
             }
             Events::Quit => {
                 std::process::exit(0);

@@ -10,6 +10,7 @@ pub enum Events {
     ChangeBPM {
         delta: f64,
     },
+    SetBPM(f64),
     Quit,
     ResetHits,
     SaveLoop,

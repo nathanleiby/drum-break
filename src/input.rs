@@ -150,19 +150,6 @@ impl Input {
             events.push(Events::SaveLoop);
         }
 
-        // // TODO: capture from UI instead and emit an event!
-        // if is_mouse_button_pressed(MouseButton::Left) {
-        //     // TODO: doesn't work on initial window load.. but if i alt-tab away and back it does work?!
-        //     let (mouse_x, mouse_y) = mouse_position();
-        //     // is on a beat?
-        //     let beat = ((mouse_x as f64 - GRID_LEFT_X) / BEAT_WIDTH_PX).floor();
-        //     let row = ((mouse_y as f64 - GRID_TOP_Y) / ROW_HEIGHT).floor();
-        //     if beat >= 0. && beat < BEATS_PER_LOOP && row >= 0. && row < (NUM_ROWS_IN_GRID as f64) {
-        //         log::debug!("Clicked on row={}, beat={}", row, beat);
-        //         events.push(Events::ToggleBeat { row, beat });
-        //     }
-        // }
-
         events
     }
 }
