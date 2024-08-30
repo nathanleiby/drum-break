@@ -1,11 +1,12 @@
 // mod app;
 
-use egui::{self, emath, pos2, Color32, Widget};
+use egui::{self, emath, pos2, Color32, Rgba, Widget};
 // EguiContexts, EguiPlugin,
 use egui_plot::{Legend, Line, Plot};
 use log::info;
 
 use crate::{
+    consts::ALL_INSTRUMENTS,
     events::Events,
     voices::{Instrument, Voices},
 };
@@ -334,11 +335,17 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
     //     }
     // }
 
+    let beat_fill_color = if ui.visuals().dark_mode {
+        Color32::from_rgba_premultiplied(200, 200, 200, 128)
+    } else {
+        Color32::from_rgba_premultiplied(50, 50, 50, 128)
+    };
+
     let mut shapes = vec![];
     let width_scale = VIRTUAL_WIDTH / GRID_COLS as f32;
     let height_scale = VIRTUAL_HEIGHT / GRID_ROWS as f32;
-    for col in 0..GRID_COLS {
-        for row in 0..GRID_ROWS {
+    for row in 0..GRID_ROWS {
+        for col in 0..GRID_COLS {
             let base_pos = pos2(col as f32 * width_scale, row as f32 * height_scale);
 
             // TODO: fix scaling to always draw a nicer looking square based grid
@@ -347,10 +354,31 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
                 max: base_pos + egui::Vec2::new(width_scale * 0.95, height_scale * 0.95),
             });
 
+            if col == 0 {
+                let name = match ALL_INSTRUMENTS[row] {
+                    Instrument::ClosedHihat => "Hi-hat",
+                    Instrument::Snare => "Snare",
+                    Instrument::Kick => "Kick",
+                    Instrument::OpenHihat => "Open Hi-hat",
+                    Instrument::Ride => "Ride",
+                    Instrument::Crash => "Crash",
+                    Instrument::Tom1 => "Tom1 (High)",
+                    Instrument::Tom2 => "Tom2 (Med)",
+                    Instrument::Tom3 => "Tom3 (Low)",
+                    Instrument::PedalHiHat => "Pedal Hi-hat",
+                };
+                let label = egui::Label::new(name);
+                ui.put(
+                    t_rect,
+                    // egui::Rect::from_min_max(t_rect.left_top(), t_rect.size().to_pos2()),
+                    label,
+                );
+            }
+
             // if this beat is enabled (row is instrument, col is beat)..
             if ui_state.enabled_beats[row][col] {
                 let shape =
-                    egui::Shape::rect_filled(t_rect, egui::Rounding::default(), Color32::GRAY);
+                    egui::Shape::rect_filled(t_rect, egui::Rounding::default(), beat_fill_color);
                 shapes.push(shape)
             }
 
