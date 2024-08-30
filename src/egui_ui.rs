@@ -13,7 +13,10 @@ use macroquad::color::{GRAY, GREEN, ORANGE, PURPLE, RED};
 use crate::{
     consts::{ALL_INSTRUMENTS, BEATS_PER_LOOP},
     events::Events,
-    score::{compute_accuracy_of_single_hit, get_user_hit_timings_by_instrument, Accuracy},
+    score::{
+        compute_accuracy_of_single_hit, compute_loop_performance_for_voice,
+        get_user_hit_timings_by_instrument, Accuracy, MISS_MARGIN,
+    },
     voices::{Instrument, Voices},
     UserHit,
 };
@@ -32,7 +35,8 @@ pub struct UIState {
     volume_metronome: f32,
     volume_target_notes: f32,
 
-    current_loop: usize,
+    // audio
+    current_loop: usize, // nth loop
     current_beat: f32,
 
     enabled_beats: [[bool; GRID_COLS]; GRID_ROWS],
@@ -78,9 +82,13 @@ impl Default for UIState {
 
 impl UIState {
     // TODO: rename related to choosing a loop
-    pub fn selector_vec(mut self, selector_vec: Vec<String>) -> Self {
-        self.selector_vec = selector_vec;
+    pub fn selector_vec(mut self, selector_vec: &Vec<String>) -> Self {
+        self.selector_vec = selector_vec.clone();
         self
+    }
+
+    pub fn set_selected_idx(&mut self, idx: usize) {
+        self.selected_idx = idx;
     }
 
     pub fn set_is_playing(&mut self, is_playing: bool) {
@@ -89,6 +97,10 @@ impl UIState {
 
     pub fn set_current_beat(&mut self, beat: f64) {
         self.current_beat = beat as f32;
+    }
+
+    pub fn set_current_loop(&mut self, val: usize) {
+        self.current_loop = val;
     }
 
     pub fn set_enabled_beats(&mut self, voices: &Voices) {
@@ -212,7 +224,6 @@ pub fn draw_ui(ctx: &egui_macroquad::egui::Context, ui_state: &UIState, events: 
                     for i in 0..ui_state.selector_vec.len() {
                         let mut current_value = &ui_state.selector_vec[i];
                         let value = ui.selectable_value(
-                            // &mut &ui_state.selector_vec[i],
                             &mut current_value,
                             &ui_state.selector_vec[ui_state.selected_idx],
                             &ui_state.selector_vec[i],
@@ -385,8 +396,8 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
     draw_user_hits(ui_state, to_screen, &mut shapes);
 
     // Draw Note Successes
-    // let loop_last_completed_beat = current_beat - MISS_MARGIN;
-    // let current_loop_hits = get_hits_from_nth_loop(&audio.user_hits, audio.current_loop());
+    // let loop_last_completed_beat = ui_state.current_beat - MISS_MARGIN as f32;
+    // let current_loop_hits = get_hits_from_nth_loop(ui_state.user_hits, ui_state.current_loop);
     // draw_note_successes(
     //     &current_loop_hits,
     //     &desired_hits,
@@ -486,6 +497,52 @@ fn draw_user_hit(
 
     let shape = egui::Shape::rect_filled(t_rect, egui::Rounding::default(), bar_color_32);
     shapes.push(shape);
+}
+
+fn draw_note_successes(
+    user_hits: &Vec<UserHit>,
+    desired_hits: &Voices,
+    audio_latency: f64,
+    loop_current_beat: f64,
+) {
+    for (instrument_idx, instrument) in ALL_INSTRUMENTS.iter().enumerate() {
+        let actual = get_user_hit_timings_by_instrument(user_hits, *instrument);
+        // add audio_latency to each note
+        let actual_w_latency = actual
+            .iter()
+            .map(|note| note + audio_latency)
+            .collect::<Vec<f64>>();
+
+        let desired = desired_hits.get_instrument_beats(instrument);
+
+        let loop_perf =
+            compute_loop_performance_for_voice(&actual_w_latency, &desired, loop_current_beat);
+        for (note_idx, note) in desired.iter().enumerate() {
+            draw_note_success(*note, instrument_idx, loop_perf[note_idx]);
+        }
+    }
+}
+
+fn draw_note_success(beats_offset: f64, row: usize, acc: Accuracy) {
+    // let beat_duration = 1 as f64;
+    // let x = GRID_LEFT_X + beats_offset * BEAT_WIDTH_PX;
+    // let y = GRID_TOP_Y + row as f64 * ROW_HEIGHT;
+    // let mut color = match acc {
+    //     Accuracy::Early => ORANGE,
+    //     Accuracy::Late => PURPLE,
+    //     Accuracy::Correct => GREEN,
+    //     Accuracy::Miss => RED,
+    //     Accuracy::Unknown => GRAY,
+    // };
+    // color.a = 0.5;
+
+    // draw_rectangle_f64(
+    //     x + BEAT_PADDING / 2.,
+    //     y + BEAT_PADDING / 2.,
+    //     BEAT_WIDTH_PX * beat_duration - BEAT_PADDING,
+    //     BEAT_WIDTH_PX - BEAT_PADDING,
+    //     color,
+    // );
 }
 
 fn gold_mode(ui: &mut egui::Ui) {

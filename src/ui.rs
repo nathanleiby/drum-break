@@ -48,7 +48,6 @@ impl UI {
         // let bpm = audio.get_bpm();
 
         // clear_background(BACKGROUND_COLOR);
-        // draw_user_hits(&audio.user_hits, &desired_hits, audio_latency);
         // let loop_last_completed_beat = current_beat - MISS_MARGIN;
         // let current_loop_hits = get_hits_from_nth_loop(&audio.user_hits, audio.current_loop());
         // draw_note_successes(

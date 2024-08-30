@@ -104,8 +104,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
     };
 
     let selector_vec = loops.iter().map(|(name, _)| name.to_string()).collect();
+    let mut selected_loop_idx = 0;
     // initialize UI state
-    let mut ui_state = UIState::default().selector_vec(selector_vec);
     //  // TODO: consider bundling the below into a Game struct or similar
     //  desired_hits: &mut Voices
     //  audio: &mut Audio
@@ -126,14 +126,24 @@ async fn main() -> Result<(), Box<dyn Error>> {
         // change game state
         process_system_events(&rx, &mut audio, &voices, &mut gold_mode);
         for e in [&events, &ui_events] {
-            process_user_events(&mut voices, &mut audio, &mut flags, &loops, &e, &dir_name)?;
+            process_user_events(
+                &mut voices,
+                &mut audio,
+                &mut flags,
+                &loops,
+                &mut selected_loop_idx,
+                &e,
+                &dir_name,
+            )?;
         }
 
         audio.schedule(&voices).await?;
 
         // render UI
-        // TODO: synchronize UI with game state -- UI actually needs access to some mutable values.. ugh
+        let mut ui_state = UIState::default().selector_vec(&selector_vec);
+        ui_state.set_selected_idx(selected_loop_idx);
         ui_state.set_current_beat(audio.current_beat());
+        ui_state.set_current_loop(audio.current_loop() as usize);
         ui_state.set_enabled_beats(&voices);
         ui_state.set_is_playing(!audio.is_paused());
         ui_state.set_bpm(audio.get_bpm() as f32);
@@ -203,6 +213,7 @@ fn process_user_events(
     audio: &mut Audio,
     flags: &mut Flags,
     loops: &Vec<(String, Loop)>,
+    selected_loop_idx: &mut usize,
     events: &Vec<Events>,
     dir_name: &str,
 ) -> Result<(), Box<dyn Error>> {
@@ -283,6 +294,8 @@ fn process_user_events(
                 let new_loop = loops.as_slice()[*loop_num].clone().1;
                 *voices = Voices::new_from_voices_old_model(&new_loop.voices);
                 audio.set_bpm(new_loop.bpm as f64);
+
+                *selected_loop_idx = *loop_num;
             }
         }
     }
