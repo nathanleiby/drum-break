@@ -132,17 +132,17 @@ impl UIState {
     pub fn set_bpm(&mut self, bpm: f32) {
         self.bpm = bpm;
     }
+
+    pub fn set_latency_offset(&mut self, offset: f32) {
+        self.latency_offset = offset;
+    }
 }
 
 // fn ui_example_system(mut contexts: EguiContexts, mut game_state: ResMut<GameState>) {
 // fn ui_example_system(mut contexts: EguiContexts, mut game_state: ResMut<GameState>) {
 // let ctx = contexts.ctx_mut();
 
-pub fn draw_ui(
-    ctx: &egui_macroquad::egui::Context,
-    ui_state: &mut UIState,
-    events: &mut Vec<Events>,
-) {
+pub fn draw_ui(ctx: &egui_macroquad::egui::Context, ui_state: &UIState, events: &mut Vec<Events>) {
     egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
         // The top panel is often a good place for a menu bar:
 
@@ -160,18 +160,17 @@ pub fn draw_ui(
             }
             ui.add(egui::Label::new("BPM"));
 
-            let bpm_slider = egui::Slider::new(&mut ui_state.bpm, 40.0..=240.0);
+            let mut local_bpm = ui_state.bpm;
+            let bpm_slider = egui::Slider::new(&mut local_bpm, 40.0..=240.0);
             let bpm_slider_resp = bpm_slider.ui(ui);
             if bpm_slider_resp.changed() {
-                events.push(Events::SetBPM(ui_state.bpm as f64));
+                events.push(Events::SetBPM(local_bpm as f64));
             }
             if ui.button("-").clicked() {
                 events.push(Events::ChangeBPM { delta: -1. });
-                ui_state.bpm -= 1.;
             }
             if ui.button("+").clicked() {
                 events.push(Events::ChangeBPM { delta: 1. });
-                ui_state.bpm += 1.;
             }
 
             ui.separator();
@@ -199,19 +198,21 @@ pub fn draw_ui(
                 false => "Play",
             };
             if ui.button(button_text).clicked() {
-                ui_state.is_playing = !ui_state.is_playing;
+                events.push(Events::Pause);
             }
 
             ui.separator();
 
             ui.add(egui::Label::new("**Volume**"));
             ui.add(egui::Label::new("Metronome"));
-            ui.add(egui::Slider::new(&mut ui_state.volume_metronome, 0.0..=1.0));
+            // TODO
+            // ui.add(egui::Slider::new(&mut ui_state.volume_metronome, 0.0..=1.0));
             ui.add(egui::Label::new("Target Notes"));
-            ui.add(egui::Slider::new(
-                &mut ui_state.volume_target_notes,
-                0.0..=1.0,
-            ));
+            // TODO
+            // ui.add(egui::Slider::new(
+            //     &mut ui_state.volume_target_notes,
+            //     0.0..=1.0,
+            // ));
 
             ui.separator();
 
@@ -239,14 +240,16 @@ pub fn draw_ui(
                 .selected_text(format!("{}", &ui_state.selector_vec[ui_state.selected_idx]))
                 .show_ui(ui, |ui| {
                     for i in 0..ui_state.selector_vec.len() {
+                        let mut current_value = &ui_state.selector_vec[i];
                         let value = ui.selectable_value(
-                            &mut &ui_state.selector_vec[i],
+                            // &mut &ui_state.selector_vec[i],
+                            &mut current_value,
                             &ui_state.selector_vec[ui_state.selected_idx],
                             &ui_state.selector_vec[i],
                         );
                         if value.clicked() {
                             // TODO: handle with event
-                            ui_state.selected_idx = i;
+                            // ui_state.selected_idx = i;
                             // TODO: load the relevant loop's data
                             events.push(Events::ChangeLoop(i));
                         }
@@ -257,15 +260,18 @@ pub fn draw_ui(
 
             ui.group(|ui| {
                 ui.add(egui::Label::new("Latency Offset (ms)"));
-                ui.add(egui::Slider::new(
-                    &mut ui_state.latency_offset,
-                    -1000.0..=1000.0,
-                ));
+                ui.label(format!("{:?}", ui_state.latency_offset));
+                // TODO
+                // ui.add(egui::Slider::new(
+                //     &mut ui_state.latency_offset,
+                //     -1000.0..=1000.0,
+                // ));
                 if ui.button("-").clicked() {
-                    ui_state.latency_offset -= 5.;
+                    events.push(Events::SetAudioLatency { delta: -5. });
+                    // ui_state.latency_offset -= 5.;
                 }
                 if ui.button("+").clicked() {
-                    ui_state.latency_offset += 5.;
+                    events.push(Events::SetAudioLatency { delta: 5. });
                 }
             });
 
@@ -299,7 +305,7 @@ const VIRTUAL_HEIGHT: f32 = 1000.;
 
 // TODO: convert mouse click to beat
 
-fn draw_beat_grid(ui_state: &mut UIState, ui: &mut egui::Ui, events: &mut Vec<Events>) {
+fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events>) {
     let (response, painter) = ui.allocate_painter(
         egui::Vec2::new(ui.available_width(), ui.available_height()),
         egui::Sense::hover(),

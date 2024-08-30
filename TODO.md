@@ -6,8 +6,11 @@ Make it look good, so it's more motivating to build and share!
 
 - [ ] migrate UI to use egui
   - [..] pass state to UI
-  - [ ] render correct beat position <--
-  - [ ] render correct beats
+  - [x] render correct beat position <--
+  - [x] render correct beats
+  - [x] handle play/pause
+  - [x] show configured latency
+  - [x] events only -- pass non mutable UI state
 
 ## soon
 

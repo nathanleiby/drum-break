@@ -137,8 +137,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
         ui_state.set_enabled_beats(&voices);
         ui_state.set_is_playing(!audio.is_paused());
         ui_state.set_bpm(audio.get_bpm() as f32);
+        ui_state.set_latency_offset(audio.get_configured_audio_latency_seconds() as f32);
 
-        ui.render(&mut ui_state);
+        ui.render(&ui_state);
         if flags.ui_debug_mode {
             fps_tracker.update();
             fps_tracker.render();

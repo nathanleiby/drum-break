@@ -41,7 +41,7 @@ impl UI {
         Self { events: vec![] }
     }
 
-    pub fn render(self: &mut Self, ui_state: &mut UIState) {
+    pub fn render(self: &mut Self, ui_state: &UIState) {
         // let current_beat = audio.current_beat();
 
         // let audio_latency = audio.get_configured_audio_latency_seconds();
@@ -69,8 +69,6 @@ impl UI {
 
         // // TODO: toggle this on and off with a key for 'calibration' mode
         // draw_pulse_beat(current_beat + audio_latency);
-
-        // draw_loop_choices(desired_hits, audio, &loops);
 
         // draw_gold_mode(gold_mode);
 
@@ -337,25 +335,6 @@ fn draw_pulse_beat(current_beat: f64) {
 const BELOW_GRID_Y: f32 =
     (GRID_TOP_Y as f32) + 32. + (((NUM_ROWS_IN_GRID as f64) * ROW_HEIGHT) as f32);
 const UI_TOP_LEFT: Vec2 = vec2(100., BELOW_GRID_Y);
-
-fn draw_loop_choices<'a, 'b: 'a>(
-    voices: &'a mut Voices,
-    audio: &'a mut Audio,
-    voices_options: &'b Vec<(String, Loop)>,
-) {
-    widgets::Window::new(hash!(), UI_TOP_LEFT, vec2(320., 200.))
-        .label("Loops")
-        .titlebar(true)
-        .ui(&mut *root_ui(), |ui| {
-            voices_options.iter().for_each(|(name, new_loop)| {
-                if ui.button(None, format!("{:?} ({:?})", name.as_str(), new_loop.bpm)) {
-                    *voices = Voices::new_from_voices_old_model(&new_loop.voices);
-                    audio.set_bpm(new_loop.bpm as f64);
-                    log::info!("Switched to {:?}", name);
-                }
-            });
-        });
-}
 
 fn draw_metronome<'a>(audio: &'a mut Audio) {
     widgets::Window::new(hash!(), UI_TOP_LEFT + vec2(0., 200.), vec2(320., 200.))
