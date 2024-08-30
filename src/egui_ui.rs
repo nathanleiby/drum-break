@@ -176,10 +176,6 @@ pub fn draw_ui(
 
             ui.separator();
 
-            ui.add(egui::Slider::new(
-                &mut ui_state.current_beat,
-                0.0..=BEATS_PER_LOOP,
-            ));
             ui.add(
                 // egui::ProgressBar::new(game_state.progress)
                 egui::ProgressBar::new(ui_state.current_beat / BEATS_PER_LOOP)
@@ -249,8 +245,10 @@ pub fn draw_ui(
                             &ui_state.selector_vec[i],
                         );
                         if value.clicked() {
+                            // TODO: handle with event
                             ui_state.selected_idx = i;
                             // TODO: load the relevant loop's data
+                            events.push(Events::ChangeLoop(i));
                         }
                     }
                 });

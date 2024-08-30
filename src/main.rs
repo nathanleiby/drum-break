@@ -126,7 +126,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         // change game state
         process_system_events(&rx, &mut audio, &voices, &mut gold_mode);
         for e in [&events, &ui_events] {
-            process_input_events(&mut voices, &mut audio, &mut flags, &e, &dir_name)?;
+            process_user_events(&mut voices, &mut audio, &mut flags, &loops, &e, &dir_name)?;
         }
 
         audio.schedule(&voices).await?;
@@ -195,10 +195,11 @@ fn process_system_events(
 }
 
 /// update application state based on events (that came from user input)
-fn process_input_events(
+fn process_user_events(
     voices: &mut Voices,
     audio: &mut Audio,
     flags: &mut Flags,
+    loops: &Vec<(String, Loop)>,
     events: &Vec<Events>,
     dir_name: &str,
 ) -> Result<(), Box<dyn Error>> {
@@ -272,6 +273,13 @@ fn process_input_events(
             }
             Events::ToggleDebugMode => {
                 flags.ui_debug_mode = !flags.ui_debug_mode;
+            }
+            Events::ChangeLoop(loop_num) => {
+                // voices_options.iter().for_each(|(name, new_loop)| {
+                // if ui.button(None, format!("{:?} ({:?})", name.as_str(), new_loop.bpm)) {
+                let new_loop = loops.as_slice()[*loop_num].clone().1;
+                *voices = Voices::new_from_voices_old_model(&new_loop.voices);
+                audio.set_bpm(new_loop.bpm as f64);
             }
         }
     }

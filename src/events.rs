@@ -23,4 +23,5 @@ pub enum Events {
         delta: f64,
     },
     ToggleDebugMode,
+    ChangeLoop(usize), // loop idx
 }
