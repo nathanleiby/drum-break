@@ -8,7 +8,7 @@ use egui::{
 // EguiContexts, EguiPlugin,
 use egui_plot::{Legend, Line, Plot};
 use log::info;
-use macroquad::color::{GRAY, GREEN, ORANGE, PURPLE, RED};
+use macroquad::color::{GRAY, GREEN, LIGHTGRAY, ORANGE, PURPLE, RED, WHITE};
 
 use crate::{
     consts::{ALL_INSTRUMENTS, BEATS_PER_LOOP},
@@ -135,12 +135,14 @@ pub fn draw_ui(ctx: &egui_macroquad::egui::Context, ui_state: &UIState, events: 
             if !is_web {
                 ui.menu_button("File", |ui| {
                     if ui.button("Quit").clicked() {
-                        // ctx.send_viewport_cmd(egui::ViewportCommand::Close);
-                        println!("quit! but with earlier EGui..");
+                        events.push(Events::Quit);
                     }
                 });
                 ui.add_space(16.0);
             }
+
+            ui.separator();
+
             ui.add(egui::Label::new("BPM"));
 
             let mut local_bpm = ui_state.bpm;
@@ -262,9 +264,8 @@ pub fn draw_ui(ctx: &egui_macroquad::egui::Context, ui_state: &UIState, events: 
 
             ui.separator();
 
-            // TODO: link to macroix github repo
             ui.add(egui::github_link_file!(
-                "https://github.com/emilk/eframe_template/blob/main/",
+                "https://github.com/nathanleiby/macroix",
                 "Source code."
             ));
 
@@ -275,9 +276,6 @@ pub fn draw_ui(ctx: &egui_macroquad::egui::Context, ui_state: &UIState, events: 
         });
 
     egui::CentralPanel::default().show(ctx, |ui| {
-        // The central panel the region left after adding TopPanel's and SidePanel's
-        ui.heading("Macroix");
-
         draw_beat_grid(ui_state, ui, events);
     });
 }
@@ -340,7 +338,7 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
     });
 
     let beat_fill_color = if ui.visuals().dark_mode {
-        Color32::from_rgba_premultiplied(200, 200, 200, 128)
+        Color32::from_rgb(50, 50, 50)
     } else {
         Color32::from_rgba_premultiplied(50, 50, 50, 128)
     };
@@ -349,27 +347,6 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
     for row in 0..GRID_ROWS {
         for col in 0..GRID_COLS {
             let t_rect = rect_for_col_row(col, row, to_screen);
-
-            if col == 0 {
-                let name = match ALL_INSTRUMENTS[row] {
-                    Instrument::ClosedHihat => "Hi-hat",
-                    Instrument::Snare => "Snare",
-                    Instrument::Kick => "Kick",
-                    Instrument::OpenHihat => "Open Hi-hat",
-                    Instrument::Ride => "Ride",
-                    Instrument::Crash => "Crash",
-                    Instrument::Tom1 => "Tom1 (High)",
-                    Instrument::Tom2 => "Tom2 (Med)",
-                    Instrument::Tom3 => "Tom3 (Low)",
-                    Instrument::PedalHiHat => "Pedal Hi-hat",
-                };
-                let label = egui::Label::new(name);
-                ui.put(
-                    t_rect,
-                    // egui::Rect::from_min_max(t_rect.left_top(), t_rect.size().to_pos2()),
-                    label,
-                );
-            }
 
             // if this beat is enabled (row is instrument, col is beat)..
             if ui_state.enabled_beats[row][col] {
@@ -408,6 +385,25 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
 
     // render them
     painter.extend(shapes);
+
+    // add instrument names last, so they stay visible
+    for row in 0..GRID_ROWS {
+        let name = match ALL_INSTRUMENTS[row] {
+            Instrument::ClosedHihat => "Hi-hat",
+            Instrument::Snare => "Snare",
+            Instrument::Kick => "Kick",
+            Instrument::OpenHihat => "Open Hi-hat",
+            Instrument::Ride => "Ride",
+            Instrument::Crash => "Crash",
+            Instrument::Tom1 => "Tom1 (High)",
+            Instrument::Tom2 => "Tom2 (Med)",
+            Instrument::Tom3 => "Tom3 (Low)",
+            Instrument::PedalHiHat => "Pedal Hi-hat",
+        };
+        let t_rect = rect_for_col_row(0, row, to_screen);
+        let label = egui::Label::new(name);
+        ui.put(t_rect, label);
+    }
 }
 
 fn rect_for_col_row(col: usize, row: usize, to_screen: RectTransform) -> egui::Rect {
@@ -495,7 +491,7 @@ fn draw_user_hit(
         Accuracy::Late => PURPLE,
         Accuracy::Correct => GREEN,
         Accuracy::Miss => RED,
-        Accuracy::Unknown => GRAY,
+        Accuracy::Unknown => LIGHTGRAY,
     };
     let bar_color_32 = Color32::from_rgb(
         (bar_color.r * 256.) as u8,
@@ -548,7 +544,7 @@ fn note_success_shape(
         Accuracy::Late => PURPLE,
         Accuracy::Correct => GREEN,
         Accuracy::Miss => RED,
-        Accuracy::Unknown => GRAY,
+        Accuracy::Unknown => LIGHTGRAY,
     };
     let bar_color_32 = Color32::from_rgb(
         (bar_color.r * 256.) as u8,
