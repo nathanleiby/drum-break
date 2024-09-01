@@ -3,3 +3,5 @@
 release*.zip
 
 .DS_Store
+
+macroix.wasm
