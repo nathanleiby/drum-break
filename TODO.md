@@ -14,7 +14,7 @@ Make it look good, so it's more motivating to build and share!
   - [x] show instrument names
   - [x] show user hits
   - [x] show note correctness color
-  - [ ] ensure audio offset is considered (current beat, pulse beat)
+  - [..] ensure audio offset is considered (current beat, pulse beat)
   - [ ] show gold mode status
     - maybe use colored emojis via https://crates.io/crates/egui-twemoji
   - [ ] show gold mode chart
@@ -65,6 +65,7 @@ Make it look good, so it's more motivating to build and share!
     - [ ] show/hide noisy stuff
   - prototype in Figma: core interactions, colors, layout, etc
     - might we show music as sheet music notation (e.g. https://github.com/jaredforth/lilypond-rs or various others)
+    - https://github.com/staff-rs/staff/
   - Explore similar existing offerings
     - Drum specific..
       - https://www.mutedrums.com/ / https://www.playdrumsonline.com/ (https://www.playdrumsonline.com/songs/create)
@@ -73,7 +74,7 @@ Make it look good, so it's more motivating to build and share!
     - Rhythm games
 - UX v2: Determine tooling
   - [x] convert input to Event-based model .. better for new UI layer migration
-  - [ ] egui https://www.egui.rs/ .. https://github.com/optozorax/egui-macroquad
+  - [x] egui https://www.egui.rs/ .. https://github.com/optozorax/egui-macroquad
     - [ ] dig into EGUI more https://rodneylab.com/macroquad-egui-devtools/
     - [ ] example of styled egui
       - https://app.rerun.io
@@ -147,7 +148,11 @@ Make it look good, so it's more motivating to build and share!
     - [ ] maybe some of these? https://github.com/ozkriff/awesome-quads?tab=readme-ov-file#libraries-plugins
   - [ ] build with Tauri https://tauri.app
 - [..] bundle so it can be shared
+  - https://mq.agical.se/release-web.html
   - [ ] as DMG? via [Tauri distribution](https://tauri.app/v1/guides/distribution/publishing)?
+  - [ ] publish to Itch.io
+    - [ ] WASM - https://github.com/brettchalupa/sokoworld/blob/09ce68c690cbae0db242ab1b403c309f8b8482d2/release_wasm.sh
+    - [ ] binary
   - [..] include loops JSON data, or fetch them remotely (e.g. from public GH link)
   - [..] include audio data so we can play sounds?
     - [ ] `include_bytes!` https://doc.rust-lang.org/std/macro.include_bytes.html
@@ -244,8 +249,15 @@ Make it look good, so it's more motivating to build and share!
 - [x] handle idea of "miss" due to not playing a desired note at all -- probably a change to in `score.rs`
 - [x] change note color -- orange note is too similar to "early" orange color
 - [..] make it shareable
+
   - [x] set keybindings (midi bindings) for each drum
   - [..] windows build? or bring a mac downstairs to drums
+  - share it
+    - w nick
+    - macroquad showcase https://discord.com/channels/710177966440579103/868282388407517214
+    - awesome quads apps https://github.com/ozkriff/awesome-quads?tab=readme-ov-file#apps-or-visualizations
+    - r/edrums once it's polished enough to share?
+
 - [x] attach to my drumkit and test
 - [x] (bug) hard crash if no midi device is attached
 - [x] add UI to save / open a loop file from your machine
