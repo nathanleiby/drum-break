@@ -18,9 +18,9 @@ Make it look good, so it's more motivating to build and share!
     - [x] current beat bar
     - [x] user hits
     - [ ] pulse beat -> NYI
-  - [ ] show gold mode status
+  - [x] show gold mode status
     - maybe use colored emojis via https://crates.io/crates/egui-twemoji
-  - [ ] show gold mode chart
+  - [x] show gold mode chart
   - (maybe) draw_pulse_beat for latency calibration
 
 ## soon
