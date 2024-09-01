@@ -147,7 +147,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         ui_state.set_enabled_beats(&voices);
         ui_state.set_is_playing(!audio.is_paused());
         ui_state.set_bpm(audio.get_bpm() as f32);
-        ui_state.set_latency_offset_ms(audio.get_configured_audio_latency_seconds() as f32 * 1000.);
+        ui_state.set_audio_latency_s(audio.get_configured_audio_latency_seconds() as f32);
         ui_state.set_user_hits(&audio.user_hits);
         ui_state.set_desired_hits(&voices);
 

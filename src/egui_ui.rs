@@ -7,7 +7,10 @@ use egui::{
 };
 // EguiContexts, EguiPlugin,
 use log::info;
-use macroquad::color::{GREEN, LIGHTGRAY, ORANGE, PURPLE, RED};
+use macroquad::{
+    audio,
+    color::{GREEN, LIGHTGRAY, ORANGE, PURPLE, RED},
+};
 
 use crate::{
     consts::{ALL_INSTRUMENTS, BEATS_PER_LOOP},
@@ -41,7 +44,7 @@ pub struct UIState {
 
     enabled_beats: [[bool; GRID_COLS]; GRID_ROWS],
 
-    latency_offset_ms: f32,
+    latency_offset_s: f32,
 
     user_hits: Vec<UserHit>,
     desired_hits: Voices,
@@ -70,7 +73,7 @@ impl Default for UIState {
             volume_metronome: 0.75,
             volume_target_notes: 0.75,
 
-            latency_offset_ms: 100.,
+            latency_offset_s: 0.,
 
             enabled_beats: [[false; GRID_COLS]; GRID_ROWS],
 
@@ -111,8 +114,8 @@ impl UIState {
         self.bpm = bpm;
     }
 
-    pub fn set_latency_offset_ms(&mut self, offset: f32) {
-        self.latency_offset_ms = offset;
+    pub fn set_audio_latency_s(&mut self, offset: f32) {
+        self.latency_offset_s = offset;
     }
 
     pub fn set_user_hits(&mut self, hits: &Vec<UserHit>) {
@@ -121,6 +124,11 @@ impl UIState {
 
     pub fn set_desired_hits(&mut self, voices: &Voices) {
         self.desired_hits = voices.clone();
+    }
+
+    pub fn get_audio_latency_in_beats(&self) -> f32 {
+        let beats_per_second = self.bpm / 60.;
+        self.latency_offset_s * beats_per_second
     }
 }
 
@@ -256,8 +264,8 @@ fn draw_right_panel(ctx: &egui::Context, ui_state: &UIState, events: &mut Vec<Ev
             ui.separator();
 
             ui.group(|ui| {
-                ui.add(egui::Label::new("Latency Offset (ms)"));
-                ui.label(format!("{:?}", ui_state.latency_offset_ms));
+                ui.add(egui::Label::new("Latency Offset"));
+                ui.label(format!("{:?}", ui_state.latency_offset_s));
                 // TODO
                 // ui.add(egui::Slider::new(
                 //     &mut ui_state.latency_offset,
@@ -379,24 +387,27 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
         }
     }
 
-    // Draw User Hits
-    draw_user_hits(ui_state, to_screen, &mut shapes);
-
     // Draw Note Successes
     let loop_last_completed_beat = ui_state.current_beat - MISS_MARGIN as f32;
     let current_loop_hits = get_hits_from_nth_loop(&ui_state.user_hits, ui_state.current_loop);
     draw_note_successes(
         &current_loop_hits,
         &ui_state.desired_hits,
-        (ui_state.latency_offset_ms) as f64,
+        (ui_state.latency_offset_s) as f64,
         loop_last_completed_beat as f64,
         to_screen,
         &mut shapes,
     );
 
-    // ---
+    // Draw User Hits
+    draw_user_hits(ui_state, to_screen, &mut shapes);
 
-    draw_current_beat(ui_state.current_beat, to_screen, ui, &mut shapes);
+    draw_current_beat(
+        ui_state.current_beat + ui_state.get_audio_latency_in_beats() as f32,
+        to_screen,
+        ui,
+        &mut shapes,
+    );
 
     // render them
     painter.extend(shapes);
@@ -461,7 +472,7 @@ fn draw_user_hits(ui_state: &UIState, to_screen: RectTransform, shapes: &mut Vec
             draw_user_hit(
                 *note,
                 instrument_idx,
-                ui_state.latency_offset_ms as f64,
+                ui_state.get_audio_latency_in_beats() as f64,
                 desired_notes,
                 to_screen,
                 shapes,
@@ -473,13 +484,13 @@ fn draw_user_hits(ui_state: &UIState, to_screen: RectTransform, shapes: &mut Vec
 fn draw_user_hit(
     user_beat: f64,
     row: usize,
-    audio_latency_ms: f64,
+    audio_latency_beats: f64,
     desired_hits: &Vec<f64>,
     to_screen: RectTransform,
     shapes: &mut Vec<Shape>,
 ) {
     // TODO: Want audio latency in terms of BEATS
-    let user_beat_with_latency = user_beat + (audio_latency_ms / 1000.);
+    let user_beat_with_latency = user_beat + audio_latency_beats;
 
     let (acc, is_next_loop) = compute_accuracy_of_single_hit(user_beat_with_latency, desired_hits);
 

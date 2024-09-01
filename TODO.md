@@ -14,7 +14,10 @@ Make it look good, so it's more motivating to build and share!
   - [x] show instrument names
   - [x] show user hits
   - [x] show note correctness color
-  - [..] ensure audio offset is considered (current beat, pulse beat)
+  - [x] ensure audio offset is displayed
+    - [x] current beat bar
+    - [x] user hits
+    - [ ] pulse beat -> NYI
   - [ ] show gold mode status
     - maybe use colored emojis via https://crates.io/crates/egui-twemoji
   - [ ] show gold mode chart
@@ -101,6 +104,8 @@ Make it look good, so it's more motivating to build and share!
       - ex. write unit tests re: the accuracy summary metric
   - [ ] support a flexible length loop
     - longer is needed. ideally you could have a "song" and loop any segment of it for practice
+  - simplify usage of f32 or f64
+  - replace some f64 with decimal(?) for better equality support, hashing, etc
 - Feature: "Swing"
   - add a "swing" meter like in Funklet https://machine.funklet.com/funklet.html
   - in Funklet, this is a setting from 0 to 12 that pushes beats 2 and 4 slightly later (from 0% to 95% or something). I suspect this is how "% swing" works in other apps, too.
