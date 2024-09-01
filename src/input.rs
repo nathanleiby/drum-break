@@ -97,7 +97,7 @@ impl Input {
                 multiplier = 100.;
             }
             events.push(Events::SetAudioLatency {
-                delta: -0.001 * multiplier,
+                delta_s: -0.001 * multiplier,
             });
         }
 
@@ -107,7 +107,7 @@ impl Input {
                 multiplier = 100.;
             }
             events.push(Events::SetAudioLatency {
-                delta: 0.001 * multiplier,
+                delta_s: 0.001 * multiplier,
             });
         }
 

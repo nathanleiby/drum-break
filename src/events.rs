@@ -20,7 +20,7 @@ pub enum Events {
     },
     TrackForCalibration,
     SetAudioLatency {
-        delta: f64,
+        delta_s: f64,
     },
     ToggleDebugMode,
     ChangeLoop(usize), // loop idx

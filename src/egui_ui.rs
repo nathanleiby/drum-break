@@ -111,7 +111,7 @@ impl UIState {
         self.bpm = bpm;
     }
 
-    pub fn set_latency_offset(&mut self, offset: f32) {
+    pub fn set_latency_offset_ms(&mut self, offset: f32) {
         self.latency_offset_ms = offset;
     }
 
@@ -125,6 +125,16 @@ impl UIState {
 }
 
 pub fn draw_ui(ctx: &egui_macroquad::egui::Context, ui_state: &UIState, events: &mut Vec<Events>) {
+    draw_top_panel(ctx, events, ui_state);
+
+    draw_left_panel(ctx, ui_state, events);
+
+    draw_right_panel(ctx, ui_state, events);
+
+    draw_central_panel(ctx, ui_state, events);
+}
+
+fn draw_top_panel(ctx: &egui::Context, events: &mut Vec<Events>, ui_state: &UIState) {
     egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
         // The top panel is often a good place for a menu bar:
 
@@ -167,7 +177,9 @@ pub fn draw_ui(ctx: &egui_macroquad::egui::Context, ui_state: &UIState, events: 
             );
         });
     });
+}
 
+fn draw_left_panel(ctx: &egui::Context, ui_state: &UIState, events: &mut Vec<Events>) {
     egui::SidePanel::left("left_panel")
         .resizable(true)
         .default_width(150.0)
@@ -210,7 +222,9 @@ pub fn draw_ui(ctx: &egui_macroquad::egui::Context, ui_state: &UIState, events: 
 
             gold_mode(ui);
         });
+}
 
+fn draw_right_panel(ctx: &egui::Context, ui_state: &UIState, events: &mut Vec<Events>) {
     egui::SidePanel::right("right_panel")
         .resizable(true)
         .default_width(150.0)
@@ -250,11 +264,11 @@ pub fn draw_ui(ctx: &egui_macroquad::egui::Context, ui_state: &UIState, events: 
                 //     -1000.0..=1000.0,
                 // ));
                 if ui.button("-").clicked() {
-                    events.push(Events::SetAudioLatency { delta: -5. });
+                    events.push(Events::SetAudioLatency { delta_s: -0.1 });
                     // ui_state.latency_offset -= 5.;
                 }
                 if ui.button("+").clicked() {
-                    events.push(Events::SetAudioLatency { delta: 5. });
+                    events.push(Events::SetAudioLatency { delta_s: 0.1 });
                 }
             });
 
@@ -273,7 +287,9 @@ pub fn draw_ui(ctx: &egui_macroquad::egui::Context, ui_state: &UIState, events: 
                 egui::warn_if_debug_build(ui);
             });
         });
+}
 
+fn draw_central_panel(ctx: &egui::Context, ui_state: &UIState, events: &mut Vec<Events>) {
     egui::CentralPanel::default().show(ctx, |ui| {
         draw_beat_grid(ui_state, ui, events);
     });
@@ -372,7 +388,7 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
     draw_note_successes(
         &current_loop_hits,
         &ui_state.desired_hits,
-        (ui_state.latency_offset_ms / 1000.) as f64,
+        (ui_state.latency_offset_ms) as f64,
         loop_last_completed_beat as f64,
         to_screen,
         &mut shapes,
