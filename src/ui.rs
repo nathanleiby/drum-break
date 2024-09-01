@@ -289,21 +289,6 @@ pub fn get_hits_from_nth_loop(user_hits: &Vec<UserHit>, desired_loop_idx: usize)
 //     (GRID_TOP_Y as f32) + 32. + (((NUM_ROWS_IN_GRID as f64) * ROW_HEIGHT) as f32);
 // const UI_TOP_LEFT: Vec2 = vec2(100., BELOW_GRID_Y);
 
-// fn draw_metronome<'a>(audio: &'a mut Audio) {
-//     widgets::Window::new(hash!(), UI_TOP_LEFT + vec2(0., 200.), vec2(320., 200.))
-//         .label("Metronome")
-//         .titlebar(true)
-//         .ui(&mut *root_ui(), |ui| {
-//             if ui.button(
-//                 None,
-//                 format!("Metronome {:?}", audio.is_metronome_enabled()),
-//             ) {
-//                 log::info!("toggle metronome");
-//                 audio.toggle_metronome();
-//             }
-//         });
-// }
-
 // fn draw_gold_mode(gold_mode: &GoldMode) {
 //     draw_text(
 //         format!(
@@ -316,35 +301,4 @@ pub fn get_hits_from_nth_loop(user_hits: &Vec<UserHit>, desired_loop_idx: usize)
 //         32.,
 //         BLACK,
 //     )
-// }
-
-// fn draw_debug_grid() {
-//     let mut grid_color = GRAY;
-//     grid_color.a = 0.5;
-
-//     // horiz lines
-//     let num_horiz = WINDOW_HEIGHT / 100 + 1;
-//     for i in 0..=num_horiz {
-//         let step = (i * 100) as f32;
-//         draw_line(
-//             0.,
-//             step,
-//             WINDOW_WIDTH as f32,
-//             step,
-//             if i % 5 == 0 { 3. } else { 1. },
-//             grid_color,
-//         );
-//     }
-//     let num_vertical = WINDOW_WIDTH / 100 + 1;
-//     for i in 0..=num_vertical {
-//         let step = (i * 100) as f32;
-//         draw_line(
-//             step,
-//             0.,
-//             step,
-//             WINDOW_HEIGHT as f32,
-//             if i % 5 == 0 { 3. } else { 1. },
-//             grid_color,
-//         );
-//     }
 // }

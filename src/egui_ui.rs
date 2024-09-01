@@ -3,6 +3,7 @@
 use egui::{
     self,
     emath::{self, RectTransform},
+    plot::{Legend, Line, Plot},
     pos2, Color32, Shape, Widget,
 };
 // EguiContexts, EguiPlugin,
@@ -17,8 +18,9 @@ use crate::{
     events::Events,
     get_hits_from_nth_loop,
     score::{
-        compute_accuracy_of_single_hit, compute_loop_performance_for_voice,
-        get_user_hit_timings_by_instrument, Accuracy, MISS_MARGIN,
+        compute_accuracy_of_single_hit, compute_last_loop_summary,
+        compute_loop_performance_for_voice, get_user_hit_timings_by_instrument, Accuracy,
+        MISS_MARGIN,
     },
     voices::{Instrument, Voices},
     UserHit,
@@ -228,7 +230,7 @@ fn draw_left_panel(ctx: &egui::Context, ui_state: &UIState, events: &mut Vec<Eve
 
             ui.separator();
 
-            gold_mode(ui);
+            gold_mode(ui, ui_state);
         });
 }
 
@@ -489,7 +491,6 @@ fn draw_user_hit(
     to_screen: RectTransform,
     shapes: &mut Vec<Shape>,
 ) {
-    // TODO: Want audio latency in terms of BEATS
     let user_beat_with_latency = user_beat + audio_latency_beats;
 
     let (acc, is_next_loop) = compute_accuracy_of_single_hit(user_beat_with_latency, desired_hits);
@@ -509,8 +510,6 @@ fn draw_user_hit(
         min: base_pos,
         max: base_pos + egui::Vec2::new(2., HEIGHT_SCALE * 0.95),
     });
-
-    info!("Drawing user hit at {:?}", t_rect);
 
     let bar_color = match acc {
         Accuracy::Early => ORANGE,
@@ -581,37 +580,55 @@ fn note_success_shape(
     egui::Shape::rect_filled(rect, egui::Rounding::default(), bar_color_32)
 }
 
-fn gold_mode(ui: &mut egui::Ui) {
+fn gold_mode(ui: &mut egui::Ui, ui_state: &UIState) {
     ui.add(egui::Label::new("**Gold Mode**"));
 
-    // Simpler than chart..
-    // 🔴
-    // 🟠
-    // 🟡
-    // 🟢
-    // ✅
+    // build up a string
+    let mut s = String::new();
 
-    // convert scopes to summary
+    let mut points: Vec<[f64; 2]> = vec![];
+    for i in 1..=5 {
+        let nth_loop_hits = get_hits_from_nth_loop(
+            &ui_state.user_hits,
+            (ui_state.current_loop as i32 - i) as usize, // TODO: check for overflow
+        );
+        let summary_data = compute_last_loop_summary(
+            &nth_loop_hits,
+            &ui_state.desired_hits,
+            ui_state.get_audio_latency_in_beats() as f64,
+        );
 
-    // https://www.egui.rs/#demo check out FontBook to see supported black and white emoji
-    // Can use image instead to get colors
-    ui.add(egui::Label::new("✅🟢🟢🟢🟡🟠🟡🔴🔴"));
+        // Simpler than chart.. TODO: support for colored emoji
+        // 🔴
+        // 🟠
+        // 🟡
+        // 🟢
+        // ✅
+        let ratio = summary_data.total().ratio();
+        s.push(if ratio == 1.0 {
+            '✅'
+        } else if ratio > 0.7 {
+            '🟢'
+        } else {
+            '🔴'
+        });
+        points.push([i as f64, ratio * 100. as f64]);
+    }
+    ui.add(egui::Label::new(s));
 
     // PLOT
-    // let points = vec![[0., 0.7], [1., 0.5], [2., 0.3], [3., 0.1], [4., 0.0]];
-    // let line = Line::new(points)
-    //     .color(Color32::from_rgb(100, 200, 100))
-    //     // .style(self.line_style)
-    //     .name("gold_mode");
+    let line = Line::new(points)
+        .color(Color32::from_rgb(100, 200, 100))
+        // .style(self.line_style)
+        .name("gold_mode");
 
-    // let plot = Plot::new("lines_demo")
-    //     .legend(Legend::default())
-    //     .show_axes(true)
-    //     .show_grid(true);
+    let plot = Plot::new("Gold Mode")
+        .legend(Legend::default())
+        .show_axes([true, true]);
 
-    // plot.show(ui, |plot_ui| {
-    //     plot_ui.line(line);
-    // });
+    plot.show(ui, |plot_ui| {
+        plot_ui.line(line);
+    });
 }
 
 fn powered_by_egui_and_eframe(ui: &mut egui::Ui) {
