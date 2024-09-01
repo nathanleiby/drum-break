@@ -11,12 +11,10 @@ use crate::{
     egui_ui::{draw_ui, UIState},
     events::Events,
     score::{
-        compute_accuracy_of_single_hit, compute_last_loop_summary,
+        compute_last_loop_summary,
         compute_loop_performance_for_voice, get_user_hit_timings_by_instrument, Accuracy,
         MISS_MARGIN,
-    },
-    voices::{Instrument, Loop},
-    Flags, GoldMode, UserHit, Voices,
+    }, GoldMode, UserHit, Voices,
 };
 
 use macroquad::{prelude::*, ui::*};

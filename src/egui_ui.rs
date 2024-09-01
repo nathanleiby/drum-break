@@ -3,12 +3,11 @@
 use egui::{
     self,
     emath::{self, RectTransform},
-    pos2, Color32, Rgba, Shape, Widget,
+    pos2, Color32, Shape, Widget,
 };
 // EguiContexts, EguiPlugin,
-use egui_plot::{Legend, Line, Plot};
 use log::info;
-use macroquad::color::{GRAY, GREEN, LIGHTGRAY, ORANGE, PURPLE, RED, WHITE};
+use macroquad::color::{GREEN, LIGHTGRAY, ORANGE, PURPLE, RED};
 
 use crate::{
     consts::{ALL_INSTRUMENTS, BEATS_PER_LOOP},
