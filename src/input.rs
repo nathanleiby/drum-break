@@ -8,7 +8,6 @@ use macroquad::prelude::*;
 
 use crate::{
     consts::*, events::Events, midi::MidiInput, time::current_time_millis, voices::Instrument,
-    UserHit,
 };
 
 pub struct Input {

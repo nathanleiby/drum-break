@@ -48,6 +48,9 @@ Make it look good, so it's more motivating to build and share!
 
 ## future
 
+- get working with WASM
+  - midir - https://github.com/Boddlnagg/midir/blob/master/examples/browser/src/lib.rs
+  - kira audio - ...
 - Loop editing
   - [ ] Allow easily re-assigning an instrument within a row (e.g. swap hihat to ride)
   - [ ] Allow click-and-drag UX to add/remove beats

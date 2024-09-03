@@ -7,9 +7,9 @@
 use std::collections::HashMap;
 
 use crate::{
+    consts::UserHit,
     consts::{ALL_INSTRUMENTS, BEATS_PER_LOOP},
     voices::{Instrument, Voices},
-    UserHit,
 };
 
 #[derive(Debug, PartialEq, Copy, Clone)]

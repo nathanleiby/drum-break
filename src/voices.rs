@@ -6,10 +6,7 @@ use std::error::Error;
 use macroquad::file::load_file;
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    consts::{ALL_INSTRUMENTS, BEATS_PER_LOOP},
-    egui_ui::{GRID_COLS, GRID_ROWS},
-};
+use crate::consts::{ALL_INSTRUMENTS, BEATS_PER_LOOP, GRID_COLS, GRID_ROWS};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Instrument {

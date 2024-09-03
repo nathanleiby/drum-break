@@ -4,4 +4,5 @@ release*.zip
 
 .DS_Store
 
+dist/
 macroix.wasm

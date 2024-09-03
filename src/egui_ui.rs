@@ -8,26 +8,19 @@ use egui::{
 };
 // EguiContexts, EguiPlugin,
 use log::info;
-use macroquad::{
-    audio,
-    color::{GREEN, LIGHTGRAY, ORANGE, PURPLE, RED},
-};
+use macroquad::color::{GREEN, LIGHTGRAY, ORANGE, PURPLE, RED};
 
 use crate::{
-    consts::{ALL_INSTRUMENTS, BEATS_PER_LOOP},
+    consts::{UserHit, ALL_INSTRUMENTS, BEATS_PER_LOOP, GRID_COLS, GRID_ROWS},
     events::Events,
-    get_hits_from_nth_loop,
     score::{
         compute_accuracy_of_single_hit, compute_last_loop_summary,
         compute_loop_performance_for_voice, get_user_hit_timings_by_instrument, Accuracy,
         MISS_MARGIN,
     },
+    ui::get_hits_from_nth_loop,
     voices::{Instrument, Voices},
-    UserHit,
 };
-
-pub const GRID_ROWS: usize = 10;
-pub const GRID_COLS: usize = 16;
 
 // This resource holds information about the game:
 pub struct UIState {

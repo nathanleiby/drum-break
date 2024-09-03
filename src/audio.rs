@@ -11,29 +11,9 @@ use macroquad::prelude::*;
 
 use crate::{
     config::AppConfig,
-    consts::{TxMsg, ALL_INSTRUMENTS, BEATS_PER_LOOP, TICK_SCHEDULE_AHEAD},
-    voices::Instrument,
-    Voices,
+    consts::{TxMsg, UserHit, ALL_INSTRUMENTS, BEATS_PER_LOOP, TICK_SCHEDULE_AHEAD},
+    voices::{Instrument, Voices},
 };
-
-#[derive(Debug, Clone)]
-pub struct UserHit {
-    pub instrument: Instrument,
-    pub clock_tick: f64,
-}
-
-impl UserHit {
-    pub fn new(instrument: Instrument, clock_tick: f64) -> Self {
-        Self {
-            instrument,
-            clock_tick,
-        }
-    }
-
-    pub fn beat(self: &Self) -> f64 {
-        self.clock_tick % BEATS_PER_LOOP
-    }
-}
 
 /// Audio is the audio player and tracks the user's hits in relation to the audio timing.
 ///

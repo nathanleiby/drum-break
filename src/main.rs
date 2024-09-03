@@ -16,16 +16,16 @@ use std::fs::File;
 use std::io::{BufWriter, Write};
 use std::sync::mpsc::{self, Receiver};
 
-use crate::audio::*;
 use crate::config::AppConfig;
 use crate::fps::FPS;
-use crate::input::*;
 use crate::ui::*;
 use crate::voices::Voices;
 
+use audio::Audio;
 use consts::{TxMsg, ALL_INSTRUMENTS, WINDOW_HEIGHT, WINDOW_WIDTH};
 use egui_ui::UIState;
 use events::Events;
+use input::Input;
 use score::compute_last_loop_summary;
 use simple_logger;
 
