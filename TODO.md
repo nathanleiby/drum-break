@@ -2,26 +2,7 @@
 
 ## working on
 
-Make it look good, so it's more motivating to build and share!
-
-- [ ] migrate UI to use egui
-  - [..] pass state to UI
-  - [x] render correct beat position <--
-  - [x] render correct beats
-  - [x] handle play/pause
-  - [x] show configured latency
-  - [x] events only -- pass non mutable UI state
-  - [x] show instrument names
-  - [x] show user hits
-  - [x] show note correctness color
-  - [x] ensure audio offset is displayed
-    - [x] current beat bar
-    - [x] user hits
-    - [ ] pulse beat -> NYI
-  - [x] show gold mode status
-    - maybe use colored emojis via https://crates.io/crates/egui-twemoji
-  - [x] show gold mode chart
-  - (maybe) draw_pulse_beat for latency calibration
+TBD
 
 ## soon
 
@@ -48,20 +29,40 @@ Make it look good, so it's more motivating to build and share!
 
 ## future
 
-- get working with WASM
-  - midir - https://github.com/Boddlnagg/midir/blob/master/examples/browser/src/lib.rs
-  - kira audio - ...
+- try colored emojis via https://crates.io/crates/egui-twemoji for gold mode status
+- Onboarding / Ease of Use
+  - [ ] redo the "calibrate latency offset" UX. Look at other models like Rhythm Doctor
+  - [ ] press ? to show help (e.g. see all key bindings)
+- Web Build (WASM)
+  - Why? Way easier to share and sbhip iterative improvements.
+  - How? Get any working web build, even if degraded UX (latency? midi?)
+    - Dig into specific lib issues
+      - midir - https://github.com/Boddlnagg/midir/blob/master/examples/browser/src/lib.rs
+      - `confy` for config may not work out of the box https://github.com/search?q=repo%3Adirs-dev%2Fdirs-rs+wasm&type=code -- can't save?
+      - kira audio - ...
+        - KIRA example https://github.com/Moxinilian/kira-web-demo/tree/main
+    - maybe some of these? https://github.com/ozkriff/awesome-quads?tab=readme-ov-file#libraries-plugins
+  - [ ] Publish to GH pages
+  - [ ] publish to Itch.io
+    - [ ] WASM - https://github.com/brettchalupa/sokoworld/blob/09ce68c690cbae0db242ab1b403c309f8b8482d2/release_wasm.sh
+    - [ ] https://mq.agical.se/release-web.html
+- Native App - improve "first run" UX
+  - [ ] sign code for easier local running without security override on Mac
+  - [ ] Make it a DMG?
+  - [ ] Mac Store
+  - [ ] Auto updater
+  - [ ] `include_bytes!` https://doc.rust-lang.org/std/macro.include_bytes.html
+    - [..] include loops JSON data, or fetch them remotely (e.g. from public GH link)
+    - [..] include audio data so we can play sounds?
+      - ... would this also work for web, just makes a fat binary/wasm file?
 - Loop editing
   - [ ] Allow easily re-assigning an instrument within a row (e.g. swap hihat to ride)
   - [ ] Allow click-and-drag UX to add/remove beats
   - [ ] File open UX -- open a loop from a file
   - [ ] easily import midi
     - e.g. from Groove Scribe
-- UX
-  - [ ] make extra BeatGrid rows less distracting -- allow show/hide in UI for unused rows
-  - cleanup input UI, which quickly gets noisy
-    - [x] e.g. hacky is a button to reset -> press "r"
-  - another idea is "fade out" by age (e.g. just keep last K loops, or actually fade over time until gone by Kth loop)
+- Usability
+  - make extra BeatGrid rows less distracting -- allow show/hide in UI for unused rows
 - UX v2: Design
   - commit UI prototypes (tauri, iced) to Github (optionally, migrate into macroix repo if reasonable to centralize)
   - [ ] Make UI look nice-ish
@@ -78,30 +79,13 @@ Make it look good, so it's more motivating to build and share!
       - Melodics
       - Clone Hero
     - Rhythm games
-- UX v2: Determine tooling
-  - [x] convert input to Event-based model .. better for new UI layer migration
-  - [x] egui https://www.egui.rs/ .. https://github.com/optozorax/egui-macroquad
-    - [ ] dig into EGUI more https://rodneylab.com/macroquad-egui-devtools/
-    - [ ] example of styled egui
-      - https://app.rerun.io
-      - https://github.com/grantshandy/egui-themer
-    - had trouble getting egui-macroquad to build due to audio lib issues. version outdated? tried to pull in file and build locally, but had trouble with that too b/c of macroquad/miniquad version mismatch
-  - [..] `iced` https://lib.rs/crates/iced (.. with `coffee` game engine too? https://github.com/hecrj/coffee .. or not that part, it's 4y old)
-    - custom widget for the sequencer
-      - https://github.com/iced-rs/iced/blob/master/examples/custom_widget/src/main.rs`
-      - https://discourse.iced.rs/t/custom-widget-for-chess-board/325
-    - input subscription https://www.reddit.com/r/rust/comments/wtzkx6/need_help_iced_subscriptions/ .. rdev has some MacOS permissions [caveats](https://crates.io/crates/rdev)
-    - minimal audio focused app https://github.com/AWBroch/metronome/blob/main/src/main.rs .. could use kira for clock instead of iced's `time::every` which supports this metronome
-      - static audio data to include it binary seems handy
-    - `slint`: https://github.com/slint-ui/slint
-  - [..] try using Tauri and build a web UI
-    - can we have a Rust "engine" (process keyboard/midi events, play sound, etc) with the FE (draw UI, etc)
-    - [..] Explore porting the "core" audio to Rust and UI in TS (https://tauri.app/)
+      - Rhythm Doctor
+      - Stepmania
+      - Osu
 - Internals
   - [ ] fix BPM
     - assuming each beat in grid is a 16th note, it should be BPM \* 2 (so 120 = 60)
     - I think ideally the data model for user_hits and desired_hits aligns nicely, i.e. 1.0 is beat 1, 2.0 is beat 2. So e.g. 16th notes are 0.25 in length
-  - [x] Refactor message passing .. should be typed (see `main.rs` in `rx.try_recv`)
   - [ ] unit tests
     - consider + document which pieces can be unit tested (and iterated on more effectively than manual testing)
       - ex. write unit tests re: the accuracy summary metric
@@ -149,22 +133,6 @@ Make it look good, so it's more motivating to build and share!
 - [ ] Explore macroquad featureset, including [experimental](https://docs.rs/macroquad/latest/macroquad/experimental/index.html) like state machine and scenes
   - [ ] Also explore community extension https://github.com/ozkriff/awesome-quads
   - [ ] tune config dynamically w cvars approach? https://github.com/martin-t/cvars or egui debug overlay
-- [ ] Explore deployment options
-  - [..] deploy to web / WASM (possible? latency??)
-    - [ ] KIRA example https://github.com/Moxinilian/kira-web-demo/tree/main
-    - [ ] `confy` for config may not work out of the box https://github.com/search?q=repo%3Adirs-dev%2Fdirs-rs+wasm&type=code -- can't save?
-    - [ ] maybe some of these? https://github.com/ozkriff/awesome-quads?tab=readme-ov-file#libraries-plugins
-  - [ ] build with Tauri https://tauri.app
-- [..] bundle so it can be shared
-  - https://mq.agical.se/release-web.html
-  - [ ] as DMG? via [Tauri distribution](https://tauri.app/v1/guides/distribution/publishing)?
-  - [ ] publish to Itch.io
-    - [ ] WASM - https://github.com/brettchalupa/sokoworld/blob/09ce68c690cbae0db242ab1b403c309f8b8482d2/release_wasm.sh
-    - [ ] binary
-  - [..] include loops JSON data, or fetch them remotely (e.g. from public GH link)
-  - [..] include audio data so we can play sounds?
-    - [ ] `include_bytes!` https://doc.rust-lang.org/std/macro.include_bytes.html
-  - [ ] sign code for easier local running without security override on Mac
 - [ ] quality
   - [..] add unit tests
   - [ ] run build + tests in Github CI
@@ -192,7 +160,6 @@ Make it look good, so it's more motivating to build and share!
 
 - get better at using rust (+VSCode), e.g. debugger, cargo fix, etc https://code.visualstudio.com/docs/languages/rust
 - allow printing version. use include str / include bytes from VERSION file
-- press ? to show help (e.g. see all key bindings)
 - accuracy
   - [ ] figure out how to allow first beat to get measured correct. since space starts clock right away... need a click in or empty space before the notes
   - [ ] Allow tuning margin for correctness in FE, until it feels dialied in. (see `score.rs`)
@@ -232,6 +199,8 @@ Make it look good, so it's more motivating to build and share!
 
 ## done
 
+- [x] Refactor message passing .. should be typed (see `main.rs` in `rx.try_recv`)
+- [x] UX v2: Determine tooling -> egui
 - Feature: Metronome
   - [x] toggle metronome on/off
 - [x] log levels that allow easy filtering
