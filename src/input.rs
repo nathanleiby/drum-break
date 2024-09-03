@@ -127,12 +127,11 @@ impl Input {
             events.push(Events::ChangeBPM { delta: -1. });
         }
 
-        // if is_key_pressed(KeyCode::M) {
-        //     // TODO: pause metronome click sound
-        // }
+        if is_key_pressed(KeyCode::M) {
+            events.push(Events::ToggleMetronome);
+        }
 
         if is_key_pressed(KeyCode::Z) {
-            debug!("Key press: toggle debug mode");
             events.push(Events::ToggleDebugMode);
         }
 
@@ -145,7 +144,6 @@ impl Input {
         }
 
         if is_key_pressed(KeyCode::X) {
-            debug!("Key press: save loop");
             events.push(Events::SaveLoop);
         }
 

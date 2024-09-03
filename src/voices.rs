@@ -105,7 +105,7 @@ impl Voices {
         }
     }
 
-    pub fn get_instrument_beats_mut(self: &mut Self, ins: &Instrument) -> &mut Vec<f64> {
+    fn get_instrument_beats_mut(self: &mut Self, ins: &Instrument) -> &mut Vec<f64> {
         if let Some(pos) = self.data.iter().position(|x| x.instrument == *ins) {
             return &mut self.data[pos].beat_timings;
         } else {

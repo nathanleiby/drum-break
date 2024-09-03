@@ -125,19 +125,19 @@ TBD
 - Feature: Volume control
   - [ ] global
   - [ ] per voice (inl metronome)
+- [ ] quality
+  - [ ] run build + tests in Github CI
+- [ ] shipping artifacts
+  - [ ] on git tag, ship a release in Github CI
 
 ### Research / Learn
 
 - midi - how does it work?
   - [ ] https://computermusicresource.com/MIDI.Commands.html
+- get better at using rust (+VSCode), e.g. debugger, cargo fix, etc https://code.visualstudio.com/docs/languages/rust
 - [ ] Explore macroquad featureset, including [experimental](https://docs.rs/macroquad/latest/macroquad/experimental/index.html) like state machine and scenes
   - [ ] Also explore community extension https://github.com/ozkriff/awesome-quads
   - [ ] tune config dynamically w cvars approach? https://github.com/martin-t/cvars or egui debug overlay
-- [ ] quality
-  - [..] add unit tests
-  - [ ] run build + tests in Github CI
-- [ ] shipping artifacts
-  - [ ] on git tag, ship a release in Github CI
 - [ ] Make "voices" data model more generic.
   - [ ] support different numbers of voices (not just 4, as today)
   - [ ] capture loop config like tempo, length, etc. (++ for tempo ASAP)
@@ -156,9 +156,8 @@ TBD
 - [ ] explore improving Kira's interface around the clock and looping to support my sequencer like use-case
   - [ ] idea: editing clock while it's playing
 
-### NEEDS TRIAGE
+### NEEDS TRIAGE / CLARITY
 
-- get better at using rust (+VSCode), e.g. debugger, cargo fix, etc https://code.visualstudio.com/docs/languages/rust
 - allow printing version. use include str / include bytes from VERSION file
 - accuracy
   - [ ] figure out how to allow first beat to get measured correct. since space starts clock right away... need a click in or empty space before the notes

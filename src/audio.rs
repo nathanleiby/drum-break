@@ -281,24 +281,29 @@ async fn schedule_note(
     let f = load_file(sound_path).await?;
     let sound = StaticSoundData::from_cursor(
         Cursor::new(f),
-        match sound_path {
-            "res/sounds/open-hihat.wav" => StaticSoundSettings::new().volume(0.5),
-            "res/sounds/ride.wav" => StaticSoundSettings::new().volume(0.15),
-            "res/sounds/crash.wav" => StaticSoundSettings::new().volume(0.4),
-            "res/sounds/tom-hi.wav" => StaticSoundSettings::new().volume(0.25),
-            "res/sounds/tom-med.wav" => StaticSoundSettings::new().volume(0.25),
-            "res/sounds/tom-low.wav" => StaticSoundSettings::new().volume(0.25),
-            "res/sounds/pedal-hihat.wav" => StaticSoundSettings::new().volume(0.5),
-            _ => StaticSoundSettings::new(),
-        }
-        .start_time(ClockTime {
-            clock: clock.id(),
-            ticks: note_tick,
-        }),
+        StaticSoundSettings::new()
+            .volume(get_volume(sound_path))
+            .start_time(ClockTime {
+                clock: clock.id(),
+                ticks: note_tick,
+            }),
     );
     if let Ok(sound) = sound {
         manager.play(sound).unwrap();
     }
 
     Ok(())
+}
+
+fn get_volume(sound_path: &str) -> f64 {
+    match sound_path {
+        "res/sounds/open-hihat.wav" => 0.5,
+        "res/sounds/ride.wav" => 0.15,
+        "res/sounds/crash.wav" => 0.4,
+        "res/sounds/tom-hi.wav" => 0.25,
+        "res/sounds/tom-med.wav" => 0.25,
+        "res/sounds/tom-low.wav" => 0.25,
+        "res/sounds/pedal-hihat.wav" => 0.5,
+        _ => 1.0,
+    }
 }
