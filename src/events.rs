@@ -23,5 +23,6 @@ pub enum Events {
         delta_s: f64,
     },
     ToggleDebugMode,
+    ToggleMetronome,
     ChangeLoop(usize), // loop idx
 }

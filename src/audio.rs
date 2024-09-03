@@ -77,7 +77,7 @@ impl Audio {
     }
 
     // TODO: Move this outside and then use it to summary loop accuracy
-    fn print_if_new_beat(self: &mut Self) {
+    fn check_if_new_beat_or_new_loop(self: &mut Self) {
         // For debugging, print when we pass an integer beat
         let current_beat = self.current_beat() as i32;
         if current_beat != self.last_beat {
@@ -95,7 +95,7 @@ impl Audio {
 
     /// schedule should be run within each game tick to schedule the audio
     pub async fn schedule(self: &mut Self, voices: &Voices) -> Result<(), Box<dyn Error>> {
-        self.print_if_new_beat();
+        self.check_if_new_beat_or_new_loop();
 
         let current = self.current_clock_tick();
         if current <= self.last_scheduled_tick {
@@ -128,7 +128,7 @@ impl Audio {
             // TODO: play a different sound at start of each measure
             // clicks on quarter notes
             let metronome_notes = vec![0., 2., 4., 6., 8., 10., 12., 14.];
-            let sound_path = "res/sounds/click.wav";
+            let sound_path = "res/sounds/click.wav"; // TODO: metronome.ogg?
             schedule_audio(
                 &metronome_notes,
                 sound_path,
@@ -203,16 +203,6 @@ impl Audio {
             self.current_clock_tick() - processing_delay_ticks,
         ));
 
-        // // play sound effect
-        // let sound = StaticSoundData::from_file(
-        //     "res/sounds/metronome.ogg",
-        //     StaticSoundSettings::new().start_time(ClockTime {
-        //         clock: self.clock.id(),
-        //         ticks: self.current_clock_tick() as u64,
-        //     }),
-        // );
-        // self.manager.play(sound.unwrap()).unwrap();
-
         log::debug!(
             "Capture at beat = {}, clock = {}",
             self.current_beat(),
@@ -223,16 +213,6 @@ impl Audio {
     /// allows for hitting a single key repeatedly on the heard beat to calibrate the audio latency
     pub fn track_for_calibration(self: &mut Self) -> f64 {
         self.calibration_input.push_back(self.current_beat());
-
-        // play sound effect
-        // let sound = StaticSoundData::from_file(
-        //     "res/sounds/metronome.ogg",
-        //     StaticSoundSettings::new().start_time(ClockTime {
-        //         clock: self.clock.id(),
-        //         ticks: self.current_clock_tick() as u64,
-        //     }),
-        // );
-        // self.manager.play(sound.unwrap()).unwrap();
 
         log::debug!(
             "Capture + calibrate at beat = {}, clock = {}",

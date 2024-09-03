@@ -121,6 +121,10 @@ impl UIState {
         self.desired_hits = voices.clone();
     }
 
+    pub fn set_metronome_enabled(&mut self, enabled: bool) {
+        self.is_metronome_enabled = enabled;
+    }
+
     pub fn get_audio_latency_in_beats(&self) -> f32 {
         let beats_per_second = self.bpm / 60.;
         self.latency_offset_s * beats_per_second
@@ -204,7 +208,15 @@ fn draw_left_panel(ctx: &egui::Context, ui_state: &UIState, events: &mut Vec<Eve
 
             ui.add(egui::Label::new("**Volume**"));
             ui.add(egui::Label::new("Metronome"));
-            // TODO
+            let button_text = match ui_state.is_metronome_enabled {
+                true => "Disable Metronome",
+                false => "Enable Metronome",
+            };
+            if ui.button(button_text).clicked() {
+                events.push(Events::ToggleMetronome);
+            }
+
+            // TODO: control volume: Metronome, target nomtes
             // ui.add(egui::Slider::new(&mut ui_state.volume_metronome, 0.0..=1.0));
             ui.add(egui::Label::new("Target Notes"));
             // TODO

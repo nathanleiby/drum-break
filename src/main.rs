@@ -150,6 +150,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         ui_state.set_audio_latency_s(audio.get_configured_audio_latency_seconds() as f32);
         ui_state.set_user_hits(&audio.user_hits);
         ui_state.set_desired_hits(&voices);
+        ui_state.set_metronome_enabled(audio.is_metronome_enabled());
 
         ui.render(&ui_state);
         if flags.ui_debug_mode {
@@ -289,6 +290,9 @@ fn process_user_events(
             }
             Events::ToggleDebugMode => {
                 flags.ui_debug_mode = !flags.ui_debug_mode;
+            }
+            Events::ToggleMetronome => {
+                audio.toggle_metronome();
             }
             Events::ChangeLoop(loop_num) => {
                 // voices_options.iter().for_each(|(name, new_loop)| {
