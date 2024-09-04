@@ -4,6 +4,7 @@ mod consts;
 mod egui_ui;
 mod events;
 mod fps;
+mod game;
 mod keyboard_input_handler;
 mod midi;
 mod midi_input_handler;
@@ -65,24 +66,29 @@ impl Flags {
     }
 }
 
+type Loops = Vec<(String, Loop)>;
+
+struct GameState {
+    voices: Voices,
+    gold_mode: GoldMode,
+    selected_loop_idx: usize,
+    loops: Loops,
+    flags: Flags,
+}
+
 #[macroquad::main(window_conf)]
 async fn main() -> Result<(), Box<dyn Error>> {
-    // simple_logger::init_with_level(log::Level::Info).unwrap();
     simple_logger::init_with_env().unwrap();
     let version = include_str!("../VERSION");
     log::info!("version: {}", version);
 
-    let conf = AppConfig::new()?;
-    log::debug!("{:?}", &conf);
-
-    let mut flags = Flags::new();
     let keyboard_input = KeyboardInputHandler::new();
     let mut midi_input = MidiInputHandler::new();
 
     // Setup game state
     // read loops
     let dir_name = process_cli_args();
-    let mut loops: Vec<(String, Loop)> = Vec::new();
+    let mut loops: Loops = Vec::new();
     // TODO: does this need to be async still?
     match read_loops(&dir_name).await {
         Ok(loops_from_dir) => loops = loops_from_dir,
@@ -95,22 +101,28 @@ async fn main() -> Result<(), Box<dyn Error>> {
         }
     }
 
-    let (tx, rx) = mpsc::channel();
-
-    let mut voices = Voices::new();
-    let mut audio = Audio::new(&conf, tx.clone());
-    let mut ui = UI::new();
-
-    let mut gold_mode = GoldMode {
-        correct_takes: 0,
-        was_gold: false,
+    let mut gs = GameState {
+        voices: Voices::new(),
+        gold_mode: GoldMode {
+            correct_takes: 0,
+            was_gold: false,
+        },
+        selected_loop_idx: 0,
+        loops,
+        flags: Flags::new(),
     };
 
-    let selector_vec = loops.iter().map(|(name, _)| name.to_string()).collect();
-    let mut selected_loop_idx = 0;
+    // Setup audio, which runs on a separate thread and passes messages back.
+    // TODO: Get rid of the shared state here (see how we compute_ui_state()), and just use message passing to update the GameState
+    let (tx, rx) = mpsc::channel();
+    let conf = AppConfig::new()?; // TODO: Get rid of conf lib for now to simplify? This is the only usage
+    log::debug!("{:?}", &conf);
+    let mut audio = Audio::new(&conf, tx.clone());
 
     // debug
     let mut fps_tracker = FPS::new();
+
+    let mut ui = UI::new();
 
     // gameplay loop
     loop {
@@ -120,36 +132,25 @@ async fn main() -> Result<(), Box<dyn Error>> {
         let ui_events = ui.flush_events();
 
         // change game state
-        process_system_events(&rx, &mut audio, &voices, &mut gold_mode);
+        process_system_events(&rx, &mut audio, &gs.voices, &mut gs.gold_mode);
         for e in [&midi_input_events, &keyboard_events, &ui_events] {
             process_user_events(
-                &mut voices,
+                &mut gs.voices,
                 &mut audio,
-                &mut flags,
-                &loops,
-                &mut selected_loop_idx,
+                &mut gs.flags,
+                &gs.loops,
+                &mut gs.selected_loop_idx,
                 &e,
                 &dir_name,
             )?;
         }
 
-        audio.schedule(&voices).await?;
+        audio.schedule(&gs.voices).await?;
 
         // render UI
-        let mut ui_state = UIState::default().selector_vec(&selector_vec);
-        ui_state.set_selected_idx(selected_loop_idx);
-        ui_state.set_current_beat(audio.current_beat());
-        ui_state.set_current_loop(audio.current_loop() as usize);
-        ui_state.set_enabled_beats(&voices);
-        ui_state.set_is_playing(!audio.is_paused());
-        ui_state.set_bpm(audio.get_bpm() as f32);
-        ui_state.set_audio_latency_s(audio.get_configured_audio_latency_seconds() as f32);
-        ui_state.set_user_hits(&audio.user_hits);
-        ui_state.set_desired_hits(&voices);
-        ui_state.set_metronome_enabled(audio.is_metronome_enabled());
 
-        ui.render(&ui_state);
-        if flags.ui_debug_mode {
+        ui.render(&compute_ui_state(&gs, &audio));
+        if gs.flags.ui_debug_mode {
             fps_tracker.update();
             fps_tracker.render();
         }
@@ -157,6 +158,22 @@ async fn main() -> Result<(), Box<dyn Error>> {
         // wait for next frame from game engine
         next_frame().await
     }
+}
+
+fn compute_ui_state(gs: &GameState, audio: &Audio) -> UIState {
+    let selector_vec = gs.loops.iter().map(|(name, _)| name.to_string()).collect();
+    let mut ui_state = UIState::default().selector_vec(&selector_vec);
+    ui_state.set_selected_idx(gs.selected_loop_idx);
+    ui_state.set_current_beat(audio.current_beat());
+    ui_state.set_current_loop(audio.current_loop() as usize);
+    ui_state.set_enabled_beats(&gs.voices);
+    ui_state.set_is_playing(!audio.is_paused());
+    ui_state.set_bpm(audio.get_bpm() as f32);
+    ui_state.set_audio_latency_s(audio.get_configured_audio_latency_seconds() as f32);
+    ui_state.set_user_hits(&audio.user_hits);
+    ui_state.set_desired_hits(&gs.voices);
+    ui_state.set_metronome_enabled(audio.is_metronome_enabled());
+    ui_state
 }
 
 fn process_system_events(

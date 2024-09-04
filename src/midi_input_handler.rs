@@ -1,5 +1,8 @@
 /*
-  Capture user input (keyboard, midi) and convert it into events.
+  Capture user input from midi. convert it into events.
+
+  This is stateful because it depends on setting up a connection to a midi input,
+  and flushing the internally stored events after the have been consumed via process().
 */
 
 use std::collections::HashSet;
