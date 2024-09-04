@@ -14,22 +14,17 @@ mod ui;
 mod voices;
 
 use std::error::Error;
-use std::fs::File;
-use std::io::{BufWriter, Write};
-use std::sync::mpsc::{self, Receiver};
+use std::sync::mpsc::{self};
 
 use crate::config::AppConfig;
 use crate::fps::FPS;
 use crate::ui::*;
-use crate::voices::Voices;
 
 use audio::Audio;
-use consts::{TxMsg, ALL_INSTRUMENTS, WINDOW_HEIGHT, WINDOW_WIDTH};
-use egui_ui::UIState;
-use events::Events;
+use consts::{WINDOW_HEIGHT, WINDOW_WIDTH};
+use game::{compute_ui_state, process_system_events, process_user_events, GameState, Loops};
 use keyboard_input_handler::KeyboardInputHandler;
 use midi_input_handler::MidiInputHandler;
-use score::compute_last_loop_summary;
 use simple_logger;
 
 use macroquad::prelude::*;
@@ -46,48 +41,16 @@ fn window_conf() -> Conf {
     }
 }
 
-const GOLD_MODE_BPM_STEP: f64 = 2.;
-const GOLD_MODE_CORRECT_TAKES: i32 = 3;
-
-pub struct GoldMode {
-    correct_takes: i32,
-    was_gold: bool,
-}
-
-pub struct Flags {
-    ui_debug_mode: bool,
-}
-
-impl Flags {
-    pub fn new() -> Self {
-        return Self {
-            ui_debug_mode: false,
-        };
-    }
-}
-
-type Loops = Vec<(String, Loop)>;
-
-struct GameState {
-    voices: Voices,
-    gold_mode: GoldMode,
-    selected_loop_idx: usize,
-    loops: Loops,
-    flags: Flags,
-}
-
 #[macroquad::main(window_conf)]
 async fn main() -> Result<(), Box<dyn Error>> {
     simple_logger::init_with_env().unwrap();
     let version = include_str!("../VERSION");
     log::info!("version: {}", version);
 
-    let keyboard_input = KeyboardInputHandler::new();
-    let mut midi_input = MidiInputHandler::new();
+    let dir_name = process_cli_args();
 
     // Setup game state
     // read loops
-    let dir_name = process_cli_args();
     let mut loops: Loops = Vec::new();
     // TODO: does this need to be async still?
     match read_loops(&dir_name).await {
@@ -101,16 +64,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
         }
     }
 
-    let mut gs = GameState {
-        voices: Voices::new(),
-        gold_mode: GoldMode {
-            correct_takes: 0,
-            was_gold: false,
-        },
-        selected_loop_idx: 0,
-        loops,
-        flags: Flags::new(),
-    };
+    let keyboard_input = KeyboardInputHandler::new();
+    let mut midi_input = MidiInputHandler::new();
+
+    let mut gs = GameState::new(loops);
 
     // Setup audio, which runs on a separate thread and passes messages back.
     // TODO: Get rid of the shared state here (see how we compute_ui_state()), and just use message passing to update the GameState
@@ -123,8 +80,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let mut fps_tracker = FPS::new();
 
     let mut ui = UI::new();
-
-    // gameplay loop
     loop {
         // read user's input and translate to events
         let keyboard_events = keyboard_input.process();
@@ -158,168 +113,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
         // wait for next frame from game engine
         next_frame().await
     }
-}
-
-fn compute_ui_state(gs: &GameState, audio: &Audio) -> UIState {
-    let selector_vec = gs.loops.iter().map(|(name, _)| name.to_string()).collect();
-    let mut ui_state = UIState::default().selector_vec(&selector_vec);
-    ui_state.set_selected_idx(gs.selected_loop_idx);
-    ui_state.set_current_beat(audio.current_beat());
-    ui_state.set_current_loop(audio.current_loop() as usize);
-    ui_state.set_enabled_beats(&gs.voices);
-    ui_state.set_is_playing(!audio.is_paused());
-    ui_state.set_bpm(audio.get_bpm() as f32);
-    ui_state.set_audio_latency_s(audio.get_configured_audio_latency_seconds() as f32);
-    ui_state.set_user_hits(&audio.user_hits);
-    ui_state.set_desired_hits(&gs.voices);
-    ui_state.set_metronome_enabled(audio.is_metronome_enabled());
-    ui_state
-}
-
-fn process_system_events(
-    rx: &Receiver<TxMsg>,
-    audio: &mut Audio,
-    voices: &Voices,
-    gold_mode: &mut GoldMode,
-) {
-    // read events
-    loop {
-        match rx.try_recv() {
-            Ok(msg) => {
-                println!("[event] {:?}", msg);
-                match msg {
-                    TxMsg::AudioNew => (),
-                    TxMsg::StartingLoop(loop_num) => {
-                        // TODO: UPDATE TO ONLY RUN THIS CODE FOR "on loop complete" events
-                        let last_loop_hits = get_hits_from_nth_loop(
-                            &audio.user_hits,
-                            (audio.current_loop() - 1) as usize,
-                        );
-                        let audio_latency = audio.get_configured_audio_latency_seconds();
-                        let summary_data =
-                            compute_last_loop_summary(&last_loop_hits, &voices, audio_latency);
-                        info!("last loop summary = {:?}", summary_data);
-                        let totals = summary_data.total();
-
-                        gold_mode.was_gold = false;
-                        if totals.ratio() == 1. {
-                            gold_mode.correct_takes += 1;
-                        } else {
-                            gold_mode.correct_takes = 0;
-                        }
-
-                        if gold_mode.correct_takes == GOLD_MODE_CORRECT_TAKES {
-                            audio.set_bpm(audio.get_bpm() + GOLD_MODE_BPM_STEP);
-                            gold_mode.correct_takes = 0;
-                            gold_mode.was_gold = true;
-                            // TODO: schedule a 1-off "success!" SFX to play
-                            // TOOD: Maybe -- clear existing noise from mistaken notes
-                        }
-                    }
-                }
-            }
-            Err(_) => break,
-        }
-    }
-}
-
-/// update application state based on events (that came from user input)
-fn process_user_events(
-    voices: &mut Voices,
-    audio: &mut Audio,
-    flags: &mut Flags,
-    loops: &Vec<(String, Loop)>,
-    selected_loop_idx: &mut usize,
-    events: &Vec<Events>,
-    dir_name: &str,
-) -> Result<(), Box<dyn Error>> {
-    for event in events {
-        info!("Processing event: {:?}", event);
-        match event {
-            Events::UserHit {
-                instrument,
-                processing_delay,
-            } => {
-                audio.track_user_hit(*instrument, *processing_delay);
-            }
-            Events::Pause => {
-                audio.toggle_pause();
-            }
-            Events::ChangeBPM { delta } => {
-                audio.set_bpm(audio.get_bpm() + delta);
-            }
-            Events::SetBPM(val) => {
-                audio.set_bpm(*val);
-            }
-            Events::Quit => {
-                std::process::exit(0);
-            }
-            Events::ResetHits => {
-                audio.user_hits = vec![];
-            }
-            Events::SaveLoop => {
-                // write serialized JSON output to a file
-                let dir_name = dir_name.trim_end_matches('/');
-                let file = File::create(format!("{}/loop-{}.json", dir_name, get_time()))?;
-                let mut writer = BufWriter::new(file);
-                let my_loop = Loop {
-                    bpm: audio.get_bpm() as usize,
-                    voices: voices.to_voices_old_model(),
-                };
-                serde_json::to_writer(&mut writer, &my_loop)?;
-                writer.flush()?;
-            }
-            Events::ToggleBeat { row, beat } => {
-                // map from UI display to instrument
-                let res = ALL_INSTRUMENTS
-                    .iter()
-                    .enumerate()
-                    .find(|x| x.0 == *row as usize);
-                let ins = match res {
-                    Some(x) => x.1,
-                    None => panic!("invalid instrument idx"),
-                };
-
-                info!("toggling beat: {:?} {:?}", *ins, *beat);
-                voices.toggle_beat(*ins, *beat);
-            }
-            Events::TrackForCalibration => {
-                let updated_val = audio.track_for_calibration();
-                audio.set_configured_audio_latency_seconds(updated_val);
-
-                let cfg = AppConfig {
-                    audio_latency_seconds: updated_val,
-                };
-                cfg.save()?;
-            }
-            Events::SetAudioLatency { delta_s: delta } => {
-                let updated_val = audio.get_configured_audio_latency_seconds() + delta;
-                audio.set_configured_audio_latency_seconds(updated_val);
-
-                let cfg = AppConfig {
-                    audio_latency_seconds: updated_val,
-                };
-                cfg.save()?;
-            }
-            Events::ToggleDebugMode => {
-                flags.ui_debug_mode = !flags.ui_debug_mode;
-            }
-            Events::ToggleMetronome => {
-                audio.toggle_metronome();
-            }
-            Events::ChangeLoop(loop_num) => {
-                // voices_options.iter().for_each(|(name, new_loop)| {
-                // if ui.button(None, format!("{:?} ({:?})", name.as_str(), new_loop.bpm)) {
-                let new_loop = loops.as_slice()[*loop_num].clone().1;
-                *voices = Voices::new_from_voices_old_model(&new_loop.voices);
-                audio.set_bpm(new_loop.bpm as f64);
-
-                *selected_loop_idx = *loop_num;
-            }
-        }
-    }
-
-    Ok(())
 }
 
 fn process_cli_args() -> String {
