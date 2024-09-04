@@ -4,8 +4,9 @@ mod consts;
 mod egui_ui;
 mod events;
 mod fps;
-mod input;
+mod keyboard_input_handler;
 mod midi;
+mod midi_input_handler;
 mod score;
 mod time;
 mod ui;
@@ -25,7 +26,8 @@ use audio::Audio;
 use consts::{TxMsg, ALL_INSTRUMENTS, WINDOW_HEIGHT, WINDOW_WIDTH};
 use egui_ui::UIState;
 use events::Events;
-use input::Input;
+use keyboard_input_handler::KeyboardInputHandler;
+use midi_input_handler::MidiInputHandler;
 use score::compute_last_loop_summary;
 use simple_logger;
 
@@ -74,7 +76,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
     log::debug!("{:?}", &conf);
 
     let mut flags = Flags::new();
-    let mut input = Input::new();
+    let keyboard_input = KeyboardInputHandler::new();
+    let mut midi_input = MidiInputHandler::new();
 
     // Setup game state
     // read loops
@@ -105,13 +108,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let selector_vec = loops.iter().map(|(name, _)| name.to_string()).collect();
     let mut selected_loop_idx = 0;
-    // initialize UI state
-    //  // TODO: consider bundling the below into a Game struct or similar
-    //  desired_hits: &mut Voices
-    //  audio: &mut Audio
-    //  loops: &Vec<(String, Loop)>
-    //  gold_mode: &GoldMode
-    //  flags: &Flags
 
     // debug
     let mut fps_tracker = FPS::new();
@@ -119,13 +115,13 @@ async fn main() -> Result<(), Box<dyn Error>> {
     // gameplay loop
     loop {
         // read user's input and translate to events
-        let events = input.process();
-        // TODO: just add to events?
+        let keyboard_events = keyboard_input.process();
+        let midi_input_events = midi_input.process();
         let ui_events = ui.flush_events();
 
         // change game state
         process_system_events(&rx, &mut audio, &voices, &mut gold_mode);
-        for e in [&events, &ui_events] {
+        for e in [&midi_input_events, &keyboard_events, &ui_events] {
             process_user_events(
                 &mut voices,
                 &mut audio,

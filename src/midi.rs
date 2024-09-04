@@ -132,7 +132,7 @@ impl MidiInput {
 // Midi Spec
 
 // from 128-255, these are the functions corresponding to a Midi Note's 1st byte
-pub const MIDI_FUNCTION_NAMES: [&str; 128] = [
+const MIDI_FUNCTION_NAMES: [&str; 128] = [
     "Chan 1 Note off",
     "Chan 2 Note off",
     "Chan 3 Note off",

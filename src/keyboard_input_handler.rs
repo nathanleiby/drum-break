@@ -10,51 +10,16 @@ use crate::{
     consts::*, events::Events, midi::MidiInput, time::current_time_millis, voices::Instrument,
 };
 
-pub struct Input {
-    midi_input: Option<MidiInput>,
-}
+pub struct KeyboardInputHandler {}
 
-impl Input {
+impl KeyboardInputHandler {
     pub fn new() -> Self {
-        let mut midi_input = MidiInput::new();
-        match midi_input {
-            Some(ref mut midi_input) => {
-                midi_input.connect();
-            }
-            None => log::warn!("warning: no midi input device found"),
-        }
-
-        Self { midi_input }
+        Self {}
     }
 
     /// convert any user input from the last frame into Events
-    pub fn process(self: &mut Self) -> Vec<Events> {
+    pub fn process(self: &Self) -> Vec<Events> {
         let mut events: Vec<Events> = vec![];
-
-        // TODO(future): get the current clock time AND audio clock time at the start of a frame, and use that for all downstream calcs
-        let _now_ms = current_time_millis();
-        match &mut self.midi_input {
-            Some(midi_input) => {
-                let hits = get_midi_as_user_hits(midi_input);
-
-                // for each hit, calculate the processing delay and correct the clock time
-                for hit in &hits {
-                    // let processing_delay_ms = now_ms - hit.clock_tick as u128;
-                    //// TODO: needs work
-                    let processing_delay_ms = 0;
-                    events.push(Events::UserHit {
-                        instrument: hit.instrument,
-                        processing_delay: processing_delay_ms as f64 / 1000.,
-                    })
-                }
-
-                // let processing_delay = now - ; // is this better called "input latency"?
-                // let corrected_clock_time = current_clock_time - processing_delay;
-
-                midi_input.flush();
-            }
-            None => {}
-        };
 
         // Playing the drums //
         let processing_delay = 0.; // TODO: solve this for keyboard input, too.
