@@ -87,7 +87,7 @@ pub fn process_system_events(
     loop {
         match rx.try_recv() {
             Ok(msg) => {
-                println!("[event] {:?}", msg);
+                println!("[system event] {:?}", msg);
                 match msg {
                     TxMsg::AudioNew => (),
                     TxMsg::StartingLoop(loop_num) => {
@@ -135,7 +135,8 @@ pub fn process_user_events(
     dir_name: &str,
 ) -> Result<(), Box<dyn Error>> {
     for event in events {
-        info!("Processing event: {:?}", event);
+        println!("[user event] {:?}", event);
+        // info!("Processing event: {:?}", event);
         match event {
             Events::UserHit {
                 instrument,

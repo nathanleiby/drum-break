@@ -2,10 +2,16 @@
 
 use egui::{
     self,
+    // # TODO
     emath::{self, RectTransform},
-    plot::{Legend, Line, Plot},
-    pos2, Color32, Shape, Widget,
+    pos2,
+    Color32,
+    Shape,
+    Widget,
 };
+
+use egui_plot::{Legend, Line, Plot};
+
 // EguiContexts, EguiPlugin,
 use log::info;
 use macroquad::color::{GREEN, LIGHTGRAY, ORANGE, PURPLE, RED};
@@ -131,7 +137,7 @@ impl UIState {
     }
 }
 
-pub fn draw_ui(ctx: &egui_macroquad::egui::Context, ui_state: &UIState, events: &mut Vec<Events>) {
+pub fn draw_ui(ctx: &egui::Context, ui_state: &UIState, events: &mut Vec<Events>) {
     draw_top_panel(ctx, events, ui_state);
 
     draw_left_panel(ctx, ui_state, events);
