@@ -249,8 +249,13 @@ fn draw_right_panel(ctx: &egui::Context, ui_state: &UIState, events: &mut Vec<Ev
                 ui.heading("Right Panel");
             });
 
+            let selector_text = if ui_state.selector_vec.len() > 0 {
+                &ui_state.selector_vec[ui_state.selected_idx]
+            } else {
+                "No loops"
+            };
             egui::ComboBox::from_label("Choose Loop")
-                .selected_text(format!("{}", &ui_state.selector_vec[ui_state.selected_idx]))
+                .selected_text(format!("{}", selector_text))
                 .show_ui(ui, |ui| {
                     for i in 0..ui_state.selector_vec.len() {
                         let mut current_value = &ui_state.selector_vec[i];

@@ -7,11 +7,9 @@ use crate::audio::Audio;
 use crate::config::AppConfig;
 use crate::consts::TxMsg;
 use crate::egui_ui::UIState;
-use crate::keyboard_input_handler::KeyboardInputHandler;
-use crate::midi_input_handler::MidiInputHandler;
 use crate::score::compute_last_loop_summary;
+use crate::ui::*;
 use crate::voices::Voices;
-use crate::{process_cli_args, ui::*};
 
 use log::info;
 use macroquad::prelude::*;

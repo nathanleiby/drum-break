@@ -6,8 +6,8 @@ mod events;
 mod fps;
 mod game;
 mod keyboard_input_handler;
-mod midi;
-mod midi_input_handler;
+// mod midi;
+// mod midi_input_handler;
 mod score;
 mod time;
 mod ui;
@@ -24,8 +24,8 @@ use audio::Audio;
 use consts::{WINDOW_HEIGHT, WINDOW_WIDTH};
 use game::{compute_ui_state, process_system_events, process_user_events, GameState, Loops};
 use keyboard_input_handler::KeyboardInputHandler;
-use midi_input_handler::MidiInputHandler;
-use simple_logger;
+// use midi_input_handler::MidiInputHandler;
+// use simple_logger;
 
 use macroquad::prelude::*;
 use voices::Loop;
@@ -43,7 +43,7 @@ fn window_conf() -> Conf {
 
 #[macroquad::main(window_conf)]
 async fn main() -> Result<(), Box<dyn Error>> {
-    simple_logger::init_with_env().unwrap();
+    // simple_logger::init_with_env().unwrap();
     let version = include_str!("../VERSION");
     log::info!("version: {}", version);
 
@@ -65,14 +65,17 @@ async fn main() -> Result<(), Box<dyn Error>> {
     }
 
     let keyboard_input = KeyboardInputHandler::new();
-    let mut midi_input = MidiInputHandler::new();
+    // let mut midi_input = MidiInputHandler::new();
 
     let mut gs = GameState::new(loops);
 
     // Setup audio, which runs on a separate thread and passes messages back.
     // TODO: Get rid of the shared state here (see how we compute_ui_state()), and just use message passing to update the GameState
     let (tx, rx) = mpsc::channel();
-    let conf = AppConfig::new()?; // TODO: Get rid of conf lib for now to simplify? This is the only usage
+    // let conf = AppConfig::new()?; // TODO: Get rid of conf lib for now to simplify? This is the only usage
+    let conf = AppConfig {
+        audio_latency_seconds: 0.,
+    };
     log::debug!("{:?}", &conf);
     let mut audio = Audio::new(&conf, tx.clone());
 
@@ -83,12 +86,13 @@ async fn main() -> Result<(), Box<dyn Error>> {
     loop {
         // read user's input and translate to events
         let keyboard_events = keyboard_input.process();
-        let midi_input_events = midi_input.process();
+        // let midi_input_events = midi_input.process();
         let ui_events = ui.flush_events();
 
         // change game state
         process_system_events(&rx, &mut audio, &gs.voices, &mut gs.gold_mode);
-        for e in [&midi_input_events, &keyboard_events, &ui_events] {
+        // for e in [&midi_input_events, &keyboard_events, &ui_events] {
+        for e in [&keyboard_events, &ui_events] {
             process_user_events(
                 &mut gs.voices,
                 &mut audio,
@@ -103,7 +107,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
         audio.schedule(&gs.voices).await?;
 
         // render UI
-
         ui.render(&compute_ui_state(&gs, &audio));
         if gs.flags.ui_debug_mode {
             fps_tracker.update();

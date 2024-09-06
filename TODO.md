@@ -42,6 +42,7 @@ TBD
       - kira audio - ...
         - KIRA example https://github.com/Moxinilian/kira-web-demo/tree/main
     - maybe some of these? https://github.com/ozkriff/awesome-quads?tab=readme-ov-file#libraries-plugins
+    - maybe this: https://github.com/not-fl3/macroquad/issues/212#issuecomment-1944760503
   - [ ] Publish to GH pages
   - [ ] publish to Itch.io
     - [ ] WASM - https://github.com/brettchalupa/sokoworld/blob/09ce68c690cbae0db242ab1b403c309f8b8482d2/release_wasm.sh
@@ -155,6 +156,7 @@ TBD
   ```
 - [ ] explore improving Kira's interface around the clock and looping to support my sequencer like use-case
   - [ ] idea: editing clock while it's playing
+- should use kira's built-in Metronome concept? https://github.com/tesselode/kira/blob/main/changelog.md#multiple-metronomes
 
 ### NEEDS TRIAGE / CLARITY
 
