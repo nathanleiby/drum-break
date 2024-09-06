@@ -6,8 +6,13 @@ mod events;
 mod fps;
 mod game;
 mod keyboard_input_handler;
-// mod midi;
-// mod midi_input_handler;
+
+#[cfg(not(target_arch = "wasm32"))]
+mod midi;
+#[cfg(not(target_arch = "wasm32"))]
+mod midi_input_handler;
+#[cfg(not(target_arch = "wasm32"))]
+use midi_input_handler::MidiInputHandler;
 
 mod score;
 mod time;
@@ -25,8 +30,7 @@ use audio::Audio;
 use consts::{WINDOW_HEIGHT, WINDOW_WIDTH};
 use game::{compute_ui_state, process_system_events, process_user_events, GameState, Loops};
 use keyboard_input_handler::KeyboardInputHandler;
-// use midi_input_handler::MidiInputHandler;
-// use simple_logger;
+use simple_logger;
 
 use macroquad::prelude::*;
 use voices::Loop;
@@ -44,7 +48,9 @@ fn window_conf() -> Conf {
 
 #[macroquad::main(window_conf)]
 async fn main() -> Result<(), Box<dyn Error>> {
-    // simple_logger::init_with_env().unwrap();
+    #[cfg(not(target_arch = "wasm32"))]
+    simple_logger::init_with_env().unwrap();
+
     let version = include_str!("../VERSION");
     log::info!("version: {}", version);
 
@@ -66,7 +72,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
     }
 
     let keyboard_input = KeyboardInputHandler::new();
-    // let mut midi_input = MidiInputHandler::new();
+    #[cfg(not(target_arch = "wasm32"))]
+    let mut midi_input = MidiInputHandler::new();
 
     let mut gs = GameState::new(loops);
 
@@ -83,25 +90,25 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let mut ui = UI::new();
     loop {
+        let mut events = Vec::new();
         // read user's input and translate to events
-        let keyboard_events = keyboard_input.process();
-        // let midi_input_events = midi_input.process();
-        let ui_events = ui.flush_events();
+        events.extend(keyboard_input.process());
+        events.extend(ui.flush_events());
+
+        #[cfg(not(target_arch = "wasm32"))]
+        events.extend(midi_input.process());
 
         // change game state
         process_system_events(&rx, &mut audio, &gs.voices, &mut gs.gold_mode);
-        // for e in [&midi_input_events, &keyboard_events, &ui_events] {
-        for e in [&keyboard_events, &ui_events] {
-            process_user_events(
-                &mut gs.voices,
-                &mut audio,
-                &mut gs.flags,
-                &gs.loops,
-                &mut gs.selected_loop_idx,
-                &e,
-                &dir_name,
-            )?;
-        }
+        process_user_events(
+            &mut gs.voices,
+            &mut audio,
+            &mut gs.flags,
+            &gs.loops,
+            &mut gs.selected_loop_idx,
+            &events,
+            &dir_name,
+        )?;
 
         audio.schedule(&gs.voices).await?;
 
