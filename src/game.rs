@@ -192,7 +192,7 @@ pub fn process_user_events(
                 let cfg = AppConfig {
                     audio_latency_seconds: updated_val,
                 };
-                cfg.save()?;
+                cfg.save();
             }
             Events::SetAudioLatency { delta_s: delta } => {
                 let updated_val = audio.get_configured_audio_latency_seconds() + delta;
@@ -201,7 +201,7 @@ pub fn process_user_events(
                 let cfg = AppConfig {
                     audio_latency_seconds: updated_val,
                 };
-                cfg.save()?;
+                cfg.save();
             }
             Events::ToggleDebugMode => {
                 flags.ui_debug_mode = !flags.ui_debug_mode;

@@ -1,5 +1,3 @@
-use std::error::Error;
-
 use serde::{Deserialize, Serialize};
 
 #[derive(Default, Debug, Serialize, Deserialize)]
@@ -8,14 +6,18 @@ pub struct AppConfig {
 }
 
 impl AppConfig {
-    pub fn new() -> Result<Self, Box<dyn Error>> {
+    pub fn new() -> Self {
         // loads or initializes
-        let cfg: AppConfig = confy::load("macroix", "AppConfig")?;
-        Ok(cfg)
+        match confy::load("macroix", "AppConfig") {
+            Ok(cfg) => cfg,
+            Err(_) => AppConfig::default(),
+        }
     }
 
-    pub fn save(&self) -> Result<(), Box<dyn Error>> {
-        confy::store("macroix", "AppConfig", self)?;
-        Ok(())
+    pub fn save(&self) {
+        match confy::store("macroix", "AppConfig", self) {
+            // ignore failures. these happen in web builds
+            _ => (),
+        }
     }
 }

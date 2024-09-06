@@ -74,9 +74,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     // TODO: Get rid of the shared state here (see how we compute_ui_state()), and just use message passing to update the GameState
     let (tx, rx) = mpsc::channel();
     // let conf = AppConfig::new()?; // TODO: Get rid of conf lib for now to simplify? This is the only usage
-    let conf = AppConfig {
-        audio_latency_seconds: 0.,
-    };
+    let conf = AppConfig::new();
     log::debug!("{:?}", &conf);
     let mut audio = Audio::new(&conf, tx.clone());
 
