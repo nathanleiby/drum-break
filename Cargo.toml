@@ -8,7 +8,7 @@ rust-version = "1.80"
 
 [dependencies]
 confy = "0.5.1"
-kira = "0.8.5"
+kira = "0.9"
 log = "0.4.21"
 egui-macroquad = { version = "0.15.0", default-features = false }
 macroquad = { version = "0.3.25", default_features = false }

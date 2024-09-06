@@ -146,7 +146,7 @@ impl Audio {
     }
 
     fn current_clock_tick(self: &Self) -> f64 {
-        self.clock.time().ticks as f64 + self.clock.fractional_position()
+        self.clock.time().ticks as f64 + self.clock.time().fraction
     }
 
     pub fn current_beat(self: &Self) -> f64 {
@@ -169,14 +169,13 @@ impl Audio {
         self.bpm = clamp(bpm, MIN_BPM, MAX_BPM);
         self.clock
             .set_speed(ClockSpeed::TicksPerMinute(bpm * 2.), Tween::default())
-            .unwrap();
     }
 
-    pub fn toggle_pause(self: &Self) {
+    pub fn toggle_pause(self: &mut Self) {
         if self.clock.ticking() {
-            self.clock.pause().unwrap();
+            self.clock.pause();
         } else {
-            self.clock.start().unwrap();
+            self.clock.start();
         }
     }
 
@@ -279,17 +278,17 @@ async fn schedule_note(
     let note_tick = (*note + (loop_num as f64) * BEATS_PER_LOOP) as u64;
     // log::debug!("\tScheduling {} ({}) at {}", sound_path, note, note_tick);
     let f = load_file(sound_path).await?;
-    let sound = StaticSoundData::from_cursor(
-        Cursor::new(f),
-        StaticSoundSettings::new()
-            .volume(get_volume(sound_path))
-            .start_time(ClockTime {
-                clock: clock.id(),
-                ticks: note_tick,
-            }),
-    );
+    let sound_settings = StaticSoundSettings::new()
+        .volume(get_volume(sound_path))
+        .start_time(ClockTime {
+            clock: clock.id(),
+            ticks: note_tick,
+            fraction: 0.,
+        });
+
+    let sound = StaticSoundData::from_cursor(Cursor::new(f));
     if let Ok(sound) = sound {
-        manager.play(sound).unwrap();
+        manager.play(sound.with_settings(sound_settings))?;
     }
 
     Ok(())
