@@ -202,6 +202,7 @@ TBD
 
 - [x] Refactor message passing .. should be typed (see `main.rs` in `rx.try_recv`)
 - [x] UX v2: Determine tooling -> egui
+  - try themes .. https://github.com/catppuccin/egui?tab=readme-ov-file .. looks good, but not a big delta so maybe later
 - Feature: Metronome
   - [x] toggle metronome on/off
 - [x] log levels that allow easy filtering
