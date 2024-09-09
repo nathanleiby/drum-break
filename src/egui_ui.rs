@@ -138,6 +138,9 @@ impl UIState {
 }
 
 pub fn draw_ui(ctx: &egui::Context, ui_state: &UIState, events: &mut Vec<Events>) {
+    // make everything bigger, so text is legible
+    ctx.set_pixels_per_point(2.0);
+
     draw_top_panel(ctx, events, ui_state);
 
     draw_left_panel(ctx, ui_state, events);
