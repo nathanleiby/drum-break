@@ -96,6 +96,13 @@ impl KeyboardInputHandler {
             events.push(Events::ToggleDebugMode);
         }
 
+        // TODO(bug):
+        // On MacOS.. KeyCode::Slash seems to map to '/' .. isn't that Backslash?
+        // and KeyCode::Backslash doesn't seem to match anything
+        if is_key_pressed(KeyCode::Slash) {
+            events.push(Events::ToggleDevToolsVisibility);
+        }
+
         if is_key_pressed(KeyCode::Q) {
             events.push(Events::Quit)
         }

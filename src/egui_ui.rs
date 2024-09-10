@@ -2,12 +2,8 @@
 
 use egui::{
     self,
-    // # TODO
     emath::{self, RectTransform},
-    pos2,
-    Color32,
-    Shape,
-    Widget,
+    pos2, CollapsingHeader, Color32, Shape, Widget,
 };
 
 use egui_plot::{Legend, Line, Plot};
@@ -49,6 +45,10 @@ pub struct UIState {
 
     user_hits: Vec<UserHit>,
     desired_hits: Voices,
+
+    is_dev_tools_visible: bool,
+    correct_margin: f64,
+    miss_margin: f64,
 }
 
 impl Default for UIState {
@@ -80,6 +80,10 @@ impl Default for UIState {
 
             user_hits: vec![],
             desired_hits: Voices::new(),
+
+            is_dev_tools_visible: true,
+            correct_margin: 0.,
+            miss_margin: 0.,
         }
     }
 }
@@ -135,22 +139,71 @@ impl UIState {
         let beats_per_second = self.bpm / 60.;
         self.latency_offset_s * beats_per_second
     }
+
+    pub fn set_is_dev_tools_visible(&mut self, enabled: bool) {
+        self.is_dev_tools_visible = enabled;
+    }
+
+    pub fn set_correct_margin(&mut self, val: f64) {
+        self.correct_margin = val;
+    }
+
+    pub fn set_miss_margin(&mut self, val: f64) {
+        self.miss_margin = val;
+    }
 }
 
 pub fn draw_ui(ctx: &egui::Context, ui_state: &UIState, events: &mut Vec<Events>) {
     // make everything bigger, so text is legible
     ctx.set_pixels_per_point(2.0);
 
-    draw_top_panel(ctx, events, ui_state);
+    draw_top_panel(ctx, ui_state, events);
 
     draw_left_panel(ctx, ui_state, events);
 
     draw_right_panel(ctx, ui_state, events);
 
     draw_central_panel(ctx, ui_state, events);
+
+    dev_tools(ctx, ui_state, events);
 }
 
-fn draw_top_panel(ctx: &egui::Context, events: &mut Vec<Events>, ui_state: &UIState) {
+fn dev_tools(ctx: &egui::Context, ui_state: &UIState, events: &mut Vec<Events>) {
+    if !ui_state.is_dev_tools_visible {
+        return;
+    }
+
+    // TODO: Floating window could work, but need to capture mouse events to ensure it isn't toggling the beat grid behidn it
+    // egui::Window::new("Developer Tools").show(ctx, |ui| {
+    egui::TopBottomPanel::bottom("bottom_panel").show(ctx, |ui| {
+        ui.vertical_centered(|ui| {
+            ui.heading("Dev Tools");
+        });
+        CollapsingHeader::new("Accuracy")
+            .default_open(true)
+            .show(ui, |ui| {
+                ui.horizontal(|ui| {
+                    ui.label("Correct Margin");
+                    let mut local_correct_margin = ui_state.correct_margin;
+                    let correct_margin_widget = egui::DragValue::new(&mut local_correct_margin);
+                    let correct_margin_widget_resp = correct_margin_widget.ui(ui);
+                    if correct_margin_widget_resp.changed() {
+                        events.push(Events::SetCorrectMargin(local_correct_margin));
+                    }
+
+                    ui.label("Miss Margin");
+                    let mut local_miss_margin = ui_state.miss_margin;
+                    let miss_margin_widget = egui::DragValue::new(&mut local_miss_margin);
+                    let miss_margin_widget_resp = miss_margin_widget.ui(ui);
+                    if miss_margin_widget_resp.changed() {
+                        events.push(Events::SetMissMargin(local_miss_margin));
+                    }
+                });
+            });
+    });
+}
+
+fn draw_top_panel(ctx: &egui::Context, ui_state: &UIState, events: &mut Vec<Events>) {
     egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
         // The top panel is often a good place for a menu bar:
 

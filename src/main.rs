@@ -108,6 +108,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
             &mut gs.selected_loop_idx,
             &events,
             &dir_name,
+            &mut gs.correct_margin,
+            &mut gs.miss_margin,
         )?;
 
         audio.schedule(&gs.voices).await?;

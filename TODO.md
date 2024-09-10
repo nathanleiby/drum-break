@@ -2,14 +2,20 @@
 
 ## working on
 
-TBD
+- [ ] allow tweaking strictness within the UI
+  - why:
+    - make gold reachable .. thus make practicing via the app more fun/meaningful
+    - still hard. not dialed in! be just a lil more generous on timing?
+  - where: UI (egui: bottom panel, overlay), config file
+    - idea: try https://docs.rs/cvars/latest/cvars/ to allow changing these in the UI during development (or EGUI [overlay](https://rodneylab.com/macroquad-egui-devtools/))
+  - how: press backtick button to toggle "dev view" ^
+  - what:
+    - (1) num correct (2) Bpm step (3) Correctness sensitivity
+    - tolerance (i.e. '% of beat' offset allowed for perfect vs great vs miss)
+      - see `CORRECT_MARGIN` in `score.rs`
 
 ## soon
 
-- [ ] make gold reachable
-  - tweak strictness .. just a lil more generous on timing? ... Dial it it!
-    Could add sliders for (1) num correct (2) Bpm step (3) Correctness sensitivity
-  - fix poor signaling of closed HH -- often triggers as MISSED (didn't hit? was Open HH due to midi)
 - [ ] quick start + gets you into flow
   - idea: saves whatever loop, BPM you were doing last time -- recovers on next start
   - capture progress over time (graph it, etc)
@@ -17,15 +23,11 @@ TBD
   - can translate to names from here https://midi.org/expanded-midi-1-0-messages-list, then log better
   - proximate reason.. to figure out problem with closed HH not triggering
 - (bug) explore triggering
+  - [ ] fix poor signaling of closed HH -- often triggers as MISSED (didn't hit? was Open HH due to midi)- In "golden" practice mode.. you can tweak knobs for shiny-ness of gold (N and X) -- could be consts at start
   - [ ] double triggering of some TD17 notes (e.g. 2x hihat hits or 2x open hihat hits, esp on hard hits?)
   - [ ] non triggering (hit too soft? event getting dropped?)
 - tracking loop accuracy: "perfect" vs "great" vs etc
   - give partial credit in "% acc" summary for close hits (e.g. 75% of the note)
-  - add simple adjustment for tolerance (i.e. '% of beat' offset allowed for perfect vs great vs miss)
-    - could be a slider. could be config file adjustment
-    - see `CORRECT_MARGIN` in `score.rs`
-- In "golden" practice mode.. you can tweak knobs for shiny-ness of gold (N and X) -- could be consts at start
-  - idea: try https://docs.rs/cvars/latest/cvars/ to allow changing these in the UI during development (or EGUI [overlay](https://rodneylab.com/macroquad-egui-devtools/))
 
 ## future
 
@@ -133,6 +135,9 @@ TBD
 
 ### Research / Learn
 
+- building for android or ios
+  - https://macroquad.rs/articles/android/
+  - https://macroquad.rs/articles/ios/
 - midi - how does it work?
   - [ ] https://computermusicresource.com/MIDI.Commands.html
 - get better at using rust (+VSCode), e.g. debugger, cargo fix, etc https://code.visualstudio.com/docs/languages/rust

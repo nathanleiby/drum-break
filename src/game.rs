@@ -26,12 +26,14 @@ pub struct GoldMode {
 
 pub struct Flags {
     pub ui_debug_mode: bool,
+    pub dev_tools_visible: bool,
 }
 
 impl Flags {
     pub fn new() -> Self {
         return Self {
             ui_debug_mode: false,
+            dev_tools_visible: false,
         };
     }
 }
@@ -44,6 +46,8 @@ pub struct GameState {
     pub selected_loop_idx: usize,
     pub loops: Loops,
     pub flags: Flags,
+    pub correct_margin: f64,
+    pub miss_margin: f64,
 }
 
 impl GameState {
@@ -57,6 +61,8 @@ impl GameState {
             selected_loop_idx: 0,
             loops,
             flags: Flags::new(),
+            correct_margin: 0.151,
+            miss_margin: 0.3,
         }
     }
 }
@@ -74,6 +80,10 @@ pub fn compute_ui_state(gs: &GameState, audio: &Audio) -> UIState {
     ui_state.set_user_hits(&audio.user_hits);
     ui_state.set_desired_hits(&gs.voices);
     ui_state.set_metronome_enabled(audio.is_metronome_enabled());
+
+    ui_state.set_is_dev_tools_visible(gs.flags.dev_tools_visible);
+    ui_state.set_correct_margin(gs.correct_margin);
+    ui_state.set_miss_margin(gs.miss_margin);
     ui_state
 }
 
@@ -133,6 +143,8 @@ pub fn process_user_events(
     selected_loop_idx: &mut usize,
     events: &Vec<Events>,
     dir_name: &str,
+    correct_margin: &mut f64,
+    miss_margin: &mut f64,
 ) -> Result<(), Box<dyn Error>> {
     for event in events {
         println!("[user event] {:?}", event);
@@ -217,6 +229,15 @@ pub fn process_user_events(
                 audio.set_bpm(new_loop.bpm as f64);
 
                 *selected_loop_idx = *loop_num;
+            }
+            Events::ToggleDevToolsVisibility => {
+                flags.dev_tools_visible = !flags.dev_tools_visible;
+            }
+            Events::SetCorrectMargin(val) => {
+                *correct_margin = *val;
+            }
+            Events::SetMissMargin(val) => {
+                *miss_margin = *val;
             }
         }
     }

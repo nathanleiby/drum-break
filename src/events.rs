@@ -25,4 +25,9 @@ pub enum Events {
     ToggleDebugMode,
     ToggleMetronome,
     ChangeLoop(usize), // loop idx
+
+    // Dev Tools
+    ToggleDevToolsVisibility,
+    SetCorrectMargin(f64),
+    SetMissMargin(f64),
 }
