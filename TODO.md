@@ -8,6 +8,7 @@
     - still hard. not dialed in! be just a lil more generous on timing?
   - where: UI (egui: bottom panel, overlay), config file
     - idea: try https://docs.rs/cvars/latest/cvars/ to allow changing these in the UI during development (or EGUI [overlay](https://rodneylab.com/macroquad-egui-devtools/))
+      - my handmade overlay was more annoying to use b/c I had to wire it up to full event-driven UI. Maybe cvars would make for easier mutable config from a "dev tools" perspective.
   - how: press backtick button to toggle "dev view" ^
   - what:
     - (1) num correct (2) Bpm step (3) Correctness sensitivity

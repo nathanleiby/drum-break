@@ -157,6 +157,8 @@ pub fn draw_ui(ctx: &egui::Context, ui_state: &UIState, events: &mut Vec<Events>
     // make everything bigger, so text is legible
     ctx.set_pixels_per_point(2.0);
 
+    dev_tools(ctx, ui_state, events);
+
     draw_top_panel(ctx, ui_state, events);
 
     draw_left_panel(ctx, ui_state, events);
@@ -164,8 +166,6 @@ pub fn draw_ui(ctx: &egui::Context, ui_state: &UIState, events: &mut Vec<Events>
     draw_right_panel(ctx, ui_state, events);
 
     draw_central_panel(ctx, ui_state, events);
-
-    dev_tools(ctx, ui_state, events);
 }
 
 fn dev_tools(ctx: &egui::Context, ui_state: &UIState, events: &mut Vec<Events>) {
