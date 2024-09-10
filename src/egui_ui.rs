@@ -467,7 +467,7 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
     draw_note_successes(
         &current_loop_hits,
         &ui_state.desired_hits,
-        (ui_state.latency_offset_s) as f64,
+        ui_state.get_audio_latency_in_beats() as f64,
         loop_last_completed_beat as f64,
         to_screen,
         &mut shapes,
