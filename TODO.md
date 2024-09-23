@@ -2,21 +2,22 @@
 
 ## working on
 
-- [ ] allow tweaking strictness within the UI
+## soon
+
+- [ ] allow easily tweaking game config (or: why I miss dynamic type systems, sometimes)
   - why:
     - make gold reachable .. thus make practicing via the app more fun/meaningful
     - still hard. not dialed in! be just a lil more generous on timing?
   - where: UI (egui: bottom panel, overlay), config file
+    - https://github.com/martin-t/cvars
     - idea: try https://docs.rs/cvars/latest/cvars/ to allow changing these in the UI during development (or EGUI [overlay](https://rodneylab.com/macroquad-egui-devtools/))
-      - my handmade overlay was more annoying to use b/c I had to wire it up to full event-driven UI. Maybe cvars would make for easier mutable config from a "dev tools" perspective.
+      - my handmade approach with egui overlay was more annoying to use b/c I had to wire it up to full event-driven UI. Let's see if cvars would make for easier mutation of global consts, from a "dev console" perspective rather a normal interactive UX
   - how: press backtick button to toggle "dev view" ^
   - what:
-    - (1) num correct (2) Bpm step (3) Correctness sensitivity
-    - tolerance (i.e. '% of beat' offset allowed for perfect vs great vs miss)
-      - see `CORRECT_MARGIN` in `score.rs`
-
-## soon
-
+    - Correctness tolerance (i.e. '% of beat' offset allowed for correct vs early/late vs miss)
+      - see `CORRECT_MARGIN` and `MISS_MARGIN` in `score.rs`
+    - Gold Mode (1) num correct (2) Bpm step
+      - see `GOLD_MODE_..` in `game.rs`
 - [ ] quick start + gets you into flow
   - idea: saves whatever loop, BPM you were doing last time -- recovers on next start
   - capture progress over time (graph it, etc)
@@ -32,6 +33,17 @@
 
 ## future
 
+- Feature: Volume control
+  - [ ] global
+  - [ ] per voice (inl metronome)
+- Loop editing
+  - [ ] Allow easily re-assigning an instrument within a row (e.g. swap hihat to ride)
+  - [ ] Allow click-and-drag UX to add/remove beats
+  - [ ] File open UX -- open a loop from a file
+  - [ ] easily import midi
+    - e.g. from Groove Scribe
+- Usability
+  - make extra BeatGrid rows less distracting -- allow show/hide in UI for unused rows
 - try colored emojis via https://crates.io/crates/egui-twemoji for gold mode status
 - Onboarding / Ease of Use
   - [ ] redo the "calibrate latency offset" UX. Look at other models like Rhythm Doctor
@@ -51,6 +63,7 @@
     - [ ] WASM - https://github.com/brettchalupa/sokoworld/blob/09ce68c690cbae0db242ab1b403c309f8b8482d2/release_wasm.sh
     - [ ] https://mq.agical.se/release-web.html
 - Native App - improve "first run" UX
+  - [ ] Add a custom app icon
   - [ ] sign code for easier local running without security override on Mac
   - [ ] Make it a DMG?
   - [ ] Mac Store
@@ -59,14 +72,6 @@
     - [..] include loops JSON data, or fetch them remotely (e.g. from public GH link)
     - [..] include audio data so we can play sounds?
       - ... would this also work for web, just makes a fat binary/wasm file?
-- Loop editing
-  - [ ] Allow easily re-assigning an instrument within a row (e.g. swap hihat to ride)
-  - [ ] Allow click-and-drag UX to add/remove beats
-  - [ ] File open UX -- open a loop from a file
-  - [ ] easily import midi
-    - e.g. from Groove Scribe
-- Usability
-  - make extra BeatGrid rows less distracting -- allow show/hide in UI for unused rows
 - UX v2: Design
   - commit UI prototypes (tauri, iced) to Github (optionally, migrate into macroix repo if reasonable to centralize)
   - [ ] Make UI look nice-ish
@@ -122,17 +127,17 @@
         1. the loop voices itself
         2. the users's input data
         3. worry about visualizing and cleaning later.. this is first pass on session over session data
-- Input improvements
+- MIDI Input improvements
   - [x] support >1 midi value per voice
   - [ ] allow easy rebinding within the app
   - [ ] save calibrated offset (latency) config per connected midi device / system (TD17 = -0.01) .. i have multiple for testing
-- Feature: Volume control
-  - [ ] global
-  - [ ] per voice (inl metronome)
 - [ ] quality
   - [ ] run build + tests in Github CI
 - [ ] shipping artifacts
   - [ ] on git tag, ship a release in Github CI
+- App Versioning
+  - Use version in Cargo file to manage Github release version (instead of separate `VERSION` file)
+  - allow printing version. use include str / include bytes from VERSION file
 
 ### Research / Learn
 
@@ -144,7 +149,6 @@
 - get better at using rust (+VSCode), e.g. debugger, cargo fix, etc https://code.visualstudio.com/docs/languages/rust
 - [ ] Explore macroquad featureset, including [experimental](https://docs.rs/macroquad/latest/macroquad/experimental/index.html) like state machine and scenes
   - [ ] Also explore community extension https://github.com/ozkriff/awesome-quads
-  - [ ] tune config dynamically w cvars approach? https://github.com/martin-t/cvars or egui debug overlay
 - [ ] Make "voices" data model more generic.
   - [ ] support different numbers of voices (not just 4, as today)
   - [ ] capture loop config like tempo, length, etc. (++ for tempo ASAP)
@@ -166,7 +170,6 @@
 
 ### NEEDS TRIAGE / CLARITY
 
-- allow printing version. use include str / include bytes from VERSION file
 - accuracy
   - [ ] figure out how to allow first beat to get measured correct. since space starts clock right away... need a click in or empty space before the notes
   - [ ] Allow tuning margin for correctness in FE, until it feels dialied in. (see `score.rs`)

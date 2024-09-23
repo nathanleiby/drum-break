@@ -46,6 +46,8 @@ pub struct UIState {
     user_hits: Vec<UserHit>,
     desired_hits: Voices,
 
+    is_help_visible: bool,
+
     is_dev_tools_visible: bool,
     correct_margin: f64,
     miss_margin: f64,
@@ -81,7 +83,9 @@ impl Default for UIState {
             user_hits: vec![],
             desired_hits: Voices::new(),
 
-            is_dev_tools_visible: true,
+            is_help_visible: false,
+
+            is_dev_tools_visible: false,
             correct_margin: 0.,
             miss_margin: 0.,
         }
@@ -140,6 +144,10 @@ impl UIState {
         self.latency_offset_s * beats_per_second
     }
 
+    pub fn set_is_help_visible(&mut self, val: bool) {
+        self.is_help_visible = val;
+    }
+
     pub fn set_is_dev_tools_visible(&mut self, enabled: bool) {
         self.is_dev_tools_visible = enabled;
     }
@@ -166,6 +174,29 @@ pub fn draw_ui(ctx: &egui::Context, ui_state: &UIState, events: &mut Vec<Events>
     draw_right_panel(ctx, ui_state, events);
 
     draw_central_panel(ctx, ui_state, events);
+
+    help_window(ctx, ui_state);
+}
+
+fn help_window(ctx: &egui::Context, ui_state: &UIState) {
+    if !ui_state.is_help_visible {
+        return;
+    }
+
+    egui::Window::new("Help").show(ctx, |ui| {
+        ui.horizontal(|ui| {
+            ui.label("Show Help");
+            ui.label("?");
+        });
+        ui.horizontal(|ui| {
+            ui.label("Show Dev Tools");
+            ui.label("a");
+        });
+        ui.horizontal(|ui| {
+            ui.label("Show FPS");
+            ui.label("z");
+        });
+    });
 }
 
 fn dev_tools(ctx: &egui::Context, ui_state: &UIState, events: &mut Vec<Events>) {

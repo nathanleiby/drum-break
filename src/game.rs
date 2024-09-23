@@ -27,6 +27,7 @@ pub struct GoldMode {
 pub struct Flags {
     pub ui_debug_mode: bool,
     pub dev_tools_visible: bool,
+    pub help_visible: bool,
 }
 
 impl Flags {
@@ -34,6 +35,7 @@ impl Flags {
         return Self {
             ui_debug_mode: false,
             dev_tools_visible: false,
+            help_visible: false,
         };
     }
 }
@@ -84,6 +86,7 @@ pub fn compute_ui_state(gs: &GameState, audio: &Audio) -> UIState {
     ui_state.set_is_dev_tools_visible(gs.flags.dev_tools_visible);
     ui_state.set_correct_margin(gs.correct_margin);
     ui_state.set_miss_margin(gs.miss_margin);
+    ui_state.set_is_help_visible(gs.flags.help_visible);
     ui_state
 }
 
@@ -238,6 +241,9 @@ pub fn process_user_events(
             }
             Events::SetMissMargin(val) => {
                 *miss_margin = *val;
+            }
+            Events::ToggleHelpVisibility => {
+                flags.help_visible = !flags.help_visible;
             }
         }
     }

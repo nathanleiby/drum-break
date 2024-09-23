@@ -22,11 +22,13 @@ pub enum Events {
     SetAudioLatency {
         delta_s: f64,
     },
-    ToggleDebugMode,
     ToggleMetronome,
     ChangeLoop(usize), // loop idx
 
+    ToggleHelpVisibility,
+
     // Dev Tools
+    ToggleDebugMode,
     ToggleDevToolsVisibility,
     SetCorrectMargin(f64),
     SetMissMargin(f64),

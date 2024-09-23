@@ -31,6 +31,8 @@ pub const MISS_MARGIN: f64 = 0.3;
 pub fn compute_accuracy_of_single_hit(
     user_beat_with_latency: f64,
     desired_hits: &Vec<f64>,
+    // correct_margin,
+    // miss_margin,
 ) -> (Accuracy, bool) {
     // find the nearest desired_hit
     let mut target_beat = None; // should always be a miss
