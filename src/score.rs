@@ -254,13 +254,12 @@ mod tests {
     use std::f64::EPSILON;
 
     use crate::{
-        consts::BEATS_PER_LOOP,
+        consts::{UserHit, BEATS_PER_LOOP},
         score::{
             compute_accuracy_of_single_hit, compute_last_loop_summary, Accuracy, ScoreTracker,
             CORRECT_MARGIN, MISS_MARGIN,
         },
         voices::{Instrument, Voices},
-        UserHit,
     };
 
     use super::compute_loop_performance_for_voice;
