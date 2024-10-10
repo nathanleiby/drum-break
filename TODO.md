@@ -2,6 +2,8 @@
 
 ## working on
 
+TBD
+
 ## soon
 
 - [ ] allow easily tweaking game config (or: why I miss dynamic type systems, sometimes)
@@ -28,6 +30,7 @@
   - [ ] fix poor signaling of closed HH -- often triggers as MISSED (didn't hit? was Open HH due to midi)- In "golden" practice mode.. you can tweak knobs for shiny-ness of gold (N and X) -- could be consts at start
   - [ ] double triggering of some TD17 notes (e.g. 2x hihat hits or 2x open hihat hits, esp on hard hits?)
   - [ ] non triggering (hit too soft? event getting dropped?)
+- (bug) adjusting BPM changes gold mode % accuracy
 - tracking loop accuracy: "perfect" vs "great" vs etc
   - give partial credit in "% acc" summary for close hits (e.g. 75% of the note)
 
@@ -138,6 +141,87 @@
 - App Versioning
   - Use version in Cargo file to manage Github release version (instead of separate `VERSION` file)
   - allow printing version. use include str / include bytes from VERSION file
+- (bug) Causing full crash `Time shouldn't move backwards`
+
+```
+thread 'main' panicked at /Users/nathanleiby/.cargo/registry/src/index.crates.io-6f17d22bba15001f/emath-0.28.1/src/history.rs:129:13:
+Time shouldn't move backwards
+stack backtrace:
+   0: rust_begin_unwind
+             at /rustc/051478957371ee0084a7c0913941d2a8c4757bb9/library/std/src/panicking.rs:652:5
+   1: core::panicking::panic_fmt
+             at /rustc/051478957371ee0084a7c0913941d2a8c4757bb9/library/core/src/panicking.rs:72:14
+   2: emath::history::History<T>::add
+             at /Users/nathanleiby/.cargo/registry/src/index.crates.io-6f17d22bba15001f/emath-0.28.1/src/history.rs:129:13
+   3: egui::input_state::PointerState::begin_frame
+             at /Users/nathanleiby/.cargo/registry/src/index.crates.io-6f17d22bba15001f/egui-0.28.1/src/input_state.rs:938:13
+   4: egui::input_state::InputState::begin_frame
+             at /Users/nathanleiby/.cargo/registry/src/index.crates.io-6f17d22bba15001f/egui-0.28.1/src/input_state.rs:221:23
+   5: egui::context::ContextImpl::begin_frame_mut
+             at /Users/nathanleiby/.cargo/registry/src/index.crates.io-6f17d22bba15001f/egui-0.28.1/src/context.rs:449:26
+   6: egui::context::Context::begin_frame::{{closure}}
+             at /Users/nathanleiby/.cargo/registry/src/index.crates.io-6f17d22bba15001f/egui-0.28.1/src/context.rs:777:26
+   7: egui::context::Context::write
+             at /Users/nathanleiby/.cargo/registry/src/index.crates.io-6f17d22bba15001f/egui-0.28.1/src/context.rs:723:9
+   8: egui::context::Context::begin_frame
+             at /Users/nathanleiby/.cargo/registry/src/index.crates.io-6f17d22bba15001f/egui-0.28.1/src/context.rs:777:9
+   9: egui::context::Context::run
+             at /Users/nathanleiby/.cargo/registry/src/index.crates.io-6f17d22bba15001f/egui-0.28.1/src/context.rs:752:9
+  10: egui_miniquad::EguiMq::run
+             at ./egui_miniquad/src/lib.rs:185:27
+  11: egui_macroquad::Egui::ui
+             at ./egui_macroquad/src/lib.rs:87:9
+  12: egui_macroquad::ui
+             at ./egui_macroquad/src/lib.rs:100:5
+  13: macroix::ui::UI::render
+             at ./src/ui.rs:23:9
+  14: macroix::amain::{{closure}}
+             at ./src/main.rs:118:9
+  15: macroix::main::{{closure}}
+             at ./src/main.rs:49:1
+  16: macroquad::exec::resume
+             at /Users/nathanleiby/.cargo/registry/src/index.crates.io-6f17d22bba15001f/macroquad-0.4.12/src/exec.rs:72:11
+  17: <macroquad::Stage as miniquad::event::EventHandler>::draw::{{closure}}
+             at /Users/nathanleiby/.cargo/registry/src/index.crates.io-6f17d22bba15001f/macroquad-0.4.12/src/lib.rs:721:24
+  18: <macroquad::Stage as miniquad::event::EventHandler>::draw::maybe_unwind
+             at /Users/nathanleiby/.cargo/registry/src/index.crates.io-6f17d22bba15001f/macroquad-0.4.12/src/lib.rs:712:21
+  19: <macroquad::Stage as miniquad::event::EventHandler>::draw
+             at /Users/nathanleiby/.cargo/registry/src/index.crates.io-6f17d22bba15001f/macroquad-0.4.12/src/lib.rs:717:26
+  20: miniquad::native::macos::define_opengl_view_class::draw_rect
+             at /Users/nathanleiby/.cargo/registry/src/index.crates.io-6f17d22bba15001f/miniquad-0.4.5/src/native/macos.rs:663:13
+  21: <unknown>
+  22: <unknown>
+  23: <unknown>
+  24: <unknown>
+  25: <unknown>
+  26: <unknown>
+  27: <unknown>
+  28: <unknown>
+  29: <unknown>
+  30: <unknown>
+  31: <unknown>
+  32: <unknown>
+  33: <unknown>
+  34: <unknown>
+  35: <unknown>
+  36: <(A,B,C,D) as objc::message::MessageArguments>::invoke
+             at /Users/nathanleiby/.cargo/registry/src/index.crates.io-6f17d22bba15001f/objc-0.2.7/src/message/mod.rs:128:17
+  37: objc::message::platform::send_unverified
+             at /Users/nathanleiby/.cargo/registry/src/index.crates.io-6f17d22bba15001f/objc-0.2.7/src/message/apple/mod.rs:27:9
+  38: objc::message::send_message
+             at /Users/nathanleiby/.cargo/registry/src/index.crates.io-6f17d22bba15001f/objc-0.2.7/src/message/mod.rs:178:5
+  39: miniquad::native::macos::run
+             at /Users/nathanleiby/.cargo/registry/src/index.crates.io-6f17d22bba15001f/objc-0.2.7/src/macros.rs:142:15
+  40: miniquad::start
+             at /Users/nathanleiby/.cargo/registry/src/index.crates.io-6f17d22bba15001f/miniquad-0.4.5/src/lib.rs:384:9
+  41: macroquad::Window::from_config
+             at /Users/nathanleiby/.cargo/registry/src/index.crates.io-6f17d22bba15001f/macroquad-0.4.12/src/lib.rs:840:9
+  42: macroix::main
+             at ./src/main.rs:49:1
+  43: core::ops::function::FnOnce::call_once
+             at /rustc/051478957371ee0084a7c0913941d2a8c4757bb9/library/core/src/ops/function.rs:250:5
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+```
 
 ### Research / Learn
 
@@ -167,6 +251,9 @@
 - [ ] explore improving Kira's interface around the clock and looping to support my sequencer like use-case
   - [ ] idea: editing clock while it's playing
 - should use kira's built-in Metronome concept? https://github.com/tesselode/kira/blob/main/changelog.md#multiple-metronomes
+- UI: try out theme colors from rerun https://github.com/rerun-io/rerun/blob/4636188996038f4be913f813fb263a3751c1d469/crates/re_ui/src/design_tokens.rs#L207
+  - see other inspiration: https://github.com/emilk/egui/issues/996
+- UI: consider dark-mode switcher widget https://tau.garden/egui-theme-switch/
 
 ### NEEDS TRIAGE / CLARITY
 
@@ -209,6 +296,7 @@
 
 ## done
 
+- [x] keep gold mode graph centered from 0 to 100
 - [x] Refactor message passing .. should be typed (see `main.rs` in `rx.try_recv`)
 - [x] UX v2: Determine tooling -> egui
   - try themes .. https://github.com/catppuccin/egui?tab=readme-ov-file .. looks good, but not a big delta so maybe later

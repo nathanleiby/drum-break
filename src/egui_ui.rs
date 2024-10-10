@@ -726,8 +726,10 @@ fn gold_mode(ui: &mut egui::Ui, ui_state: &UIState) {
         .name("gold_mode");
 
     let plot = Plot::new("Gold Mode")
-        .legend(Legend::default())
-        .show_axes([true, true]);
+        // .legend(Legend::default())
+        .show_axes([true, true])
+        .include_y(0.0)
+        .include_y(100.0);
 
     plot.show(ui, |plot_ui| {
         plot_ui.line(line);
