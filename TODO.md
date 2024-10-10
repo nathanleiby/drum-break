@@ -2,7 +2,8 @@
 
 ## working on
 
-TBD
+- tracking loop accuracy: "perfect" vs "great" vs etc
+  - give partial credit in "% acc" summary for close hits (e.g. 75% of the note)
 
 ## soon
 
@@ -31,8 +32,6 @@ TBD
   - [ ] double triggering of some TD17 notes (e.g. 2x hihat hits or 2x open hihat hits, esp on hard hits?)
   - [ ] non triggering (hit too soft? event getting dropped?)
 - (bug) adjusting BPM changes gold mode % accuracy
-- tracking loop accuracy: "perfect" vs "great" vs etc
-  - give partial credit in "% acc" summary for close hits (e.g. 75% of the note)
 
 ## future
 

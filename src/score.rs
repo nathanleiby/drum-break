@@ -4,7 +4,7 @@
   This logic is pure, so it can be iterated independently of other game logic or audio system.
 */
 
-use std::collections::HashMap;
+use std::{collections::HashMap, ops::Add};
 
 use crate::{
     consts::UserHit,
@@ -95,7 +95,7 @@ pub fn compute_accuracy_of_single_hit(
     }
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone, Copy)]
 pub struct ScoreTracker {
     pub num_correct: usize,
     pub num_notes: usize,
@@ -112,6 +112,17 @@ impl ScoreTracker {
     pub fn ratio(self: Self) -> f64 {
         self.num_correct as f64 / self.num_notes as f64
     }
+}
+
+impl Add for ScoreTracker {
+    fn add(self, rhs: Self) -> Self::Output {
+        ScoreTracker {
+            num_correct: self.num_correct + rhs.num_correct,
+            num_notes: self.num_notes + rhs.num_notes,
+        }
+    }
+
+    type Output = ScoreTracker;
 }
 
 #[derive(Debug)]
@@ -161,8 +172,7 @@ impl LastLoopSummary {
 
         for ins in ALL_INSTRUMENTS.iter() {
             let st = self.get_score_tracker(ins);
-            combined.num_correct += st.num_correct;
-            combined.num_notes += st.num_notes;
+            combined = combined + *st;
         }
 
         combined
