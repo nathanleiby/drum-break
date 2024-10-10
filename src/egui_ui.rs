@@ -707,7 +707,7 @@ fn gold_mode(ui: &mut egui::Ui, ui_state: &UIState) {
         // 🟡
         // 🟢
         // ✅
-        let ratio = summary_data.total().ratio();
+        let ratio = summary_data.total().score();
         s.push(if ratio == 1.0 {
             '✅'
         } else if ratio > 0.7 {

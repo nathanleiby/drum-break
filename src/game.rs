@@ -116,7 +116,7 @@ pub fn process_system_events(
                         let totals = summary_data.total();
 
                         gold_mode.was_gold = false;
-                        if totals.ratio() == 1. {
+                        if totals.score() == 1. {
                             gold_mode.correct_takes += 1;
                         } else {
                             gold_mode.correct_takes = 0;

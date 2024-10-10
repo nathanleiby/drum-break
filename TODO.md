@@ -2,8 +2,7 @@
 
 ## working on
 
-- tracking loop accuracy: "perfect" vs "great" vs etc
-  - give partial credit in "% acc" summary for close hits (e.g. 75% of the note)
+TBD
 
 ## soon
 
@@ -32,6 +31,7 @@
   - [ ] double triggering of some TD17 notes (e.g. 2x hihat hits or 2x open hihat hits, esp on hard hits?)
   - [ ] non triggering (hit too soft? event getting dropped?)
 - (bug) adjusting BPM changes gold mode % accuracy
+- (bug) it's possible to click-and-drag on the gold mode chart
 
 ## future
 
@@ -256,6 +256,8 @@ note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose bac
 
 ### NEEDS TRIAGE / CLARITY
 
+- More nuanced Accuracy scoring
+  - Possible approach: Use more Accuracy levels instead of just CORRECT , EARLY/LATE , MISSED. For example, in DDR a note can be "marvelous", "perfect", "great, "good", ... these are finer gradations of early/late
 - accuracy
   - [ ] figure out how to allow first beat to get measured correct. since space starts clock right away... need a click in or empty space before the notes
   - [ ] Allow tuning margin for correctness in FE, until it feels dialied in. (see `score.rs`)
@@ -295,6 +297,7 @@ note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose bac
 
 ## done
 
+- [x] give partial credit in "% acc" summary for close hits (e.g. 75% of the note)
 - [x] keep gold mode graph centered from 0 to 100
 - [x] Refactor message passing .. should be typed (see `main.rs` in `rx.try_recv`)
 - [x] UX v2: Determine tooling -> egui

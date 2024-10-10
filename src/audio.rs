@@ -191,6 +191,8 @@ impl Audio {
         self.metronome_enabled
     }
 
+    // TODO: Feels like this could be moved elsewhere, with a quick lookup against audio if needed (e.g. get_seconds_per_tick)
+
     /// saves a user's hits, so they can be displayed and checked for accuracy
     pub fn track_user_hit(self: &mut Self, instrument: Instrument, processing_delay_s: f64) {
         // convert processing delay to ticks, based on BPM

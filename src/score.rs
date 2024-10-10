@@ -4,7 +4,7 @@
   This logic is pure, so it can be iterated independently of other game logic or audio system.
 */
 
-use std::{collections::HashMap, ops::Add};
+use std::{collections::HashMap, ops::Add, vec};
 
 use crate::{
     consts::UserHit,
@@ -95,34 +95,36 @@ pub fn compute_accuracy_of_single_hit(
     }
 }
 
-#[derive(Debug, Eq, PartialEq, Clone, Copy)]
+#[derive(Debug)]
 pub struct ScoreTracker {
-    pub num_correct: usize,
-    pub num_notes: usize,
+    pub accuracies: Vec<Accuracy>,
 }
 
 impl ScoreTracker {
     fn new() -> Self {
-        Self {
-            num_correct: 0,
-            num_notes: 0,
-        }
+        Self { accuracies: vec![] }
     }
 
-    pub fn ratio(self: Self) -> f64 {
-        self.num_correct as f64 / self.num_notes as f64
-    }
-}
+    // score is given as a ratio, from 0 to 1
+    pub fn score(self: Self) -> f64 {
+        let num_correct = self
+            .accuracies
+            .iter()
+            .map(|acc| *acc == Accuracy::Correct)
+            .filter(|b| *b == true)
+            .count();
+        let num_close = self
+            .accuracies
+            .iter()
+            .map(|acc| *acc == Accuracy::Early || *acc == Accuracy::Late)
+            .filter(|b| *b == true)
+            .count();
 
-impl Add for ScoreTracker {
-    fn add(self, rhs: Self) -> Self::Output {
-        ScoreTracker {
-            num_correct: self.num_correct + rhs.num_correct,
-            num_notes: self.num_notes + rhs.num_notes,
-        }
-    }
+        let num_notes = self.accuracies.len();
 
-    type Output = ScoreTracker;
+        // Consider near-hits as partial success instead of ONLY correct
+        (1. * num_correct as f64 + 0.5 * num_close as f64) / num_notes as f64
+    }
 }
 
 #[derive(Debug)]
@@ -168,14 +170,18 @@ impl LastLoopSummary {
     }
 
     pub fn total(self: Self) -> ScoreTracker {
-        let mut combined = ScoreTracker::new();
+        let mut all_acc = vec![];
 
         for ins in ALL_INSTRUMENTS.iter() {
             let st = self.get_score_tracker(ins);
-            combined = combined + *st;
+            for acc in &st.accuracies {
+                all_acc.push(*acc);
+            }
         }
 
-        combined
+        ScoreTracker {
+            accuracies: all_acc,
+        }
     }
 }
 
@@ -197,6 +203,7 @@ pub fn compute_loop_performance_for_voice(
     user_hits: &Vec<f64>,
     desired_hits: &Vec<f64>,
     loop_current_beat: f64,
+    // TODO: consider audio_latency
 ) -> Vec<Accuracy> {
     let mut out = Vec::new();
 
@@ -233,27 +240,24 @@ pub fn compute_last_loop_summary(
     let mut out = LastLoopSummary::new();
 
     for (_, instrument) in ALL_INSTRUMENTS.iter().enumerate() {
-        // get accuracy of hihat
+        // // get accuracy of hihat
         let user_timings = get_user_hit_timings_by_instrument(user_hits, *instrument);
         let desired_timings = desired_hits.get_instrument_beats(instrument);
 
-        // compare that to desired hits for hihat
-        let mut num_correct: usize = 0;
-        for note in user_timings.iter() {
-            let (acc, _) = compute_accuracy_of_single_hit(note + audio_latency, desired_timings);
-            if acc == Accuracy::Correct {
-                num_correct += 1;
-            }
-        }
+        // let mut accuracies = vec![];
+        // for d in desired_timings.iter() {
 
-        let num_notes = desired_timings.len();
-        out.set_score_tracker(
-            instrument,
-            ScoreTracker {
-                num_correct,
-                num_notes,
-            },
-        );
+        // }
+        // // compare that to desired hits for hihat
+        // for note in user_timings.iter() {
+        //     let (acc, _) = compute_accuracy_of_single_hit(note + audio_latency, desired_timings);
+        //     accuracies.push(acc);
+        // }
+
+        let accuracies =
+            compute_loop_performance_for_voice(&user_timings, desired_timings, BEATS_PER_LOOP);
+
+        out.set_score_tracker(instrument, ScoreTracker { accuracies });
     }
 
     out
@@ -266,8 +270,8 @@ mod tests {
     use crate::{
         consts::{UserHit, BEATS_PER_LOOP},
         score::{
-            compute_accuracy_of_single_hit, compute_last_loop_summary, Accuracy, ScoreTracker,
-            CORRECT_MARGIN, MISS_MARGIN,
+            compute_accuracy_of_single_hit, compute_last_loop_summary, Accuracy, CORRECT_MARGIN,
+            MISS_MARGIN,
         },
         voices::{Instrument, Voices},
     };
@@ -368,11 +372,8 @@ mod tests {
 
         let result = compute_last_loop_summary(&user_hits, &desired_hits, 0.0);
         assert_eq!(
-            result.get_score_tracker(&Instrument::Kick),
-            &ScoreTracker {
-                num_correct: 1,
-                num_notes: 1,
-            }
+            result.get_score_tracker(&Instrument::Kick).accuracies,
+            vec![Accuracy::Correct],
         );
     }
 
@@ -384,11 +385,8 @@ mod tests {
 
         let result = compute_last_loop_summary(&user_hits, &desired_hits, 0.0);
         assert_eq!(
-            result.get_score_tracker(&Instrument::Kick),
-            &ScoreTracker {
-                num_correct: 0,
-                num_notes: 1,
-            }
+            result.get_score_tracker(&Instrument::Kick).accuracies,
+            vec![Accuracy::Miss],
         );
     }
 
