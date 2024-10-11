@@ -26,11 +26,13 @@ TBD
 - [..] add better debugging for midi signals, so I can filter to important ones (e.g. can ignore polyphonic aftertouch 167 on changing HH pedal in terms of hitting notes on the beat)
   - can translate to names from here https://midi.org/expanded-midi-1-0-messages-list, then log better
   - proximate reason.. to figure out problem with closed HH not triggering
+  - TODO: I think remaining work here is to log the drum name itself. Cannot test without midi controller hooked up.
 - (bug) explore triggering
   - [ ] fix poor signaling of closed HH -- often triggers as MISSED (didn't hit? was Open HH due to midi)- In "golden" practice mode.. you can tweak knobs for shiny-ness of gold (N and X) -- could be consts at start
   - [ ] double triggering of some TD17 notes (e.g. 2x hihat hits or 2x open hihat hits, esp on hard hits?)
   - [ ] non triggering (hit too soft? event getting dropped?)
 - (bug) adjusting BPM changes gold mode % accuracy
+  - this relates to calibration offset (and may temporarily NOT be a problem at the moment due to changes in gold mode calc)
 - update README with new explanation and screenshots
 
 ## future
@@ -130,6 +132,10 @@ TBD
         2. the users's input data
         3. worry about visualizing and cleaning later.. this is first pass on session over session data
 - MIDI Input improvements
+  - [ ] virtual midi controller .. Can I download one and attach it to the app, for testing?
+    - [ ] Scope creep / side project.. Could I build a virtual midi controller?
+      - One could even trigger it with a computer keyboard :P
+      - Maybe it could be on ipad / iOS app too
   - [x] support >1 midi value per voice
   - [ ] allow easy rebinding within the app
   - [ ] save calibrated offset (latency) config per connected midi device / system (TD17 = -0.01) .. i have multiple for testing
