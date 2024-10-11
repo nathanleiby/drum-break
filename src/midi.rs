@@ -4,6 +4,7 @@
  Thanks to: https://github.com/TanTanDev/midi_game
 */
 
+use log::info;
 use midir;
 use std::collections::HashMap;
 use std::string::*;
@@ -112,8 +113,8 @@ impl MidiInput {
                             status: midi_function,
                             note_velocity: message[2],
                         };
-                        println!("{}: {:?} (len = {})", stamp, v, message.len());
-                        println!("{}", MIDI_FUNCTION_NAMES[midi_function as usize - 128]);
+                        info!("{}: {:?} (len = {})", stamp, v, message.len());
+                        info!("{}", MIDI_FUNCTION_NAMES[midi_function as usize - 128]);
                         let mut rw: std::sync::MutexGuard<HashMap<u8, MidiInputDataRaw>> =
                             raw_inputs.lock().unwrap();
                         rw.insert(note_number, v);
