@@ -7,6 +7,7 @@ TBD
 ## soon
 
 - [ ] allow easily tweaking game config (or: why I miss dynamic type systems, sometimes)
+  - blocker: need internet access to download CVARS and try that approach
   - why:
     - make gold reachable .. thus make practicing via the app more fun/meaningful
     - still hard. not dialed in! be just a lil more generous on timing?
@@ -20,9 +21,15 @@ TBD
       - see `CORRECT_MARGIN` and `MISS_MARGIN` in `score.rs`
     - Gold Mode (1) num correct (2) Bpm step
       - see `GOLD_MODE_..` in `game.rs`
-- [ ] quick start + gets you into flow
-  - idea: saves whatever loop, BPM you were doing last time -- recovers on next start
-  - capture progress over time (graph it, etc)
+- "keep flow" MVP: On quit, save chosen loop and BPM you were doing. On start, recover that state.
+  - BONUS: extending this 'save state' behavior might lead well to saving a 'UI Story' snapshot that you can resume later. keypress to save state / resume state at will would be dope for development.
+- Update README with latest explanation and screenshots
+  - manually...
+  - idea: can an egui app screenshot itself?
+  - idea: can I spawn an app and then automate a screenshot?
+
+## future
+
 - [..] add better debugging for midi signals, so I can filter to important ones (e.g. can ignore polyphonic aftertouch 167 on changing HH pedal in terms of hitting notes on the beat)
   - can translate to names from here https://midi.org/expanded-midi-1-0-messages-list, then log better
   - proximate reason.. to figure out problem with closed HH not triggering
@@ -33,10 +40,6 @@ TBD
   - [ ] non triggering (hit too soft? event getting dropped?)
 - (bug) adjusting BPM changes gold mode % accuracy
   - this relates to calibration offset (and may temporarily NOT be a problem at the moment due to changes in gold mode calc)
-- update README with new explanation and screenshots
-
-## future
-
 - Feature: Volume control
   - [ ] global
   - [ ] per voice (inl metronome)
@@ -274,6 +277,17 @@ note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose bac
 
 ### NEEDS TRIAGE / CLARITY
 
+- NEED UX DESIGN WORK
+  - Capture progress over time (graph it, etc)
+    - The full details of the gold mode chart.
+    - Personal bests.
+  - Quick start + gets you into flow.
+    - how to reduce barrier to entry?
+      - resume previous state?
+      - daily challenge?
+      - suggested activities?
+      - warm up drill? (with option to skip)
+      - remind user of last session's work. progress and
 - More nuanced Accuracy scoring
   - Possible approach: Use more Accuracy levels instead of just CORRECT , EARLY/LATE , MISSED. For example, in DDR a note can be "marvelous", "perfect", "great, "good", ... these are finer gradations of early/late
 - accuracy

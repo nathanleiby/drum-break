@@ -24,6 +24,8 @@ pub enum Accuracy {
 // TODO: consider using Decimal type for exact math on beats.
 // - Floating point math has comparison/equality challenges
 // - Can't hash floating point numbers out of the gate
+
+// TODO: Can I use cvars to tweak these vals at runtime?
 pub const CORRECT_MARGIN: f64 = 0.151; // TODO: hacky fix 0.15 -> 0.151 due to floating point comparison. let's try Decimal later
 pub const MISS_MARGIN: f64 = 0.3;
 
