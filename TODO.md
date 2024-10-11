@@ -31,7 +31,7 @@ TBD
   - [ ] double triggering of some TD17 notes (e.g. 2x hihat hits or 2x open hihat hits, esp on hard hits?)
   - [ ] non triggering (hit too soft? event getting dropped?)
 - (bug) adjusting BPM changes gold mode % accuracy
-- (bug) it's possible to click-and-drag on the gold mode chart
+- update README with new explanation and screenshots
 
 ## future
 
@@ -222,6 +222,18 @@ stack backtrace:
 note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
 ```
 
+- "UI Stories" (UI Test States)
+  - like in Storybook, it would be nice to quickly pop into the app with a given data-state
+    - a specific loop is loaded
+    - some user hits exist with various accuracies
+    - there's historical data so gold mode graph is populated
+  - Currently, I need to manually play drum parts and verify behavior
+  - As with Storybook, the goal is def to move lots of testing to units.
+  - Scope creep..
+    - Possible I could load individual components of my app, too?
+    - :thinking: "EGUI Storybook" might be compelling to others using EGUI too and building something composed of various components.
+    - It would be esp neat if I could spin up in a browser
+
 ### Research / Learn
 
 - building for android or ios
@@ -297,6 +309,7 @@ note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose bac
 
 ## done
 
+- [x] (bug) it's possible to click-and-drag on the gold mode chart
 - [x] give partial credit in "% acc" summary for close hits (e.g. 75% of the note)
 - [x] keep gold mode graph centered from 0 to 100
 - [x] Refactor message passing .. should be typed (see `main.rs` in `rx.try_recv`)

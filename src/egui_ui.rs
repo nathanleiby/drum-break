@@ -729,7 +729,8 @@ fn gold_mode(ui: &mut egui::Ui, ui_state: &UIState) {
         // .legend(Legend::default())
         .show_axes([true, true])
         .include_y(0.0)
-        .include_y(100.0);
+        .include_y(100.0)
+        .allow_drag(false);
 
     plot.show(ui, |plot_ui| {
         plot_ui.line(line);
