@@ -9,7 +9,7 @@ use crate::consts::TxMsg;
 use crate::egui_ui::UIState;
 use crate::score::compute_last_loop_summary;
 use crate::ui::*;
-use crate::voices::Voices;
+use crate::voices::{Voices, VoicesFromJSON};
 
 use log::info;
 use macroquad::prelude::*;
@@ -67,8 +67,32 @@ impl GameState {
             miss_margin: 0.3,
         }
     }
+
+    pub fn new_mock_game_state() -> Self {
+        let voices_from_json = VoicesFromJSON::new_mock();
+        let voices = Voices::new_from_voices_old_model(&voices_from_json);
+        Self {
+            voices,
+            gold_mode: GoldMode {
+                correct_takes: 0,
+                was_gold: false,
+            },
+            selected_loop_idx: 0,
+            loops: vec![(
+                "Foo".to_string(),
+                Loop {
+                    bpm: 112,
+                    voices: voices_from_json,
+                },
+            )],
+            flags: Flags::new(),
+            correct_margin: 0.151,
+            miss_margin: 0.3,
+        }
+    }
 }
 
+// TODO: simplify how we init this.. I don't think all the mutability and helper fns are needed
 pub fn compute_ui_state(gs: &GameState, audio: &Audio) -> UIState {
     let selector_vec = gs.loops.iter().map(|(name, _)| name.to_string()).collect();
     let mut ui_state = UIState::default().selector_vec(&selector_vec);

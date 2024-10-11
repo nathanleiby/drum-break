@@ -67,6 +67,15 @@ impl Audio {
         }
     }
 
+    pub fn new_mock(conf: &AppConfig, tx: Sender<TxMsg>) -> Self {
+        let mut audio = Audio::new(conf, tx);
+        audio.user_hits = vec![UserHit {
+            instrument: Instrument::ClosedHihat,
+            clock_tick: 1.0,
+        }];
+        audio
+    }
+
     // audio latency
     pub fn get_configured_audio_latency_seconds(self: &Self) -> f64 {
         self.configured_audio_latency_seconds

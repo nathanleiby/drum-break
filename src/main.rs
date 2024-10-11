@@ -46,6 +46,9 @@ fn window_conf() -> Conf {
     }
 }
 
+// TOOD: move this to an env var controlled flag or similar
+const MOCK_INITIAL_STATE: bool = false;
+
 #[macroquad::main(window_conf)]
 async fn main() -> Result<(), Box<dyn Error>> {
     #[cfg(not(target_arch = "wasm32"))]
@@ -75,15 +78,24 @@ async fn main() -> Result<(), Box<dyn Error>> {
     #[cfg(not(target_arch = "wasm32"))]
     let mut midi_input = MidiInputHandler::new();
 
-    let mut gs = GameState::new(loops);
+    let mut gs = if MOCK_INITIAL_STATE {
+        GameState::new_mock_game_state()
+    } else {
+        GameState::new(loops)
+    };
 
     // Setup audio, which runs on a separate thread and passes messages back.
     // TODO: Get rid of the shared state here (see how we compute_ui_state()), and just use message passing to update the GameState
     let (tx, rx) = mpsc::channel();
     // let conf = AppConfig::new()?; // TODO: Get rid of conf lib for now to simplify? This is the only usage
     let conf = AppConfig::new();
-    log::debug!("{:?}", &conf);
-    let mut audio = Audio::new(&conf, tx.clone());
+    log::debug!("App Config: {:?}", &conf);
+
+    let mut audio = if MOCK_INITIAL_STATE {
+        Audio::new_mock(&conf, tx.clone())
+    } else {
+        Audio::new(&conf, tx.clone())
+    };
 
     // debug
     let mut fps_tracker = FPS::new();

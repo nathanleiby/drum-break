@@ -50,6 +50,25 @@ pub struct VoicesFromJSON {
     crash: Vec<f64>,
 }
 
+impl VoicesFromJSON {
+    fn new() -> Self {
+        Self {
+            closed_hihat: vec![],
+            snare: vec![],
+            kick: vec![],
+            open_hihat: vec![],
+            ride: vec![],
+            crash: vec![],
+        }
+    }
+
+    pub fn new_mock() -> Self {
+        let mut voices = VoicesFromJSON::new();
+        voices.closed_hihat = vec![1.0, 3.0];
+        voices
+    }
+}
+
 /// Voices represents the notes to be played on each instrument.
 #[derive(Debug, Clone)]
 pub struct Voices {

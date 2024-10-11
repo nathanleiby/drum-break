@@ -228,7 +228,7 @@ stack backtrace:
 note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
 ```
 
-- "UI Stories" (UI Test States)
+- [..] "UI Stories" (UI Test States)
   - like in Storybook, it would be nice to quickly pop into the app with a given data-state
     - a specific loop is loaded
     - some user hits exist with various accuracies
@@ -315,6 +315,8 @@ note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose bac
 
 ## done
 
+- [x] Load into the app with some mock game state.
+  - basic pass working. controlled by `MOCK_INITIAL_STATE` in `main.rs`
 - [x] (bug) it's possible to click-and-drag on the gold mode chart
 - [x] give partial credit in "% acc" summary for close hits (e.g. 75% of the note)
 - [x] keep gold mode graph centered from 0 to 100
