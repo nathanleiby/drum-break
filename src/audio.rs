@@ -297,9 +297,11 @@ async fn schedule_note(
             fraction: 0.,
         });
 
+    // TODO: Should instantiate all sounds upfront and then clone then on each use to avoid extra memory?
     let sound = StaticSoundData::from_cursor(Cursor::new(f));
     if let Ok(sound) = sound {
-        manager.play(sound.with_settings(sound_settings))?;
+        // TODO: is it possible to cancel something which you have scheduled with play? (e.g. if you call stop on a sound)
+        let handle = manager.play(sound.with_settings(sound_settings))?;
     }
 
     Ok(())

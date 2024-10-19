@@ -11,6 +11,7 @@ mod keyboard_input_handler;
 mod midi;
 #[cfg(not(target_arch = "wasm32"))]
 mod midi_input_handler;
+use cvars_console_macroquad::MacroquadConsole;
 #[cfg(not(target_arch = "wasm32"))]
 use midi_input_handler::MidiInputHandler;
 
@@ -46,6 +47,26 @@ fn window_conf() -> Conf {
     }
 }
 
+use cvars::cvars;
+
+// TODO: Can I wrap make a static var wrapped with std::sync::LazyLock, so this let's me effectively edit globals
+// Or do I need to pass the value down via dependency injection?
+cvars! {
+    //! Documentation for the generated struct
+    #![derive(Debug, Clone)]
+    #![cvars(sorted)]
+
+    /// Documentation for the cvar
+    g_test_bool: bool = false,
+}
+
+impl Cvars {
+    /// Create a new Cvars object with the default RecWars settings.
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
+
 // TOOD: move this to an env var controlled flag or similar
 const MOCK_INITIAL_STATE: bool = false;
 
@@ -53,6 +74,9 @@ const MOCK_INITIAL_STATE: bool = false;
 async fn main() -> Result<(), Box<dyn Error>> {
     #[cfg(not(target_arch = "wasm32"))]
     simple_logger::init_with_env().unwrap();
+
+    let mut my_cvars = Cvars::new();
+    let mut macroquad_console = MacroquadConsole::new();
 
     let version = include_str!("../VERSION");
     log::info!("version: {}", version);
@@ -104,7 +128,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
     loop {
         let mut events = Vec::new();
         // read user's input and translate to events
-        events.extend(keyboard_input.process());
+        if !macroquad_console.is_open() {
+            events.extend(keyboard_input.process());
+        }
         events.extend(ui.flush_events());
 
         #[cfg(not(target_arch = "wasm32"))]
@@ -128,6 +154,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
         // render UI
         ui.render(&compute_ui_state(&gs, &audio));
+        macroquad_console.update(&mut my_cvars);
         if gs.flags.ui_debug_mode {
             fps_tracker.update();
             fps_tracker.render();

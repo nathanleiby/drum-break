@@ -2,7 +2,7 @@
 
 ## working on
 
-TBD
+cvars
 
 ## soon
 
@@ -117,6 +117,14 @@ TBD
 - Bugs
   - [ ] (bug) ScoreTracker behaves strangely when you have >1 Correct user hit for a single desired note (e.g. 2/2 or 3/3 could refer to 2 desired notes, just in the latter case we have 3 correct notes total bc two hits were within the Correct margin)
   - [ ] (bug) on changing loop, the voices aren't scheduled immediately. this means first few notes don't make sounds because of schedule ahead logic
+    - could we rethink scheduling? Right now it happens "just in time" as the clock progresses, but perhaps it should also depend on when notes are added/removed?
+      - relatedly, we might want to track handles for all scheduled sounds so we can stop them before/during play if they're removed
+      ```rs
+      let handle = manager.play(sound.with_settings(sound_settings))?;
+      // track the handles...
+      // if need to stop...
+      handle.stop()
+      ```
   - this means even on first run.. when you choose an initial track and press play.. its sounds aren't scheduled yet.
 - Input Precision
   - [..] Capture EXACT timing of the midi note for use in timing.

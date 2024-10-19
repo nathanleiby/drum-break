@@ -21,6 +21,8 @@ simple_logger = "4.3.3"
 # fix build error
 time = "0.3.36"
 egui_plot = "0.28.1"
+cvars-console-macroquad = "0.3.0" # this uses macroquad 0.4.0 .. is OK or crash?
+cvars = "0.4.2"
 
 # these seem to be the minimum features needed for kira audio to work in native app.
 # Without cpal, the clock doesn't tick. Without symphonia, there's no audio playback.
