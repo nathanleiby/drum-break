@@ -10,7 +10,10 @@ use egui_plot::{Legend, Line, Plot};
 
 // EguiContexts, EguiPlugin,
 use log::info;
-use macroquad::color::{GREEN, LIGHTGRAY, ORANGE, PURPLE, RED};
+use macroquad::{
+    color::{GREEN, LIGHTGRAY, ORANGE, PURPLE, RED},
+    telemetry::enable,
+};
 
 use crate::{
     consts::{UserHit, ALL_INSTRUMENTS, BEATS_PER_LOOP, GRID_COLS, GRID_ROWS},
@@ -23,6 +26,8 @@ use crate::{
     ui::get_hits_from_nth_loop,
     voices::{Instrument, Voices},
 };
+
+pub type EnabledBeats = [[bool; GRID_COLS]; GRID_ROWS];
 
 // This resource holds information about the game:
 pub struct UIState {
@@ -39,7 +44,7 @@ pub struct UIState {
     current_loop: usize, // nth loop
     current_beat: f32,
 
-    enabled_beats: [[bool; GRID_COLS]; GRID_ROWS],
+    enabled_beats: EnabledBeats,
 
     latency_offset_s: f32,
 
@@ -51,6 +56,8 @@ pub struct UIState {
     is_dev_tools_visible: bool,
     correct_margin: f64,
     miss_margin: f64,
+
+    hide_empty_tracks: bool,
     // user interaction state
     // is_dragging,
 }
@@ -90,6 +97,8 @@ impl Default for UIState {
             is_dev_tools_visible: false,
             correct_margin: 0.,
             miss_margin: 0.,
+
+            hide_empty_tracks: false,
         }
     }
 }
@@ -160,6 +169,10 @@ impl UIState {
 
     pub fn set_miss_margin(&mut self, val: f64) {
         self.miss_margin = val;
+    }
+
+    pub fn set_hide_empty_tracks(&mut self, val: bool) {
+        self.hide_empty_tracks = val;
     }
 }
 
@@ -393,13 +406,12 @@ fn draw_right_panel(ctx: &egui::Context, ui_state: &UIState, events: &mut Vec<Ev
             ui.separator();
 
             ui.add(egui::Label::new("**UI**"));
-            // let button_text = match ui_state.show_empty_tracks {
-            let button_text = match true {
-                true => "Hide Empty Tracks",
-                false => "Show Empty Tracks",
+            let button_text = match ui_state.hide_empty_tracks {
+                true => "Show Empty Tracks",
+                false => "Hide Empty Tracks",
             };
             if ui.button(button_text).clicked() {
-                // events.push(Events::ToggleEmptyTrackVisibility);
+                events.push(Events::ToggleEmptyTrackVisibility);
             }
 
             ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
@@ -421,6 +433,31 @@ fn draw_central_panel(ctx: &egui::Context, ui_state: &UIState, events: &mut Vec<
 const VIRTUAL_WIDTH: f32 = 800.;
 const VIRTUAL_HEIGHT: f32 = 1000.;
 
+fn is_beat_enabled(
+    visible_row: usize,
+    col: usize,
+    enabled_beats: EnabledBeats,
+    visible_instruments: &Vec<&Instrument>,
+) -> bool {
+    // determine instrument
+    let res = visible_instruments
+        .iter()
+        .enumerate()
+        .find(|x| x.0 == visible_row);
+    let ins = match res {
+        Some(x) => *x.1,
+        None => panic!("invalid instrument idx"),
+    };
+
+    // see if it's enabled
+    let res2 = ALL_INSTRUMENTS.iter().enumerate().find(|x| x.1 == ins);
+    let row = match res2 {
+        Some(x) => x.0,
+        None => panic!("invalid instrument idx"),
+    };
+
+    enabled_beats[row][col]
+}
 fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events>) {
     let (response, painter) = ui.allocate_painter(
         egui::Vec2::new(ui.available_width(), ui.available_height()),
@@ -442,11 +479,20 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
         ),
     );
 
-    let visible_rows = GRID_ROWS;
-    let visible_cols = GRID_COLS;
-    // TODO: This basic idea works, but we want to dynamically hide just ones without notes
-    // let visible_rows = GRID_ROWS - 2;
-    // let visible_cols = GRID_COLS - 2;
+    let visible_instruments: Vec<&Instrument> = if ui_state.hide_empty_tracks {
+        ALL_INSTRUMENTS
+            .iter()
+            .enumerate()
+            .filter(|(idx, _)| ui_state.enabled_beats[*idx].iter().any(|b| *b))
+            .map(|(_, ins)| ins)
+            .collect()
+    } else {
+        ALL_INSTRUMENTS.iter().filter(|_| true).collect()
+    };
+
+    let visible_rows = visible_instruments.len();
+    let visible_cols = GRID_COLS; // future, this depends on length of loop
+
     let width_scale: f32 = VIRTUAL_WIDTH / visible_cols as f32;
     let height_scale: f32 = VIRTUAL_HEIGHT / visible_rows as f32;
 
@@ -471,8 +517,15 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
                         "click at position = {:?} [[tpos = {:?}]] (row={:?}, col={:?})",
                         pos, tpos, row, col,
                     );
+
+                    // map from UI display to instrument
+                    let res = visible_instruments.iter().enumerate().find(|x| x.0 == row);
+                    let ins = match res {
+                        Some(x) => *x.1,
+                        None => panic!("invalid instrument idx"),
+                    };
                     events.push(Events::ToggleBeat {
-                        row: row as f64,
+                        ins: *ins,
                         beat: col as f64,
                     });
                 }
@@ -489,12 +542,17 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
     };
 
     let mut shapes = vec![];
-    for row in 0..visible_rows {
+    for visible_row in 0..visible_rows {
         for col in 0..visible_cols {
-            let t_rect = rect_for_col_row(col, row, to_screen, width_scale, height_scale);
+            let t_rect = rect_for_col_row(col, visible_row, to_screen, width_scale, height_scale);
 
             // if this beat is enabled (row is instrument, col is beat)..
-            if ui_state.enabled_beats[row][col] {
+            if is_beat_enabled(
+                visible_row,
+                col,
+                ui_state.enabled_beats,
+                &visible_instruments,
+            ) {
                 let shape =
                     egui::Shape::rect_filled(t_rect, egui::Rounding::default(), beat_fill_color);
                 shapes.push(shape)
@@ -521,10 +579,17 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
         &mut shapes,
         width_scale,
         height_scale,
+        &visible_instruments,
     );
 
     // Draw User Hits
-    draw_user_hits(ui_state, to_screen, &mut shapes, height_scale);
+    draw_user_hits(
+        ui_state,
+        to_screen,
+        &mut shapes,
+        height_scale,
+        &visible_instruments,
+    );
 
     draw_current_beat(
         ui_state.current_beat + ui_state.get_audio_latency_in_beats() as f32,
@@ -538,7 +603,7 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
 
     // add instrument names last, so they stay visible
     for row in 0..visible_rows {
-        let name = match ALL_INSTRUMENTS[row] {
+        let name = match visible_instruments[row] {
             Instrument::ClosedHihat => "Hi-hat",
             Instrument::Snare => "Snare",
             Instrument::Kick => "Kick",
@@ -599,9 +664,10 @@ fn draw_user_hits(
     to_screen: RectTransform,
     shapes: &mut Vec<Shape>,
     height_scale: f32,
+    visible_instruments: &Vec<&Instrument>,
 ) {
-    for (instrument_idx, instrument) in ALL_INSTRUMENTS.iter().enumerate() {
-        let user_notes = get_user_hit_timings_by_instrument(&ui_state.user_hits, *instrument);
+    for (instrument_idx, instrument) in visible_instruments.iter().enumerate() {
+        let user_notes = get_user_hit_timings_by_instrument(&ui_state.user_hits, **instrument);
         let desired_notes = ui_state.desired_hits.get_instrument_beats(instrument);
         for note in user_notes.iter() {
             draw_user_hit(
@@ -672,9 +738,10 @@ fn draw_note_successes(
     shapes: &mut Vec<Shape>,
     width_scale: f32,
     height_scale: f32,
+    visible_instruments: &Vec<&Instrument>,
 ) {
-    for (instrument_idx, instrument) in ALL_INSTRUMENTS.iter().enumerate() {
-        let actual = get_user_hit_timings_by_instrument(user_hits, *instrument);
+    for (instrument_idx, instrument) in visible_instruments.iter().enumerate() {
+        let actual = get_user_hit_timings_by_instrument(user_hits, **instrument);
         // add audio_latency to each note
         let actual_w_latency = actual
             .iter()

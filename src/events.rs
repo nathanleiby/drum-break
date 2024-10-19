@@ -15,7 +15,7 @@ pub enum Events {
     ResetHits,
     SaveLoop,
     ToggleBeat {
-        row: f64,
+        ins: Instrument,
         beat: f64,
     },
     TrackForCalibration,
@@ -26,6 +26,7 @@ pub enum Events {
     ChangeLoop(usize), // loop idx
 
     ToggleHelpVisibility,
+    ToggleEmptyTrackVisibility,
 
     // Dev Tools
     ToggleDebugMode,

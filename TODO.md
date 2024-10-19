@@ -2,8 +2,7 @@
 
 ## working on
 
-- Usability
-  - make extra BeatGrid rows less distracting -- allow show/hide in UI for unused rows
+TBD
 
 ## soon
 
@@ -337,6 +336,10 @@ note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose bac
 
 ## done
 
+- [x] (usability) make extra BeatGrid rows less distracting -- allow show/hide in UI for unused rows
+  - get number of rows right
+  - allow toggle via button on RHS
+  - make sure click interactions select right instrument row
 - [x] Load into the app with some mock game state.
   - basic pass working. controlled by `MOCK_INITIAL_STATE` in `main.rs`
 - [x] (bug) it's possible to click-and-drag on the gold mode chart

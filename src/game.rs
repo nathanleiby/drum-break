@@ -28,6 +28,7 @@ pub struct Flags {
     pub ui_debug_mode: bool,
     pub dev_tools_visible: bool,
     pub help_visible: bool,
+    pub hide_empty_tracks: bool,
 }
 
 impl Flags {
@@ -36,6 +37,7 @@ impl Flags {
             ui_debug_mode: false,
             dev_tools_visible: false,
             help_visible: false,
+            hide_empty_tracks: false,
         };
     }
 }
@@ -111,6 +113,7 @@ pub fn compute_ui_state(gs: &GameState, audio: &Audio) -> UIState {
     ui_state.set_correct_margin(gs.correct_margin);
     ui_state.set_miss_margin(gs.miss_margin);
     ui_state.set_is_help_visible(gs.flags.help_visible);
+    ui_state.set_hide_empty_tracks(gs.flags.hide_empty_tracks);
     ui_state
 }
 
@@ -209,17 +212,7 @@ pub fn process_user_events(
                 serde_json::to_writer(&mut writer, &my_loop)?;
                 writer.flush()?;
             }
-            Events::ToggleBeat { row, beat } => {
-                // map from UI display to instrument
-                let res = ALL_INSTRUMENTS
-                    .iter()
-                    .enumerate()
-                    .find(|x| x.0 == *row as usize);
-                let ins = match res {
-                    Some(x) => x.1,
-                    None => panic!("invalid instrument idx"),
-                };
-
+            Events::ToggleBeat { ins, beat } => {
                 info!("toggling beat: {:?} {:?}", *ins, *beat);
                 voices.toggle_beat(*ins, *beat);
             }
@@ -267,6 +260,9 @@ pub fn process_user_events(
             }
             Events::ToggleHelpVisibility => {
                 flags.help_visible = !flags.help_visible;
+            }
+            Events::ToggleEmptyTrackVisibility => {
+                flags.hide_empty_tracks = !flags.hide_empty_tracks;
             }
         }
     }
