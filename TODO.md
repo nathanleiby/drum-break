@@ -2,7 +2,8 @@
 
 ## working on
 
-cvars
+- Usability
+  - make extra BeatGrid rows less distracting -- allow show/hide in UI for unused rows
 
 ## soon
 
@@ -30,6 +31,7 @@ cvars
 
 ## future
 
+- Add "Stop" interaction (resets Current Loop = 0, Current Beat = 0)
 - [..] add better debugging for midi signals, so I can filter to important ones (e.g. can ignore polyphonic aftertouch 167 on changing HH pedal in terms of hitting notes on the beat)
   - can translate to names from here https://midi.org/expanded-midi-1-0-messages-list, then log better
   - proximate reason.. to figure out problem with closed HH not triggering
@@ -49,12 +51,10 @@ cvars
   - [ ] File open UX -- open a loop from a file
   - [ ] easily import midi
     - e.g. from Groove Scribe
-- Usability
-  - make extra BeatGrid rows less distracting -- allow show/hide in UI for unused rows
 - try colored emojis via https://crates.io/crates/egui-twemoji for gold mode status
 - Onboarding / Ease of Use
   - [ ] redo the "calibrate latency offset" UX. Look at other models like Rhythm Doctor
-  - [ ] press ? to show help (e.g. see all key bindings)
+  - [..] press ? to show help (e.g. see all key bindings)
 - Web Build (WASM)
   - Why? Way easier to share and sbhip iterative improvements.
   - How? Get any working web build, even if degraded UX (latency? midi?)
@@ -157,7 +157,7 @@ cvars
 - App Versioning
   - Use version in Cargo file to manage Github release version (instead of separate `VERSION` file)
   - allow printing version. use include str / include bytes from VERSION file
-- (bug) Causing full crash `Time shouldn't move backwards`
+- (bug) Causing full crash `Time shouldn't move backwards`. Potentially issue in vendored egui
 
 ```
 thread 'main' panicked at /Users/nathanleiby/.cargo/registry/src/index.crates.io-6f17d22bba15001f/emath-0.28.1/src/history.rs:129:13:

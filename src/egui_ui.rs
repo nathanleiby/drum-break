@@ -3,7 +3,7 @@
 use egui::{
     self,
     emath::{self, RectTransform},
-    pos2, CollapsingHeader, Color32, Shape, Widget,
+    pos2, CollapsingHeader, Color32, Shape, Vec2, Widget,
 };
 
 use egui_plot::{Legend, Line, Plot};
@@ -51,6 +51,8 @@ pub struct UIState {
     is_dev_tools_visible: bool,
     correct_margin: f64,
     miss_margin: f64,
+    // user interaction state
+    // is_dragging,
 }
 
 impl Default for UIState {
@@ -390,13 +392,21 @@ fn draw_right_panel(ctx: &egui::Context, ui_state: &UIState, events: &mut Vec<Ev
 
             ui.separator();
 
-            ui.add(egui::github_link_file!(
-                "https://github.com/nathanleiby/macroix",
-                "Source code."
-            ));
+            ui.add(egui::Label::new("**UI**"));
+            // let button_text = match ui_state.show_empty_tracks {
+            let button_text = match true {
+                true => "Hide Empty Tracks",
+                false => "Show Empty Tracks",
+            };
+            if ui.button(button_text).clicked() {
+                // events.push(Events::ToggleEmptyTrackVisibility);
+            }
 
             ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
-                powered_by_egui_and_eframe(ui);
+                ui.add(egui::github_link_file!(
+                    "https://github.com/nathanleiby/drum-break",
+                    "Source code."
+                ));
                 egui::warn_if_debug_build(ui);
             });
         });
@@ -410,8 +420,6 @@ fn draw_central_panel(ctx: &egui::Context, ui_state: &UIState, events: &mut Vec<
 
 const VIRTUAL_WIDTH: f32 = 800.;
 const VIRTUAL_HEIGHT: f32 = 1000.;
-const WIDTH_SCALE: f32 = VIRTUAL_WIDTH / GRID_COLS as f32;
-const HEIGHT_SCALE: f32 = VIRTUAL_HEIGHT / GRID_ROWS as f32;
 
 fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events>) {
     let (response, painter) = ui.allocate_painter(
@@ -434,6 +442,14 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
         ),
     );
 
+    let visible_rows = GRID_ROWS;
+    let visible_cols = GRID_COLS;
+    // TODO: This basic idea works, but we want to dynamically hide just ones without notes
+    // let visible_rows = GRID_ROWS - 2;
+    // let visible_cols = GRID_COLS - 2;
+    let width_scale: f32 = VIRTUAL_WIDTH / visible_cols as f32;
+    let height_scale: f32 = VIRTUAL_HEIGHT / visible_rows as f32;
+
     // capture mouse clicks and toggle relevant beat
     ui.input(|i| {
         for event in &i.raw.events {
@@ -449,8 +465,8 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
 
                     // Translate to (row, col)
                     let tpos = from_screen.transform_pos(*pos);
-                    let row = (tpos.y * GRID_ROWS as f32 / VIRTUAL_HEIGHT) as usize;
-                    let col = (tpos.x * GRID_COLS as f32 / VIRTUAL_WIDTH) as usize;
+                    let row = (tpos.y * visible_rows as f32 / VIRTUAL_HEIGHT) as usize;
+                    let col = (tpos.x * visible_cols as f32 / VIRTUAL_WIDTH) as usize;
                     info!(
                         "click at position = {:?} [[tpos = {:?}]] (row={:?}, col={:?})",
                         pos, tpos, row, col,
@@ -460,6 +476,7 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
                         beat: col as f64,
                     });
                 }
+
                 _ => (),
             }
         }
@@ -472,9 +489,9 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
     };
 
     let mut shapes = vec![];
-    for row in 0..GRID_ROWS {
-        for col in 0..GRID_COLS {
-            let t_rect = rect_for_col_row(col, row, to_screen);
+    for row in 0..visible_rows {
+        for col in 0..visible_cols {
+            let t_rect = rect_for_col_row(col, row, to_screen, width_scale, height_scale);
 
             // if this beat is enabled (row is instrument, col is beat)..
             if ui_state.enabled_beats[row][col] {
@@ -502,10 +519,12 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
         loop_last_completed_beat as f64,
         to_screen,
         &mut shapes,
+        width_scale,
+        height_scale,
     );
 
     // Draw User Hits
-    draw_user_hits(ui_state, to_screen, &mut shapes);
+    draw_user_hits(ui_state, to_screen, &mut shapes, height_scale);
 
     draw_current_beat(
         ui_state.current_beat + ui_state.get_audio_latency_in_beats() as f32,
@@ -518,7 +537,7 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
     painter.extend(shapes);
 
     // add instrument names last, so they stay visible
-    for row in 0..GRID_ROWS {
+    for row in 0..visible_rows {
         let name = match ALL_INSTRUMENTS[row] {
             Instrument::ClosedHihat => "Hi-hat",
             Instrument::Snare => "Snare",
@@ -531,19 +550,25 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
             Instrument::Tom3 => "Tom3 (Low)",
             Instrument::PedalHiHat => "Pedal Hi-hat",
         };
-        let t_rect = rect_for_col_row(0, row, to_screen);
+        let t_rect = rect_for_col_row(0, row, to_screen, width_scale, height_scale);
         let label = egui::Label::new(name);
         ui.put(t_rect, label);
     }
 }
 
-fn rect_for_col_row(col: usize, row: usize, to_screen: RectTransform) -> egui::Rect {
-    let base_pos = pos2(col as f32 * WIDTH_SCALE, row as f32 * HEIGHT_SCALE);
+fn rect_for_col_row(
+    col: usize,
+    row: usize,
+    to_screen: RectTransform,
+    width_scale: f32,
+    height_scale: f32,
+) -> egui::Rect {
+    let base_pos = pos2(col as f32 * width_scale, row as f32 * height_scale);
 
     // TODO: fix scaling to always draw a nicer looking square based grid
     let t_rect = to_screen.transform_rect(egui::Rect {
         min: base_pos,
-        max: base_pos + egui::Vec2::new(WIDTH_SCALE * 0.95, HEIGHT_SCALE * 0.95),
+        max: base_pos + egui::Vec2::new(width_scale * 0.95, height_scale * 0.95),
     });
     t_rect
 }
@@ -569,7 +594,12 @@ fn draw_current_beat(
     shapes.push(shape);
 }
 
-fn draw_user_hits(ui_state: &UIState, to_screen: RectTransform, shapes: &mut Vec<Shape>) {
+fn draw_user_hits(
+    ui_state: &UIState,
+    to_screen: RectTransform,
+    shapes: &mut Vec<Shape>,
+    height_scale: f32,
+) {
     for (instrument_idx, instrument) in ALL_INSTRUMENTS.iter().enumerate() {
         let user_notes = get_user_hit_timings_by_instrument(&ui_state.user_hits, *instrument);
         let desired_notes = ui_state.desired_hits.get_instrument_beats(instrument);
@@ -581,6 +611,7 @@ fn draw_user_hits(ui_state: &UIState, to_screen: RectTransform, shapes: &mut Vec
                 desired_notes,
                 to_screen,
                 shapes,
+                height_scale,
             );
         }
     }
@@ -593,6 +624,7 @@ fn draw_user_hit(
     desired_hits: &Vec<f64>,
     to_screen: RectTransform,
     shapes: &mut Vec<Shape>,
+    height_scale: f32,
 ) {
     let user_beat_with_latency = user_beat + audio_latency_beats;
 
@@ -608,10 +640,10 @@ fn draw_user_hit(
         (user_beat_with_latency as f32 / BEATS_PER_LOOP as f32) * VIRTUAL_WIDTH
     };
 
-    let base_pos = pos2(x as f32, row as f32 * HEIGHT_SCALE);
+    let base_pos = pos2(x as f32, row as f32 * height_scale);
     let t_rect = to_screen.transform_rect(egui::Rect {
         min: base_pos,
-        max: base_pos + egui::Vec2::new(2., HEIGHT_SCALE * 0.95),
+        max: base_pos + egui::Vec2::new(2., height_scale * 0.95),
     });
 
     let bar_color = match acc {
@@ -638,6 +670,8 @@ fn draw_note_successes(
     loop_current_beat: f64,
     to_screen: RectTransform,
     shapes: &mut Vec<Shape>,
+    width_scale: f32,
+    height_scale: f32,
 ) {
     for (instrument_idx, instrument) in ALL_INSTRUMENTS.iter().enumerate() {
         let actual = get_user_hit_timings_by_instrument(user_hits, *instrument);
@@ -652,7 +686,14 @@ fn draw_note_successes(
         let loop_perf =
             compute_loop_performance_for_voice(&actual_w_latency, &desired, loop_current_beat);
         for (note_idx, note) in desired.iter().enumerate() {
-            let shape = note_success_shape(*note, instrument_idx, loop_perf[note_idx], to_screen);
+            let shape = note_success_shape(
+                *note,
+                instrument_idx,
+                loop_perf[note_idx],
+                to_screen,
+                width_scale,
+                height_scale,
+            );
             shapes.push(shape);
         }
     }
@@ -663,9 +704,11 @@ fn note_success_shape(
     row: usize,
     acc: Accuracy,
     to_screen: RectTransform,
+    width_scale: f32,
+    height_scale: f32,
 ) -> Shape {
     let col = beats_offset as usize; // TODO: truncate, for now
-    let rect = rect_for_col_row(col, row, to_screen);
+    let rect = rect_for_col_row(col, row, to_screen, width_scale, height_scale);
 
     let bar_color = match acc {
         Accuracy::Early => ORANGE,
