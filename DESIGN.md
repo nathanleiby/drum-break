@@ -2,6 +2,25 @@
 
 My thinking around core problems in this app.
 
+## Guiding the User over Time (Days, Weeks)
+
+I need to collect all the data so I can start to analyze it and understand what's next.
+It's OK to start with any data collection in the current state, and then iterate toward a better data model.
+
+- hacky possible approach: dump full application "Game state" as a JSON?
+  - include a schema version
+  - could re-use this for snapshot/restore feature, too
+- otherwise,
+  - high level: % accuracy score over time
+  - low level: all actual hits .. vs desired hits
+  - ... perhaps need to design that data model of a "practice session"
+- save it somewhere robust
+  - mvp: local folder that syncs to remote drive so i don't lose data
+  - someday: some kind of remotely hosted, inexpensive DB
+
+I can start by experimenting with a Python Notebook to do data analysis and data viz.
+Commit this to Github (along with my data) and start to analyze over time.
+
 ## Audio Latency / Calibration
 
 We probably _do not_ want to play sounds too.
