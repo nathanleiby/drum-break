@@ -30,6 +30,13 @@ TBD
 
 ## future
 
+- Quick wins
+  - add Clippy setup locally, to enforce better rust practices
+  - enable CI - https://github.com/nathanleiby/drum-break/commit/8bb53e467e6104d1a68414e85139ad722f7e60c6
+    - tests
+    - lint (clippy)
+    - build
+    - release
 - Add "Stop" interaction (resets Current Loop = 0, Current Beat = 0)
 - [..] add better debugging for midi signals, so I can filter to important ones (e.g. can ignore polyphonic aftertouch 167 on changing HH pedal in terms of hitting notes on the beat)
   - can translate to names from here https://midi.org/expanded-midi-1-0-messages-list, then log better
