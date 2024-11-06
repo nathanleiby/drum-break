@@ -6,6 +6,7 @@ Capturing user metrics, so I can begin to understand progress over time.
 
 - TODO: In future, write to SQLlite DB or similar
 - TODO: Emit this, with relevant metadata (BPM, loop_id, datetime)
+- TODO: Investigate `score` value (0.0 to 1.0). Values seem fishy.
 
 ## soon
 
