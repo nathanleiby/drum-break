@@ -108,7 +108,7 @@ impl ScoreTracker {
     }
 
     // score is given as a ratio, from 0 to 1
-    pub fn score(self: Self) -> f64 {
+    pub fn score(self: &Self) -> f64 {
         let num_correct = self
             .accuracies
             .iter()
