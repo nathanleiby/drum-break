@@ -1,5 +1,7 @@
 /target
 /release
+/log
+
 release*.zip
 
 .DS_Store

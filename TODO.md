@@ -2,7 +2,10 @@
 
 ## working on
 
-TBD
+Capturing user metrics, so I can begin to understand progress over time.
+
+- TODO: In future, write to SQLlite DB or similar
+- TODO: Emit this, with relevant metadata (BPM, loop_id, datetime)
 
 ## soon
 
@@ -288,6 +291,7 @@ note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose bac
 - UI: try out theme colors from rerun https://github.com/rerun-io/rerun/blob/4636188996038f4be913f813fb263a3751c1d469/crates/re_ui/src/design_tokens.rs#L207
   - see other inspiration: https://github.com/emilk/egui/issues/996
 - UI: consider dark-mode switcher widget https://tau.garden/egui-theme-switch/
+- try rust `tracing` lib for better logs
 
 ### NEEDS TRIAGE / CLARITY
 

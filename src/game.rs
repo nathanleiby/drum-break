@@ -1,6 +1,8 @@
+use std::error::Error;
+use std::time::{SystemTime, UNIX_EPOCH};
+use std::{env, fs};
 use std::{fs::File, io::BufWriter, io::Write};
 
-use std::error::Error;
 use std::sync::mpsc::Receiver;
 
 use crate::audio::Audio;
@@ -8,11 +10,13 @@ use crate::config::AppConfig;
 use crate::consts::TxMsg;
 use crate::egui_ui::UIState;
 use crate::score::compute_last_loop_summary;
+use crate::time::current_time_millis;
 use crate::ui::*;
 use crate::voices::{Voices, VoicesFromJSON};
 
 use log::info;
 use macroquad::prelude::*;
+use serde::Serialize;
 
 use crate::{consts::ALL_INSTRUMENTS, events::Events, voices::Loop};
 
@@ -117,6 +121,14 @@ pub fn compute_ui_state(gs: &GameState, audio: &Audio) -> UIState {
     ui_state
 }
 
+#[derive(Debug, Serialize)]
+struct UserMetric {
+    // TODO: Add loop name / id
+    system_time_ms: u128,
+    score: f64,
+    bpm: f64,
+}
+
 pub fn process_system_events(
     rx: &Receiver<TxMsg>,
     audio: &mut Audio,
@@ -131,7 +143,6 @@ pub fn process_system_events(
                 match msg {
                     TxMsg::AudioNew => (),
                     TxMsg::StartingLoop(loop_num) => {
-                        // TODO: UPDATE TO ONLY RUN THIS CODE FOR "on loop complete" events
                         let last_loop_hits = get_hits_from_nth_loop(
                             &audio.user_hits,
                             (audio.current_loop() - 1) as usize,
@@ -141,6 +152,20 @@ pub fn process_system_events(
                             compute_last_loop_summary(&last_loop_hits, &voices, audio_latency);
                         info!("last loop summary = {:?}", summary_data);
                         let totals = summary_data.total();
+
+                        if loop_num > 0 {
+                            // Log user metric to a file, for eventual data analysis
+                            let user_metric = UserMetric {
+                                system_time_ms: current_time_millis(),
+                                bpm: audio.get_bpm(),
+                                score: totals.score(),
+                            };
+                            let log_result = log_user_metric(&user_metric);
+                            match log_result {
+                                Err(e) => println!("error logging user_metric. error was: {e}"),
+                                _ => {}
+                            }
+                        }
 
                         gold_mode.was_gold = false;
                         if totals.score() == 1. {
@@ -162,6 +187,19 @@ pub fn process_system_events(
             Err(_) => break,
         }
     }
+}
+
+fn log_user_metric(user_metric: &UserMetric) -> Result<(), Box<dyn Error>> {
+    println!("user_metric = {:?}", user_metric);
+    let data = serde_json::to_string(&user_metric)?;
+    let current_dir = env::current_dir()?;
+    println!("user_metric (json) = {}", data);
+
+    let dir = current_dir.join("log");
+    fs::create_dir_all(&dir)?;
+    let fpath = dir.join(format!("user_metric-{}.json", user_metric.system_time_ms));
+    fs::write(fpath, data)?;
+    Ok(())
 }
 
 /// update application state based on events (that came from user input)
