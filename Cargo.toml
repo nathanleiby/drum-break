@@ -32,13 +32,9 @@ cvars = "0.4.2"
 # >   at mq_js_bundle_0.4.7.js:3:9649\
 
 
-[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 kira = { version = "0.9.5", default-features = false, features = ["symphonia", "cpal"] }
 symphonia = { version = "0.5.4", features = ["wav"] }
-
-[target.'cfg(target_arch = "wasm32")'.dependencies]
-kira = { version = "0.9.5", default-features = false, features = ["symphonia"] }
-symphonia = { version = "0.5.4", features = ["wav"] }
+web-time = "1.1.0"
 # TODO: Get it working with WASM https://github.com/RustAudio/cpal/wiki/Setting-up-a-new-CPAL-WASM-project
 #cpal = { version = "0.15", features = ["wasm-bindgen"] }
 
