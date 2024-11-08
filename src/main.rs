@@ -7,12 +7,9 @@ mod fps;
 mod game;
 mod keyboard_input_handler;
 
-#[cfg(not(target_arch = "wasm32"))]
 mod midi;
-#[cfg(not(target_arch = "wasm32"))]
 mod midi_input_handler;
 use cvars_console_macroquad::MacroquadConsole;
-#[cfg(not(target_arch = "wasm32"))]
 use midi_input_handler::MidiInputHandler;
 
 mod score;
@@ -99,7 +96,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
     }
 
     let keyboard_input = KeyboardInputHandler::new();
-    #[cfg(not(target_arch = "wasm32"))]
     let mut midi_input = MidiInputHandler::new();
 
     let mut gs = if MOCK_INITIAL_STATE {
@@ -133,7 +129,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
         }
         events.extend(ui.flush_events());
 
-        #[cfg(not(target_arch = "wasm32"))]
         events.extend(midi_input.process());
 
         // change game state
