@@ -18,25 +18,15 @@ midir = "0.9.1"
 serde = { version = "1.0.193", features = ["derive"] }
 serde_json = "1.0.108"
 simple_logger = "4.3.3"
-# fix build error
-time = "0.3.36"
 egui_plot = "0.28.1"
 cvars-console-macroquad = "0.3.0" # this uses macroquad 0.4.0 .. is OK or crash?
 cvars = "0.4.2"
-
-# these seem to be the minimum features needed for kira audio to work in native app.
-# Without cpal, the clock doesn't tick. Without symphonia, there's no audio playback.
-# To explore a WASM build at the moment, you can disable these but the app doesn't really work.
-# When CPAL is enabled, the build error is:
-# > mq_js_bundle_0.4.7.js:3 TypeError: WebAssembly.instantiate(): Import #0 "__wbindgen_placeholder__": module is not an object or function
-# >   at mq_js_bundle_0.4.7.js:3:9649\
-
-
 kira = { version = "0.9.5", default-features = false, features = ["symphonia", "cpal"] }
 symphonia = { version = "0.5.4", features = ["wav"] }
 web-time = "1.1.0"
-# TODO: Get it working with WASM https://github.com/RustAudio/cpal/wiki/Setting-up-a-new-CPAL-WASM-project
-#cpal = { version = "0.15", features = ["wasm-bindgen"] }
+
+# security fix suggested by dependabot
+webbrowser = "0.8.3"
 
 # From README:
 # > Adding the following snippet to your Cargo.toml ensures that all dependencies compile in release even in debug mode.
