@@ -116,6 +116,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     } else {
         Audio::new(&conf, tx.clone())
     };
+    audio.initialize().await?;
 
     // debug
     let mut fps_tracker = FPS::new();

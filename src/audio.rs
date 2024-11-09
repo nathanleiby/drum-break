@@ -1,4 +1,9 @@
-use std::{collections::VecDeque, error::Error, io::Cursor, sync::mpsc::Sender};
+use std::{
+    collections::{HashMap, VecDeque},
+    error::Error,
+    io::Cursor,
+    sync::mpsc::Sender,
+};
 
 use kira::{
     clock::{ClockHandle, ClockSpeed, ClockTime},
@@ -26,6 +31,7 @@ pub struct Audio {
     bpm: f64,
     metronome_enabled: bool,
 
+    sounds: HashMap<Instrument, StaticSoundData>,
     pub user_hits: Vec<UserHit>,
     calibration_input: VecDeque<f64>,
     configured_audio_latency_seconds: f64,
@@ -57,6 +63,7 @@ impl Audio {
             last_scheduled_tick: -1.,
             bpm: DEFAULT_BPM,
             metronome_enabled: false,
+            sounds: HashMap::new(),
 
             user_hits: vec![],
             calibration_input: VecDeque::new(),
@@ -74,6 +81,19 @@ impl Audio {
             clock_tick: 1.0,
         }];
         audio
+    }
+
+    // initialize() loads required resources, like audio data
+    // I've separated this from new() because it's async and it may error.
+    pub async fn initialize(self: &mut Self) -> Result<(), Box<dyn Error>> {
+        for ins in ALL_INSTRUMENTS {
+            let sound_path = Voices::get_audio_file_for_instrument(&ins);
+            let f = load_file(sound_path).await?;
+            let sound = StaticSoundData::from_cursor(Cursor::new(f))?;
+            self.sounds.insert(ins, sound);
+        }
+
+        Ok(())
     }
 
     // audio latency
@@ -121,16 +141,22 @@ impl Audio {
 
         for ins in ALL_INSTRUMENTS.iter() {
             let notes = voices.get_instrument_beats(ins);
-            let sound_path = Voices::get_audio_file_for_instrument(ins);
+            // fetch sound data from hashmap and the clone() it to re-use
+            let sound = self
+                .sounds
+                .get(ins)
+                .expect("Failed to load sound for instrument: {} ... was audio.initialize() run?")
+                .clone();
+
             schedule_audio(
                 notes,
-                sound_path,
+                &sound,
+                get_volume(ins),
                 &mut self.manager,
                 &self.clock,
                 self.last_scheduled_tick,
                 tick_to_schedule,
-            )
-            .await?;
+            )?;
         }
 
         if self.is_metronome_enabled() {
@@ -138,15 +164,18 @@ impl Audio {
             // clicks on quarter notes
             let metronome_notes = vec![0., 2., 4., 6., 8., 10., 12., 14.];
             let sound_path = "res/sounds/click.wav"; // TODO: metronome.ogg?
+            let f = load_file(sound_path).await?;
+            let sound = StaticSoundData::from_cursor(Cursor::new(f))?;
+            let volume = 1.;
             schedule_audio(
                 &metronome_notes,
-                sound_path,
+                &sound,
+                volume,
                 &mut self.manager,
                 &self.clock,
                 self.last_scheduled_tick,
                 tick_to_schedule,
-            )
-            .await?;
+            )?;
         }
 
         self.last_scheduled_tick = tick_to_schedule;
@@ -246,9 +275,10 @@ impl Audio {
 }
 
 /// schedules notes for a single sound to be played between last_scheduled_tick and tick_to_schedule
-async fn schedule_audio(
+fn schedule_audio(
     notes: &Vec<f64>,
-    sound_path: &str,
+    sound: &StaticSoundData,
+    volume: f64,
     manager: &mut AudioManager,
     clock: &ClockHandle,
     last_scheduled_tick: f64,
@@ -259,18 +289,18 @@ async fn schedule_audio(
     let loop_num = (last_scheduled_tick / BEATS_PER_LOOP) as i32; // floor
     for note in notes.iter() {
         if note > &prev_beat && note <= &next_beat {
-            schedule_note(note, loop_num, clock, manager, sound_path).await?;
+            schedule_note(note, loop_num, clock, manager, sound, volume)?;
         };
 
         // handle wrap-around case
         if next_beat < prev_beat {
             // from prev_beat to end of loop
             if *note > prev_beat && *note <= BEATS_PER_LOOP as f64 {
-                schedule_note(note, loop_num, clock, manager, sound_path).await?;
+                schedule_note(note, loop_num, clock, manager, sound, volume)?;
             }
             // from start of loop to next beat
             if *note >= 0. && *note <= next_beat {
-                schedule_note(note, loop_num + 1, clock, manager, sound_path).await?;
+                schedule_note(note, loop_num + 1, clock, manager, sound, volume)?;
             }
         }
     }
@@ -279,43 +309,43 @@ async fn schedule_audio(
 }
 
 /// schedules a single note to be played at a specific tick
-async fn schedule_note(
+fn schedule_note(
     note: &f64,
     loop_num: i32,
     clock: &ClockHandle,
     manager: &mut AudioManager,
-    sound_path: &str,
+    sound: &StaticSoundData,
+    volume: f64,
 ) -> Result<(), Box<dyn Error>> {
     let note_tick = (*note + (loop_num as f64) * BEATS_PER_LOOP) as u64;
-    // log::debug!("\tScheduling {} ({}) at {}", sound_path, note, note_tick);
-    let f = load_file(sound_path).await?;
-    let sound_settings = StaticSoundSettings::new()
-        .volume(get_volume(sound_path))
+    log::debug!(
+        "\tScheduling {:?} ({}) at {}",
+        sound.settings,
+        note,
+        note_tick
+    );
+
+    // Set volume and timing
+    let settings = StaticSoundSettings::new()
+        .volume(volume)
         .start_time(ClockTime {
             clock: clock.id(),
             ticks: note_tick,
             fraction: 0.,
         });
 
-    // TODO: Should instantiate all sounds upfront and then clone then on each use to avoid extra memory?
-    let sound = StaticSoundData::from_cursor(Cursor::new(f));
-    if let Ok(sound) = sound {
-        // TODO: is it possible to cancel something which you have scheduled with play? (e.g. if you call stop on a sound)
-        let handle = manager.play(sound.with_settings(sound_settings))?;
-    }
+    manager.play(sound.with_settings(settings))?;
 
     Ok(())
 }
 
-fn get_volume(sound_path: &str) -> f64 {
-    match sound_path {
-        "res/sounds/open-hihat.wav" => 0.5,
-        "res/sounds/ride.wav" => 0.15,
-        "res/sounds/crash.wav" => 0.4,
-        "res/sounds/tom-hi.wav" => 0.25,
-        "res/sounds/tom-med.wav" => 0.25,
-        "res/sounds/tom-low.wav" => 0.25,
-        "res/sounds/pedal-hihat.wav" => 0.5,
+fn get_volume(ins: &Instrument) -> f64 {
+    match ins {
+        Instrument::OpenHihat => 0.5,
+        Instrument::PedalHiHat => 0.5,
+        Instrument::Ride => 0.15,
+        Instrument::Crash => 0.4,
+        Instrument::Tom1 | Instrument::Tom2 | Instrument::Tom3 => 0.25,
         _ => 1.0,
     }
 }
