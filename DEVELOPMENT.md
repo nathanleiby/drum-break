@@ -6,11 +6,21 @@
 - clone this repo
 - run it: `cargo run`
 
+There are some helper scripts for local runs, too. See:
+
+- `./dev.sh`
+- `./dev-wasm.sh`
+
 ## Creating a release
 
 - update the `VERSION` file
   - versioning scheme is semver with leading `v`, e.g. `v0.0.1`
 - run `./release.sh`
+
+To release the web version:
+
+- run `./release-wasm.sh`
+- commit the generated code (in `github_pages/`) and push
 
 ## System Design (TODO: Fix outdated content)
 
