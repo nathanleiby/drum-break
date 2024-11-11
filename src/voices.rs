@@ -3,7 +3,6 @@
 */
 use std::error::Error;
 
-use macroquad::file::load_file;
 use serde::{Deserialize, Serialize};
 
 use crate::consts::{ALL_INSTRUMENTS, BEATS_PER_LOOP, GRID_COLS, GRID_ROWS};
@@ -149,17 +148,6 @@ impl Voices {
         }
     }
 
-    pub fn to_voices_old_model(&self) -> VoicesFromJSON {
-        VoicesFromJSON {
-            closed_hihat: self.get_instrument_beats(&Instrument::ClosedHihat).clone(),
-            snare: self.get_instrument_beats(&Instrument::Snare).clone(),
-            kick: self.get_instrument_beats(&Instrument::Kick).clone(),
-            open_hihat: self.get_instrument_beats(&Instrument::OpenHihat).clone(),
-            ride: self.get_instrument_beats(&Instrument::Ride).clone(),
-            crash: self.get_instrument_beats(&Instrument::Crash).clone(),
-        }
-    }
-
     pub fn to_enabled_beats(&self) -> [[bool; GRID_COLS]; GRID_ROWS] {
         let mut out = [[false; GRID_COLS]; GRID_ROWS];
 
@@ -185,21 +173,7 @@ pub struct Loop {
 }
 
 impl Loop {
-    pub async fn new_from_file_async(path: &str) -> Result<Self, Box<dyn Error>> {
-        log::info!("Loop::new_from_file .. {}", path);
-        let f = load_file(path).await?;
-        let out: Self = serde_json::from_reader(&*f)?;
-        Ok(out)
-    }
-
     pub fn new_from_file(path: &str) -> Result<Self, Box<dyn Error>> {
-        // load file at path
-        let f = std::fs::File::open(path)?;
-        let out: Self = serde_json::from_reader(f)?;
-        Ok(out)
-    }
-
-    pub fn new_from_data(path: &str) -> Result<Self, Box<dyn Error>> {
         // load file at path
         let f = std::fs::File::open(path)?;
         let out: Self = serde_json::from_reader(f)?;
