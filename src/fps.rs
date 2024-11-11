@@ -6,13 +6,13 @@ use std::collections::VecDeque;
 
 use macroquad::prelude::*;
 
-pub struct FPS {
+pub struct Fps {
     fps_tracker: VecDeque<i32>,
     last_fps: i32,
     last_updated_fps_timestamp: f64,
 }
 
-impl FPS {
+impl Fps {
     pub fn new() -> Self {
         Self {
             fps_tracker: VecDeque::<i32>::with_capacity(10),

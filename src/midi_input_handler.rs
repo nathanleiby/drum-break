@@ -152,7 +152,7 @@ fn get_midi_as_user_hits(midi_input: &MidiInput) -> Vec<UserHit> {
     };
 
     let ic_midi = match midi_input.get_device_name() {
-        s if s == "MPK Mini Mk II" => mpk_mini_mk_ii,
+        "MPK Mini Mk II" => mpk_mini_mk_ii,
         s if s.contains("TD-17") => td17,
         s if s.contains("TD-27") => td27,
         s if s.contains("Nitro") => alesis_nitro,

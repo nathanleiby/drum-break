@@ -19,5 +19,7 @@ jobs:
         run: sudo apt install libasound2-dev
       - name: Build
         run: cargo build --verbose
-      - name: Run tests
+      - name: Unit tests
         run: cargo test --verbose
+      - name: Lint
+        run: cargo clippy --all --all-features --tests -- -D warnings

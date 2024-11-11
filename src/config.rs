@@ -15,6 +15,8 @@ impl AppConfig {
     }
 
     pub fn save(&self) {
+        // TODO: We may remove confy. Ignore for now
+        #[allow(clippy::match_single_binding)]
         match confy::store("macroix", "AppConfig", self) {
             // ignore failures. these happen in web builds
             _ => (),

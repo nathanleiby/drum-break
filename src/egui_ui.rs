@@ -1,5 +1,3 @@
-// mod app;
-
 use egui::{
     self,
     emath::{self, RectTransform},
@@ -34,7 +32,9 @@ pub struct UIState {
     is_playing: bool,
     bpm: f32,
     is_metronome_enabled: bool,
+    #[allow(dead_code)]
     volume_metronome: f32,
+    #[allow(dead_code)]
     volume_target_notes: f32,
 
     // audio
@@ -102,6 +102,8 @@ impl Default for UIState {
 
 impl UIState {
     // TODO: rename related to choosing a loop
+    // TODO: investigate a fix for the clippy error. Changing to a slice threw errors elsewhere in code.
+    #[allow(clippy::ptr_arg)]
     pub fn selector_vec(mut self, selector_vec: &Vec<String>) -> Self {
         self.selector_vec = selector_vec.clone();
         self
@@ -135,8 +137,8 @@ impl UIState {
         self.latency_offset_s = offset;
     }
 
-    pub fn set_user_hits(&mut self, hits: &Vec<UserHit>) {
-        self.user_hits = hits.clone();
+    pub fn set_user_hits(&mut self, hits: &[UserHit]) {
+        self.user_hits = hits.to_vec().clone();
     }
 
     pub fn set_desired_hits(&mut self, voices: &Voices) {
@@ -434,7 +436,7 @@ fn is_beat_enabled(
     visible_row: usize,
     col: usize,
     enabled_beats: EnabledBeats,
-    visible_instruments: &Vec<&Instrument>,
+    visible_instruments: &[&Instrument],
 ) -> bool {
     // determine instrument
     let res = visible_instruments
@@ -497,8 +499,9 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
     ui.input(|i| {
         for event in &i.raw.events {
             if let egui::Event::PointerButton {
-                    pos, pressed: true, ..
-                } = event {
+                pos, pressed: true, ..
+            } = event
+            {
                 // check if click is within the beat grid's bounds
                 if !response.rect.contains(*pos) {
                     continue;
@@ -594,8 +597,8 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
     painter.extend(shapes);
 
     // add instrument names last, so they stay visible
-    for row in 0..visible_rows {
-        let name = match visible_instruments[row] {
+    for (row, item) in visible_instruments.iter().enumerate().take(visible_rows) {
+        let name = match item {
             Instrument::ClosedHihat => "Hi-hat",
             Instrument::Snare => "Snare",
             Instrument::Kick => "Kick",
@@ -623,7 +626,7 @@ fn rect_for_col_row(
     let base_pos = pos2(col as f32 * width_scale, row as f32 * height_scale);
 
     // TODO: fix scaling to always draw a nicer looking square based grid
-    
+
     to_screen.transform_rect(egui::Rect {
         min: base_pos,
         max: base_pos + egui::Vec2::new(width_scale * 0.95, height_scale * 0.95),
@@ -656,7 +659,7 @@ fn draw_user_hits(
     to_screen: RectTransform,
     shapes: &mut Vec<Shape>,
     height_scale: f32,
-    visible_instruments: &Vec<&Instrument>,
+    visible_instruments: &[&Instrument],
 ) {
     for (instrument_idx, instrument) in visible_instruments.iter().enumerate() {
         let user_notes = get_user_hit_timings_by_instrument(&ui_state.user_hits, **instrument);
@@ -679,7 +682,7 @@ fn draw_user_hit(
     user_beat: f64,
     row: usize,
     audio_latency_beats: f64,
-    desired_hits: &Vec<f64>,
+    desired_hits: &[f64],
     to_screen: RectTransform,
     shapes: &mut Vec<Shape>,
     height_scale: f32,
@@ -721,8 +724,9 @@ fn draw_user_hit(
     shapes.push(shape);
 }
 
+#[allow(clippy::too_many_arguments)]
 fn draw_note_successes(
-    user_hits: &Vec<UserHit>,
+    user_hits: &[UserHit],
     desired_hits: &Voices,
     audio_latency: f64,
     loop_current_beat: f64,
@@ -730,7 +734,7 @@ fn draw_note_successes(
     shapes: &mut Vec<Shape>,
     width_scale: f32,
     height_scale: f32,
-    visible_instruments: &Vec<&Instrument>,
+    visible_instruments: &[&Instrument],
 ) {
     for (instrument_idx, instrument) in visible_instruments.iter().enumerate() {
         let actual = get_user_hit_timings_by_instrument(user_hits, **instrument);
@@ -797,11 +801,7 @@ fn gold_mode(ui: &mut egui::Ui, ui_state: &UIState) {
             &ui_state.user_hits,
             (ui_state.current_loop as i32 - i) as usize, // TODO: check for overflow
         );
-        let summary_data = compute_last_loop_summary(
-            &nth_loop_hits,
-            &ui_state.desired_hits,
-            ui_state.get_audio_latency_in_beats() as f64,
-        );
+        let summary_data = compute_last_loop_summary(&nth_loop_hits, &ui_state.desired_hits);
 
         // Simpler than chart.. TODO: support for colored emoji
         // 🔴
@@ -836,19 +836,5 @@ fn gold_mode(ui: &mut egui::Ui, ui_state: &UIState) {
 
     plot.show(ui, |plot_ui| {
         plot_ui.line(line);
-    });
-}
-
-fn powered_by_egui_and_eframe(ui: &mut egui::Ui) {
-    ui.horizontal(|ui| {
-        ui.spacing_mut().item_spacing.x = 0.0;
-        ui.label("Powered by ");
-        ui.hyperlink_to("egui", "https://github.com/emilk/egui");
-        ui.label(" and ");
-        ui.hyperlink_to(
-            "eframe",
-            "https://github.com/emilk/egui/tree/master/crates/eframe",
-        );
-        ui.label(".");
     });
 }

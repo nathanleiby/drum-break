@@ -276,7 +276,7 @@ impl Audio {
 
 /// schedules notes for a single sound to be played between last_scheduled_tick and tick_to_schedule
 fn schedule_audio(
-    notes: &Vec<f64>,
+    notes: &[f64],
     sound: &StaticSoundData,
     volume: f64,
     manager: &mut AudioManager,

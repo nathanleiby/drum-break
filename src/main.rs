@@ -21,7 +21,7 @@ use std::error::Error;
 use std::sync::mpsc::{self};
 
 use crate::config::AppConfig;
-use crate::fps::FPS;
+use crate::fps::Fps;
 use crate::ui::*;
 
 use audio::Audio;
@@ -118,7 +118,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     audio.initialize().await?;
 
     // debug
-    let mut fps_tracker = FPS::new();
+    let mut fps_tracker = Fps::new();
 
     let mut ui = UI::new();
     loop {
@@ -162,7 +162,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
 fn process_cli_args() -> String {
     // read commnand line arg as directory name
-    
 
     std::env::args()
         .nth(1)

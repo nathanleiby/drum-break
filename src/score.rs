@@ -32,7 +32,7 @@ pub const MISS_MARGIN: f64 = 0.3;
 /// returns a tuple of (accuracy rating, a bool of whether not this measurement is wrapping around to the _next_ loop)
 pub fn compute_accuracy_of_single_hit(
     user_beat_with_latency: f64,
-    desired_hits: &Vec<f64>,
+    desired_hits: &[f64],
     // correct_margin,
     // miss_margin,
 ) -> (Accuracy, bool) {
@@ -153,11 +153,7 @@ impl LastLoopSummary {
         }
     }
 
-    pub fn set_score_tracker(
-        &mut self,
-        instrument: &Instrument,
-        score_tracker: ScoreTracker,
-    ) {
+    pub fn set_score_tracker(&mut self, instrument: &Instrument, score_tracker: ScoreTracker) {
         let to_update: &mut ScoreTracker = self.get_mut_score_tracker(instrument);
         *to_update = score_tracker;
     }
@@ -188,7 +184,7 @@ impl LastLoopSummary {
 }
 
 pub fn get_user_hit_timings_by_instrument(
-    user_hits: &Vec<UserHit>,
+    user_hits: &[UserHit],
     instrument: Instrument,
 ) -> Vec<f64> {
     user_hits
@@ -219,7 +215,7 @@ pub fn compute_loop_performance_for_voice(
         // find the first user hit that a non-miss
         let mut was_miss = true;
         for user_hit in user_hits {
-            let (acc, _) = compute_accuracy_of_single_hit(*user_hit, &vec![*desired_hit]);
+            let (acc, _) = compute_accuracy_of_single_hit(*user_hit, &[*desired_hit]);
             if acc != Accuracy::Miss {
                 was_miss = false;
                 out.push(acc);
@@ -234,14 +230,10 @@ pub fn compute_loop_performance_for_voice(
     out
 }
 
-pub fn compute_last_loop_summary(
-    user_hits: &Vec<UserHit>,
-    desired_hits: &Voices,
-    audio_latency: f64,
-) -> LastLoopSummary {
+pub fn compute_last_loop_summary(user_hits: &[UserHit], desired_hits: &Voices) -> LastLoopSummary {
     let mut out = LastLoopSummary::new();
 
-    for (_, instrument) in ALL_INSTRUMENTS.iter().enumerate() {
+    for instrument in ALL_INSTRUMENTS.iter() {
         // // get accuracy of hihat
         let user_timings = get_user_hit_timings_by_instrument(user_hits, *instrument);
         let desired_timings = desired_hits.get_instrument_beats(instrument);
@@ -267,8 +259,6 @@ pub fn compute_last_loop_summary(
 
 #[cfg(test)]
 mod tests {
-    use std::f64::EPSILON;
-
     use crate::{
         consts::{UserHit, BEATS_PER_LOOP},
         score::{
@@ -318,7 +308,7 @@ mod tests {
         assert_eq!(result, Accuracy::Early);
 
         // beyond the miss margin
-        let miss = MISS_MARGIN + EPSILON;
+        let miss = MISS_MARGIN + f64::EPSILON;
         let result = compute_accuracy_legacy(miss, &vec![0.0]);
         assert_eq!(result, Accuracy::Miss);
 
@@ -341,7 +331,7 @@ mod tests {
         assert_eq!(result, Accuracy::Correct);
 
         let result = compute_accuracy_legacy(
-            BEATS_PER_LOOP - CORRECT_MARGIN - EPSILON * 5.,
+            BEATS_PER_LOOP - CORRECT_MARGIN - f64::EPSILON * 5.,
             &vec![0.0, 1.0],
         );
         assert_eq!(result, Accuracy::Early);
@@ -352,12 +342,12 @@ mod tests {
 
     #[test]
     fn it_computes_accuracy_considering_is_next_loop() {
-        let result = compute_accuracy_of_single_hit(BEATS_PER_LOOP - CORRECT_MARGIN, &vec![0.0]);
+        let result = compute_accuracy_of_single_hit(BEATS_PER_LOOP - CORRECT_MARGIN, &[0.0]);
         assert_eq!(result, (Accuracy::Correct, true));
 
         let result = compute_accuracy_of_single_hit(
-            BEATS_PER_LOOP - CORRECT_MARGIN - EPSILON * 5.,
-            &vec![0.0],
+            BEATS_PER_LOOP - CORRECT_MARGIN - f64::EPSILON * 5.,
+            &[0.0],
         );
         assert_eq!(result, (Accuracy::Early, true));
     }
@@ -372,7 +362,7 @@ mod tests {
         let mut desired_hits = Voices::new();
         desired_hits.toggle_beat(Instrument::Kick, 0.0);
 
-        let result = compute_last_loop_summary(&user_hits, &desired_hits, 0.0);
+        let result = compute_last_loop_summary(&user_hits, &desired_hits);
         assert_eq!(
             result.get_score_tracker(&Instrument::Kick).accuracies,
             vec![Accuracy::Correct],
@@ -385,7 +375,7 @@ mod tests {
         let mut desired_hits = Voices::new();
         desired_hits.toggle_beat(Instrument::Kick, 0.0);
 
-        let result = compute_last_loop_summary(&user_hits, &desired_hits, 0.0);
+        let result = compute_last_loop_summary(&user_hits, &desired_hits);
         assert_eq!(
             result.get_score_tracker(&Instrument::Kick).accuracies,
             vec![Accuracy::Miss],

@@ -135,52 +135,46 @@ pub fn process_system_events(
     gold_mode: &mut GoldMode,
 ) {
     // read events
-    loop {
-        match rx.try_recv() {
-            Ok(msg) => {
-                info!("[system event] {:?}", msg);
-                match msg {
-                    TxMsg::AudioNew => (),
-                    TxMsg::StartingLoop(loop_num) => {
-                        let last_loop_hits = get_hits_from_nth_loop(
-                            &audio.user_hits,
-                            (audio.current_loop() - 1) as usize,
-                        );
-                        let audio_latency = audio.get_configured_audio_latency_seconds();
-                        let summary_data =
-                            compute_last_loop_summary(&last_loop_hits, voices, audio_latency);
-                        info!("last loop summary = {:?}", summary_data);
-                        let totals = summary_data.total();
 
-                        if loop_num > 0 {
-                            // Log user metric to a file, for eventual data analysis
-                            let user_metric = UserMetric {
-                                system_time_ms: current_time_millis(),
-                                bpm: audio.get_bpm(),
-                                score: totals.score(),
-                            };
-                            let log_result = log_user_metric(&user_metric);
-                            if let Err(e) = log_result { println!("error logging user_metric. error was: {e}") }
-                        }
+    while let Ok(msg) = rx.try_recv() {
+        info!("[system event] {:?}", msg);
+        match msg {
+            TxMsg::AudioNew => (),
+            TxMsg::StartingLoop(loop_num) => {
+                let last_loop_hits =
+                    get_hits_from_nth_loop(&audio.user_hits, (audio.current_loop() - 1) as usize);
+                let summary_data = compute_last_loop_summary(&last_loop_hits, voices);
+                info!("last loop summary = {:?}", summary_data);
+                let totals = summary_data.total();
 
-                        gold_mode.was_gold = false;
-                        if totals.score() == 1. {
-                            gold_mode.correct_takes += 1;
-                        } else {
-                            gold_mode.correct_takes = 0;
-                        }
-
-                        if gold_mode.correct_takes == GOLD_MODE_CORRECT_TAKES {
-                            audio.set_bpm(audio.get_bpm() + GOLD_MODE_BPM_STEP);
-                            gold_mode.correct_takes = 0;
-                            gold_mode.was_gold = true;
-                            // TODO: schedule a 1-off "success!" SFX to play
-                            // TOOD: Maybe -- clear existing noise from mistaken notes
-                        }
+                if loop_num > 0 {
+                    // Log user metric to a file, for eventual data analysis
+                    let user_metric = UserMetric {
+                        system_time_ms: current_time_millis(),
+                        bpm: audio.get_bpm(),
+                        score: totals.score(),
+                    };
+                    let log_result = log_user_metric(&user_metric);
+                    if let Err(e) = log_result {
+                        println!("error logging user_metric. error was: {e}")
                     }
                 }
+
+                gold_mode.was_gold = false;
+                if totals.score() == 1. {
+                    gold_mode.correct_takes += 1;
+                } else {
+                    gold_mode.correct_takes = 0;
+                }
+
+                if gold_mode.correct_takes == GOLD_MODE_CORRECT_TAKES {
+                    audio.set_bpm(audio.get_bpm() + GOLD_MODE_BPM_STEP);
+                    gold_mode.correct_takes = 0;
+                    gold_mode.was_gold = true;
+                    // TODO: schedule a 1-off "success!" SFX to play
+                    // TOOD: Maybe -- clear existing noise from mistaken notes
+                }
             }
-            Err(_) => break,
         }
     }
 }
@@ -199,6 +193,7 @@ fn log_user_metric(user_metric: &UserMetric) -> Result<(), Box<dyn Error>> {
 }
 
 /// update application state based on events (that came from user input)
+#[allow(clippy::too_many_arguments)]
 pub fn process_user_events(
     voices: &mut Voices,
     audio: &mut Audio,
