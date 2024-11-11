@@ -198,6 +198,13 @@ impl Loop {
         let out: Self = serde_json::from_reader(f)?;
         Ok(out)
     }
+
+    pub fn new_from_data(path: &str) -> Result<Self, Box<dyn Error>> {
+        // load file at path
+        let f = std::fs::File::open(path)?;
+        let out: Self = serde_json::from_reader(f)?;
+        Ok(out)
+    }
 }
 
 #[cfg(test)]

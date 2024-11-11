@@ -1,6 +1,5 @@
 use std::error::Error;
 use std::{env, fs};
-use std::{fs::File, io::BufWriter, io::Write};
 
 use std::sync::mpsc::Receiver;
 
@@ -201,7 +200,6 @@ pub fn process_user_events(
     loops: &Vec<(String, Loop)>,
     selected_loop_idx: &mut usize,
     events: &Vec<Events>,
-    dir_name: &str,
     correct_margin: &mut f64,
     miss_margin: &mut f64,
 ) -> Result<(), Box<dyn Error>> {
@@ -230,16 +228,7 @@ pub fn process_user_events(
                 audio.user_hits = vec![];
             }
             Events::SaveLoop => {
-                // write serialized JSON output to a file
-                let dir_name = dir_name.trim_end_matches('/');
-                let file = File::create(format!("{}/loop-{}.json", dir_name, get_time()))?;
-                let mut writer = BufWriter::new(file);
-                let my_loop = Loop {
-                    bpm: audio.get_bpm() as usize,
-                    voices: voices.to_voices_old_model(),
-                };
-                serde_json::to_writer(&mut writer, &my_loop)?;
-                writer.flush()?;
+                warn!("SaveLoop temporarily disabled in favor of portability of include_dir");
             }
             Events::ToggleBeat { ins, beat } => {
                 info!("toggling beat: {:?} {:?}", *ins, *beat);

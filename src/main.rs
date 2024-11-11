@@ -32,6 +32,10 @@ use keyboard_input_handler::KeyboardInputHandler;
 use macroquad::prelude::*;
 use voices::Loop;
 
+use include_dir::{include_dir, Dir};
+
+const LOOPS_DIR: Dir = include_dir!("./assets/loops");
+
 fn window_conf() -> Conf {
     Conf {
         window_title: "Macroix".to_owned(),
@@ -77,23 +81,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let version = include_str!("../VERSION");
     log::info!("version: {}", version);
 
-    let dir_name = process_cli_args();
-
     // Setup game state
-    // read loops
-    let mut loops: Loops = Vec::new();
-    // TODO: does this need to be async still?
-    match read_loops(&dir_name).await {
-        Ok(loops_from_dir) => loops = loops_from_dir,
-        Err(e) => {
-            log::warn!(
-                "warning: unable to read loops from given directory ({}) due to '{}'",
-                &dir_name,
-                e
-            )
-        }
-    }
-
+    let loops: Loops = read_loops().await?;
     let keyboard_input = KeyboardInputHandler::new();
     let mut midi_input = MidiInputHandler::new();
 
@@ -140,7 +129,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
             &gs.loops,
             &mut gs.selected_loop_idx,
             &events,
-            &dir_name,
             &mut gs.correct_margin,
             &mut gs.miss_margin,
         )?;
@@ -160,35 +148,21 @@ async fn main() -> Result<(), Box<dyn Error>> {
     }
 }
 
-fn process_cli_args() -> String {
-    // read commnand line arg as directory name
-
-    std::env::args()
-        .nth(1)
-        .unwrap_or_else(|| "assets/loops/".to_string())
-}
-
-async fn read_loops(dir_name: &str) -> Result<Vec<(String, Loop)>, Box<dyn Error>> {
-    // get all file names from the dir
-    let paths = std::fs::read_dir(dir_name)?
-        .map(|res| res.map(|e| e.path()))
-        .collect::<Result<Vec<_>, std::io::Error>>()?;
+async fn read_loops() -> Result<Vec<(String, Loop)>, Box<dyn Error>> {
+    let loopdata = LOOPS_DIR.files().map(|f| (f.path(), f.contents()));
 
     // for each file name, load the file into Voices
     let mut loops = Vec::<(String, Loop)>::new();
-    for path in &paths {
-        let p = path.to_str().expect("unable to convert PathBuf to string");
-        let v = Loop::new_from_file_async(p).await?;
+    for (p, ld) in loopdata {
+        let v: Loop = serde_json::from_slice(ld)?;
 
-        // get just the file name from the path
-        let n = path
-            .file_name()
-            .expect("unable to get file name from path")
+        // get the name without the '.json'
+        let n = p
             .to_str()
-            .expect("unable to convert OsStr to str");
-
-        // remove the file extension
-        let n = n.split(".json").next().expect("unable to split file name");
+            .unwrap()
+            .split(".json")
+            .next()
+            .expect("unable to split file name");
 
         loops.push((n.to_string(), v));
     }
