@@ -8,10 +8,7 @@ pub struct AppConfig {
 impl AppConfig {
     pub fn new() -> Self {
         // loads or initializes
-        match confy::load("macroix", "AppConfig") {
-            Ok(cfg) => cfg,
-            Err(_) => AppConfig::default(),
-        }
+        confy::load("macroix", "AppConfig").unwrap_or_default()
     }
 
     pub fn save(&self) {
