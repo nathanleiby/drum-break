@@ -52,7 +52,7 @@ impl Audio {
             AudioManager::<DefaultBackend>::new(AudioManagerSettings::default()).unwrap();
         let clock = manager
             // TODO: investigate bpm * 2 stuff
-            .add_clock(ClockSpeed::TicksPerMinute(DEFAULT_BPM * 2. as f64))
+            .add_clock(ClockSpeed::TicksPerMinute(DEFAULT_BPM * 2_f64))
             .unwrap();
 
         tx.send(TxMsg::AudioNew).unwrap();
@@ -85,7 +85,7 @@ impl Audio {
 
     // initialize() loads required resources, like audio data
     // I've separated this from new() because it's async and it may error.
-    pub async fn initialize(self: &mut Self) -> Result<(), Box<dyn Error>> {
+    pub async fn initialize(&mut self) -> Result<(), Box<dyn Error>> {
         for ins in ALL_INSTRUMENTS {
             let sound_path = Voices::get_audio_file_for_instrument(&ins);
             let f = load_file(sound_path).await?;
@@ -97,21 +97,21 @@ impl Audio {
     }
 
     // audio latency
-    pub fn get_configured_audio_latency_seconds(self: &Self) -> f64 {
+    pub fn get_configured_audio_latency_seconds(&self) -> f64 {
         self.configured_audio_latency_seconds
     }
 
-    pub fn set_configured_audio_latency_seconds(self: &mut Self, latency: f64) {
+    pub fn set_configured_audio_latency_seconds(&mut self, latency: f64) {
         self.configured_audio_latency_seconds = latency;
     }
 
     // TODO: Move this outside and then use it to summary loop accuracy
-    fn check_if_new_beat_or_new_loop(self: &mut Self) {
+    fn check_if_new_beat_or_new_loop(&mut self) {
         // For debugging, print when we pass an integer beat
         let current_beat = self.current_beat() as i32;
         if current_beat != self.last_beat {
             // log::debug!("Beat: {}", current_beat as i32);
-            self.last_beat = current_beat as i32;
+            self.last_beat = current_beat;
             // if new loop, print that too
             if current_beat == 0 {
                 self.tx
@@ -123,7 +123,7 @@ impl Audio {
     }
 
     /// schedule should be run within each game tick to schedule the audio
-    pub async fn schedule(self: &mut Self, voices: &Voices) -> Result<(), Box<dyn Error>> {
+    pub async fn schedule(&mut self, voices: &Voices) -> Result<(), Box<dyn Error>> {
         self.check_if_new_beat_or_new_loop();
 
         let current = self.current_clock_tick();
@@ -183,33 +183,33 @@ impl Audio {
         Ok(())
     }
 
-    fn current_clock_tick(self: &Self) -> f64 {
+    fn current_clock_tick(&self) -> f64 {
         self.clock.time().ticks as f64 + self.clock.time().fraction
     }
 
-    pub fn current_beat(self: &Self) -> f64 {
+    pub fn current_beat(&self) -> f64 {
         self.current_clock_tick() % BEATS_PER_LOOP
     }
 
-    pub fn current_loop(self: &Self) -> i32 {
+    pub fn current_loop(&self) -> i32 {
         (self.current_clock_tick() / BEATS_PER_LOOP) as i32
     }
 
-    fn get_seconds_per_tick(self: &Self) -> f64 {
+    fn get_seconds_per_tick(&self) -> f64 {
         60. / self.bpm / 2.
     }
 
-    pub fn get_bpm(self: &Self) -> f64 {
+    pub fn get_bpm(&self) -> f64 {
         self.bpm
     }
 
-    pub fn set_bpm(self: &mut Self, bpm: f64) {
+    pub fn set_bpm(&mut self, bpm: f64) {
         self.bpm = clamp(bpm, MIN_BPM, MAX_BPM);
         self.clock
             .set_speed(ClockSpeed::TicksPerMinute(bpm * 2.), Tween::default())
     }
 
-    pub fn toggle_pause(self: &mut Self) {
+    pub fn toggle_pause(&mut self) {
         if self.clock.ticking() {
             self.clock.pause();
         } else {
@@ -217,22 +217,22 @@ impl Audio {
         }
     }
 
-    pub fn is_paused(self: &Self) -> bool {
+    pub fn is_paused(&self) -> bool {
         !self.clock.ticking()
     }
 
-    pub fn toggle_metronome(self: &mut Self) {
+    pub fn toggle_metronome(&mut self) {
         self.metronome_enabled = !self.metronome_enabled;
     }
 
-    pub fn is_metronome_enabled(self: &Self) -> bool {
+    pub fn is_metronome_enabled(&self) -> bool {
         self.metronome_enabled
     }
 
     // TODO: Feels like this could be moved elsewhere, with a quick lookup against audio if needed (e.g. get_seconds_per_tick)
 
     /// saves a user's hits, so they can be displayed and checked for accuracy
-    pub fn track_user_hit(self: &mut Self, instrument: Instrument, processing_delay_s: f64) {
+    pub fn track_user_hit(&mut self, instrument: Instrument, processing_delay_s: f64) {
         // convert processing delay to ticks, based on BPM
         let ticks_per_second = 1. / self.get_seconds_per_tick();
         let processing_delay_ticks = ticks_per_second * processing_delay_s;
@@ -250,7 +250,7 @@ impl Audio {
     }
 
     /// allows for hitting a single key repeatedly on the heard beat to calibrate the audio latency
-    pub fn track_for_calibration(self: &mut Self) -> f64 {
+    pub fn track_for_calibration(&mut self) -> f64 {
         self.calibration_input.push_back(self.current_beat());
 
         log::debug!(
@@ -295,7 +295,7 @@ fn schedule_audio(
         // handle wrap-around case
         if next_beat < prev_beat {
             // from prev_beat to end of loop
-            if *note > prev_beat && *note <= BEATS_PER_LOOP as f64 {
+            if *note > prev_beat && *note <= BEATS_PER_LOOP {
                 schedule_note(note, loop_num, clock, manager, sound, volume)?;
             }
             // from start of loop to next beat

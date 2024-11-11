@@ -116,17 +116,17 @@ impl Voices {
         }
     }
 
-    pub fn get_instrument_beats(self: &Self, ins: &Instrument) -> &Vec<f64> {
+    pub fn get_instrument_beats(&self, ins: &Instrument) -> &Vec<f64> {
         if let Some(pos) = self.data.iter().position(|x| x.instrument == *ins) {
-            return &self.data[pos].beat_timings;
+            &self.data[pos].beat_timings
         } else {
             panic!("couldn't find instrument, though ALL_INSTRUMENTS should be present");
         }
     }
 
-    fn get_instrument_beats_mut(self: &mut Self, ins: &Instrument) -> &mut Vec<f64> {
+    fn get_instrument_beats_mut(&mut self, ins: &Instrument) -> &mut Vec<f64> {
         if let Some(pos) = self.data.iter().position(|x| x.instrument == *ins) {
-            return &mut self.data[pos].beat_timings;
+            &mut self.data[pos].beat_timings
         } else {
             panic!("couldn't find instrument, though ALL_INSTRUMENTS should be present");
         }

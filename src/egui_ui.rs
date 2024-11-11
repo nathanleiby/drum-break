@@ -3,17 +3,14 @@
 use egui::{
     self,
     emath::{self, RectTransform},
-    pos2, CollapsingHeader, Color32, Shape, Vec2, Widget,
+    pos2, CollapsingHeader, Color32, Shape, Widget,
 };
 
-use egui_plot::{Legend, Line, Plot};
+use egui_plot::{Line, Plot};
 
 // EguiContexts, EguiPlugin,
 use log::info;
-use macroquad::{
-    color::{GREEN, LIGHTGRAY, ORANGE, PURPLE, RED},
-    telemetry::enable,
-};
+use macroquad::color::{GREEN, LIGHTGRAY, ORANGE, PURPLE, RED};
 
 use crate::{
     consts::{UserHit, ALL_INSTRUMENTS, BEATS_PER_LOOP, GRID_COLS, GRID_ROWS},
@@ -357,13 +354,13 @@ fn draw_right_panel(ctx: &egui::Context, ui_state: &UIState, events: &mut Vec<Ev
                 ui.heading("Right Panel");
             });
 
-            let selector_text = if ui_state.selector_vec.len() > 0 {
+            let selector_text = if !ui_state.selector_vec.is_empty() {
                 &ui_state.selector_vec[ui_state.selected_idx]
             } else {
                 "No loops"
             };
             egui::ComboBox::from_label("Choose Loop")
-                .selected_text(format!("{}", selector_text))
+                .selected_text(selector_text.to_string())
                 .show_ui(ui, |ui| {
                     for i in 0..ui_state.selector_vec.len() {
                         let mut current_value = &ui_state.selector_vec[i];
@@ -499,38 +496,33 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
     // capture mouse clicks and toggle relevant beat
     ui.input(|i| {
         for event in &i.raw.events {
-            match event {
-                // TODO: what is this syntax
-                egui::Event::PointerButton {
+            if let egui::Event::PointerButton {
                     pos, pressed: true, ..
-                } => {
-                    // check if click is within the beat grid's bounds
-                    if !response.rect.contains(*pos) {
-                        continue;
-                    }
-
-                    // Translate to (row, col)
-                    let tpos = from_screen.transform_pos(*pos);
-                    let row = (tpos.y * visible_rows as f32 / VIRTUAL_HEIGHT) as usize;
-                    let col = (tpos.x * visible_cols as f32 / VIRTUAL_WIDTH) as usize;
-                    info!(
-                        "click at position = {:?} [[tpos = {:?}]] (row={:?}, col={:?})",
-                        pos, tpos, row, col,
-                    );
-
-                    // map from UI display to instrument
-                    let res = visible_instruments.iter().enumerate().find(|x| x.0 == row);
-                    let ins = match res {
-                        Some(x) => *x.1,
-                        None => panic!("invalid instrument idx"),
-                    };
-                    events.push(Events::ToggleBeat {
-                        ins: *ins,
-                        beat: col as f64,
-                    });
+                } = event {
+                // check if click is within the beat grid's bounds
+                if !response.rect.contains(*pos) {
+                    continue;
                 }
 
-                _ => (),
+                // Translate to (row, col)
+                let tpos = from_screen.transform_pos(*pos);
+                let row = (tpos.y * visible_rows as f32 / VIRTUAL_HEIGHT) as usize;
+                let col = (tpos.x * visible_cols as f32 / VIRTUAL_WIDTH) as usize;
+                info!(
+                    "click at position = {:?} [[tpos = {:?}]] (row={:?}, col={:?})",
+                    pos, tpos, row, col,
+                );
+
+                // map from UI display to instrument
+                let res = visible_instruments.iter().enumerate().find(|x| x.0 == row);
+                let ins = match res {
+                    Some(x) => *x.1,
+                    None => panic!("invalid instrument idx"),
+                };
+                events.push(Events::ToggleBeat {
+                    ins: *ins,
+                    beat: col as f64,
+                });
             }
         }
     });
@@ -592,7 +584,7 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
     );
 
     draw_current_beat(
-        ui_state.current_beat + ui_state.get_audio_latency_in_beats() as f32,
+        ui_state.current_beat + ui_state.get_audio_latency_in_beats(),
         to_screen,
         ui,
         &mut shapes,
@@ -631,11 +623,11 @@ fn rect_for_col_row(
     let base_pos = pos2(col as f32 * width_scale, row as f32 * height_scale);
 
     // TODO: fix scaling to always draw a nicer looking square based grid
-    let t_rect = to_screen.transform_rect(egui::Rect {
+    
+    to_screen.transform_rect(egui::Rect {
         min: base_pos,
         max: base_pos + egui::Vec2::new(width_scale * 0.95, height_scale * 0.95),
-    });
-    t_rect
+    })
 }
 
 fn draw_current_beat(
@@ -706,7 +698,7 @@ fn draw_user_hit(
         (user_beat_with_latency as f32 / BEATS_PER_LOOP as f32) * VIRTUAL_WIDTH
     };
 
-    let base_pos = pos2(x as f32, row as f32 * height_scale);
+    let base_pos = pos2(x, row as f32 * height_scale);
     let t_rect = to_screen.transform_rect(egui::Rect {
         min: base_pos,
         max: base_pos + egui::Vec2::new(2., height_scale * 0.95),
@@ -751,7 +743,7 @@ fn draw_note_successes(
         let desired = desired_hits.get_instrument_beats(instrument);
 
         let loop_perf =
-            compute_loop_performance_for_voice(&actual_w_latency, &desired, loop_current_beat);
+            compute_loop_performance_for_voice(&actual_w_latency, desired, loop_current_beat);
         for (note_idx, note) in desired.iter().enumerate() {
             let shape = note_success_shape(
                 *note,
@@ -825,7 +817,7 @@ fn gold_mode(ui: &mut egui::Ui, ui_state: &UIState) {
         } else {
             '🔴'
         });
-        points.push([i as f64, ratio * 100. as f64]);
+        points.push([i as f64, ratio * 100_f64]);
     }
     ui.add(egui::Label::new(s));
 

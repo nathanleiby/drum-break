@@ -14,7 +14,7 @@ impl KeyboardInputHandler {
     }
 
     /// convert any user input from the last frame into Events
-    pub fn process(self: &Self) -> Vec<Events> {
+    pub fn process(&self) -> Vec<Events> {
         let mut events: Vec<Events> = vec![];
 
         // Playing the drums //

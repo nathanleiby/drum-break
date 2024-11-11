@@ -17,7 +17,7 @@ use log::info;
 use macroquad::prelude::*;
 use serde::Serialize;
 
-use crate::{consts::ALL_INSTRUMENTS, events::Events, voices::Loop};
+use crate::{events::Events, voices::Loop};
 
 const GOLD_MODE_BPM_STEP: f64 = 2.;
 const GOLD_MODE_CORRECT_TAKES: i32 = 3;
@@ -36,12 +36,12 @@ pub struct Flags {
 
 impl Flags {
     pub fn new() -> Self {
-        return Self {
+        Self {
             ui_debug_mode: false,
             dev_tools_visible: false,
             help_visible: false,
             hide_empty_tracks: false,
-        };
+        }
     }
 }
 
@@ -148,7 +148,7 @@ pub fn process_system_events(
                         );
                         let audio_latency = audio.get_configured_audio_latency_seconds();
                         let summary_data =
-                            compute_last_loop_summary(&last_loop_hits, &voices, audio_latency);
+                            compute_last_loop_summary(&last_loop_hits, voices, audio_latency);
                         info!("last loop summary = {:?}", summary_data);
                         let totals = summary_data.total();
 
@@ -160,10 +160,7 @@ pub fn process_system_events(
                                 score: totals.score(),
                             };
                             let log_result = log_user_metric(&user_metric);
-                            match log_result {
-                                Err(e) => println!("error logging user_metric. error was: {e}"),
-                                _ => {}
-                            }
+                            if let Err(e) = log_result { println!("error logging user_metric. error was: {e}") }
                         }
 
                         gold_mode.was_gold = false;

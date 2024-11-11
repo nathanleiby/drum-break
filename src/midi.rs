@@ -5,7 +5,6 @@
 */
 
 use log::info;
-use midir;
 use std::collections::HashMap;
 use std::string::*;
 use std::sync::{Arc, Mutex};
@@ -70,7 +69,7 @@ impl MidiInput {
                 pressed.push(*raw_input);
             }
         }
-        if pressed.len() > 0 {
+        if !pressed.is_empty() {
             log::info!("Pressed midi: {:?}", pressed);
         }
         pressed
@@ -82,7 +81,7 @@ impl MidiInput {
         let mut raw_inputs = self.raw_inputs.lock().unwrap();
         // store latests values as previous
         for (id, raw_input) in raw_inputs.iter_mut() {
-            if let Some(prev_raw) = prev_raw_inputs.get_mut(&id) {
+            if let Some(prev_raw) = prev_raw_inputs.get_mut(id) {
                 *prev_raw = *raw_input;
             } else {
                 prev_raw_inputs.insert(*id, *raw_input);

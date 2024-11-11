@@ -54,7 +54,7 @@ impl UserHit {
         }
     }
 
-    pub fn beat(self: &Self) -> f64 {
+    pub fn beat(&self) -> f64 {
         self.clock_tick % BEATS_PER_LOOP
     }
 }

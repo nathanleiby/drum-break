@@ -28,7 +28,6 @@ use audio::Audio;
 use consts::{WINDOW_HEIGHT, WINDOW_WIDTH};
 use game::{compute_ui_state, process_system_events, process_user_events, GameState, Loops};
 use keyboard_input_handler::KeyboardInputHandler;
-use simple_logger;
 
 use macroquad::prelude::*;
 use voices::Loop;
@@ -163,11 +162,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
 fn process_cli_args() -> String {
     // read commnand line arg as directory name
-    let dir_name = std::env::args()
-        .nth(1)
-        .unwrap_or_else(|| return "res/loops/".to_string());
+    
 
-    return dir_name;
+    std::env::args()
+        .nth(1)
+        .unwrap_or_else(|| "res/loops/".to_string())
 }
 
 async fn read_loops(dir_name: &str) -> Result<Vec<(String, Loop)>, Box<dyn Error>> {

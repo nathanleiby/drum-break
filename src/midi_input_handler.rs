@@ -31,7 +31,7 @@ impl MidiInputHandler {
     }
 
     /// convert any user input from the last frame into Events
-    pub fn process(self: &mut Self) -> Vec<Events> {
+    pub fn process(&mut self) -> Vec<Events> {
         let mut events: Vec<Events> = vec![];
 
         // TODO(future): get the current clock time AND audio clock time at the start of a frame, and use that for all downstream calcs
@@ -77,7 +77,7 @@ struct InputConfigMidi {
 }
 
 impl InputConfigMidi {
-    pub fn get_note_numbers(self: &Self, ins: &Instrument) -> &HashSet<u8> {
+    pub fn get_note_numbers(&self, ins: &Instrument) -> &HashSet<u8> {
         match ins {
             Instrument::ClosedHihat => &self.closed_hi_hat,
             Instrument::Snare => &self.snare,

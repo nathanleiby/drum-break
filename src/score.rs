@@ -4,7 +4,7 @@
   This logic is pure, so it can be iterated independently of other game logic or audio system.
 */
 
-use std::{collections::HashMap, ops::Add, vec};
+use std::{collections::HashMap, vec};
 
 use crate::{
     consts::UserHit,
@@ -76,7 +76,7 @@ pub fn compute_accuracy_of_single_hit(
     match target_beat {
         None => {
             // log::info!("No target beat found, returning Miss");
-            return (Accuracy::Miss, false);
+            (Accuracy::Miss, false)
         }
         Some((b, _)) => {
             log::debug!("Target beat found: {:?}", b);
@@ -92,7 +92,7 @@ pub fn compute_accuracy_of_single_hit(
             //     "Accuracy: {:?} .. user_input_beat = {:?} .. target_beat = {:?} .. distance = {:?} .. is_next_loop = {:?}",
             //     acc, user_beat_with_latency, target_beat, distance, is_next_loop
             // );
-            return (acc, is_next_loop);
+            (acc, is_next_loop)
         }
     }
 }
@@ -108,18 +108,18 @@ impl ScoreTracker {
     }
 
     // score is given as a ratio, from 0 to 1
-    pub fn score(self: &Self) -> f64 {
+    pub fn score(&self) -> f64 {
         let num_correct = self
             .accuracies
             .iter()
             .map(|acc| *acc == Accuracy::Correct)
-            .filter(|b| *b == true)
+            .filter(|b| *b)
             .count();
         let num_close = self
             .accuracies
             .iter()
             .map(|acc| *acc == Accuracy::Early || *acc == Accuracy::Late)
-            .filter(|b| *b == true)
+            .filter(|b| *b)
             .count();
 
         let num_notes = self.accuracies.len();
@@ -144,7 +144,7 @@ impl LastLoopSummary {
         Self { data }
     }
 
-    pub fn get_score_tracker(self: &Self, instrument: &Instrument) -> &ScoreTracker {
+    pub fn get_score_tracker(&self, instrument: &Instrument) -> &ScoreTracker {
         let st = self.data.get(instrument);
         if let Some(st) = st {
             st
@@ -154,7 +154,7 @@ impl LastLoopSummary {
     }
 
     pub fn set_score_tracker(
-        self: &mut Self,
+        &mut self,
         instrument: &Instrument,
         score_tracker: ScoreTracker,
     ) {
@@ -162,7 +162,7 @@ impl LastLoopSummary {
         *to_update = score_tracker;
     }
 
-    fn get_mut_score_tracker(self: &mut Self, instrument: &Instrument) -> &mut ScoreTracker {
+    fn get_mut_score_tracker(&mut self, instrument: &Instrument) -> &mut ScoreTracker {
         let st = self.data.get_mut(instrument);
         if let Some(st) = st {
             st
@@ -171,7 +171,7 @@ impl LastLoopSummary {
         }
     }
 
-    pub fn total(self: Self) -> ScoreTracker {
+    pub fn total(self) -> ScoreTracker {
         let mut all_acc = vec![];
 
         for ins in ALL_INSTRUMENTS.iter() {
