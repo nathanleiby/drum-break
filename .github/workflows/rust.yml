@@ -17,9 +17,9 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install OS dependencies (alsa)
         run: sudo apt install libasound2-dev
+      - name: Lint
+        run: cargo clippy --all --all-features --tests -- -D warnings
       - name: Build
         run: cargo build --verbose
       - name: Unit tests
         run: cargo test --verbose
-      - name: Lint
-        run: cargo clippy --all --all-features --tests -- -D warnings
