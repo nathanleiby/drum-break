@@ -38,7 +38,7 @@ const LOOPS_DIR: Dir = include_dir!("./assets/loops");
 
 fn window_conf() -> Conf {
     Conf {
-        window_title: "Macroix".to_owned(),
+        window_title: "Drum Break".to_owned(),
         // fullscreen: true,
         window_width: WINDOW_WIDTH,
         window_height: WINDOW_HEIGHT,
