@@ -135,17 +135,17 @@ impl Voices {
     pub fn get_audio_file_for_instrument(ins: &Instrument) -> &str {
         // TODO: verify required sound files exist on startup- right now it fails during runtime
         match ins {
-            Instrument::ClosedHihat => "res/sounds/closed-hihat.wav",
-            Instrument::Snare => "res/sounds/snare.wav",
-            Instrument::Kick => "res/sounds/kick.wav",
-            Instrument::OpenHihat => "res/sounds/open-hihat.wav",
-            Instrument::Ride => "res/sounds/ride.wav",
-            Instrument::Crash => "res/sounds/crash.wav",
-            Instrument::Tom1 => "res/sounds/tom-hi.wav",
-            Instrument::Tom2 => "res/sounds/tom-med.wav",
-            Instrument::Tom3 => "res/sounds/tom-low.wav",
-            Instrument::PedalHiHat => "res/sounds/pedal-hihat.wav",
-            // Instrument::Metronome => "res/sounds/click.wav",
+            Instrument::ClosedHihat => "assets/sounds/closed-hihat.wav",
+            Instrument::Snare => "assets/sounds/snare.wav",
+            Instrument::Kick => "assets/sounds/kick.wav",
+            Instrument::OpenHihat => "assets/sounds/open-hihat.wav",
+            Instrument::Ride => "assets/sounds/ride.wav",
+            Instrument::Crash => "assets/sounds/crash.wav",
+            Instrument::Tom1 => "assets/sounds/tom-hi.wav",
+            Instrument::Tom2 => "assets/sounds/tom-med.wav",
+            Instrument::Tom3 => "assets/sounds/tom-low.wav",
+            Instrument::PedalHiHat => "assets/sounds/pedal-hihat.wav",
+            // Instrument::Metronome => "assets/sounds/click.wav",
         }
     }
 
@@ -206,7 +206,7 @@ mod tests {
 
     #[test]
     fn it_can_load_a_loop_from_file() {
-        let result = Loop::new_from_file("res/loops/samba.json");
+        let result = Loop::new_from_file("assets/loops/samba.json");
         let loop_data = result.unwrap();
         assert_eq!(loop_data.bpm, 120);
         let voices = Voices::new_from_voices_old_model(&loop_data.voices);

@@ -8,7 +8,7 @@ python3 migrate_loops2.py
 import os
 import json
 
-prefix = "./res/loops"
+prefix = "./assets/loops"
 names = os.listdir(prefix)
 
 # This migration adds `voices.crash = []`

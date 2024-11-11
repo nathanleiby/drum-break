@@ -9,7 +9,7 @@ import os
 import json
 import uuid
 
-prefix = "./res/loops"
+prefix = "./assets/loops"
 names = os.listdir(prefix)
 
 # This migration adds

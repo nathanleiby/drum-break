@@ -165,7 +165,7 @@ fn process_cli_args() -> String {
 
     std::env::args()
         .nth(1)
-        .unwrap_or_else(|| "res/loops/".to_string())
+        .unwrap_or_else(|| "assets/loops/".to_string())
 }
 
 async fn read_loops(dir_name: &str) -> Result<Vec<(String, Loop)>, Box<dyn Error>> {

@@ -163,7 +163,7 @@ impl Audio {
             // TODO: play a different sound at start of each measure
             // clicks on quarter notes
             let metronome_notes = vec![0., 2., 4., 6., 8., 10., 12., 14.];
-            let sound_path = "res/sounds/click.wav"; // TODO: metronome.ogg?
+            let sound_path = "assets/sounds/click.wav"; // TODO: metronome.ogg?
             let f = load_file(sound_path).await?;
             let sound = StaticSoundData::from_cursor(Cursor::new(f))?;
             let volume = 1.;

@@ -8,7 +8,7 @@ python3 migrate_loops.py
 import os
 import json
 
-names = os.listdir("./res/loops")
+names = os.listdir("./assets/loops")
 
 # This migration adds `voices.ride = []`
 

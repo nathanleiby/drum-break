@@ -21,7 +21,7 @@ cp target/aarch64-apple-darwin/release/drum-break ./release/drum-break-aarch64
 chmod 700 ./release/drum-break-aarch64
 
 # add assets
-cp -r res/ ./release/res/
+cp -r assets/ ./release/assets/
 
 # zip it up and ship the release
 version="$(cat VERSION)"
