@@ -36,6 +36,6 @@ cargo install universal2
 cargo universal2
 ```
 
-This outputs a universal binary at `./target/universal2-apple-darwin/release/macroix`.
+This outputs a universal binary at `./target/universal2-apple-darwin/release/drum-break`.
 
 For more info: https://github.com/randomairborne/cargo-universal2/blob/main/src/lib.rs

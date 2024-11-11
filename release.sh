@@ -10,15 +10,15 @@ mkdir -p release
 
 # build: x86
 target=x86_64-apple-darwin
-final_binary_name=macroix-x86
+final_binary_name=drum-break-x86
 cargo build --release --target $target
-cp target/x86_64-apple-darwin/release/macroix ./release/$final_binary_name
+cp target/x86_64-apple-darwin/release/drum-break ./release/$final_binary_name
 chmod 700 ./release/$final_binary_name
 
 # build: arm
 cargo build --release --target aarch64-apple-darwin
-cp target/aarch64-apple-darwin/release/macroix ./release/macroix-aarch64
-chmod 700 ./release/macroix-aarch64
+cp target/aarch64-apple-darwin/release/drum-break ./release/drum-break-aarch64
+chmod 700 ./release/drum-break-aarch64
 
 # add assets
 cp -r res/ ./release/res/

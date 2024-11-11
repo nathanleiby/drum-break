@@ -1,7 +1,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>macroix</title>
+    <title>drum-break</title>
     <style>
         html,
         body,
@@ -20,7 +20,7 @@
     <canvas id="glcanvas" tabindex='1' hidden></canvas>
     <script src="https://not-fl3.github.io/miniquad-samples/mq_js_bundle.js"></script>
     <script type="module">
-        import init, { set_wasm } from "./macroix.js";
+        import init, { set_wasm } from "./drum-break.js";
         async function impl_run() {
             let wbg = await init();
             miniquad_add_plugin({
@@ -29,7 +29,7 @@
                 version: "0.0.1",
                 name: "wbg",
             });
-            load("./macroix_bg.wasm");
+            load("./drum-break_bg.wasm");
         }
         window.run = function() {
             document.getElementById("run-container").remove();

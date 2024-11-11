@@ -13,7 +13,7 @@ The tool is in an alpha state.
 
 ## Download
 
-1. Download the latest [release-<version>.zip](https://github.com/nathanleiby/macroix/releases) from Github.
+1. Download the latest [release-<version>.zip](https://github.com/nathanleiby/drum-break/releases) from Github.
 2. Unzip it
 3. `cd release/`
 4. Run `./drum_break`.

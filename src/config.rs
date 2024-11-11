@@ -8,13 +8,13 @@ pub struct AppConfig {
 impl AppConfig {
     pub fn new() -> Self {
         // loads or initializes
-        confy::load("macroix", "AppConfig").unwrap_or_default()
+        confy::load("drum-break", "AppConfig").unwrap_or_default()
     }
 
     pub fn save(&self) {
         // TODO: We may remove confy. Ignore for now
         #[allow(clippy::match_single_binding)]
-        match confy::store("macroix", "AppConfig", self) {
+        match confy::store("drum-break", "AppConfig", self) {
             // ignore failures. these happen in web builds
             _ => (),
         }

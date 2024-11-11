@@ -498,6 +498,28 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "75b325c5dbd37f80359721ad39aca5a29fb04c89279657cffdda8736d0c0b9d2"
 
 [[package]]
+name = "drum-break"
+version = "0.1.0"
+dependencies = [
+ "confy",
+ "cvars",
+ "cvars-console-macroquad",
+ "egui",
+ "egui_macroquad",
+ "egui_plot",
+ "kira",
+ "log",
+ "macroquad",
+ "midir",
+ "serde",
+ "serde_json",
+ "simple_logger",
+ "symphonia",
+ "web-time",
+ "webbrowser 0.8.15",
+]
+
+[[package]]
 name = "ecolor"
 version = "0.28.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -903,28 +925,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "19b955cdeb2a02b9117f121ce63aa52d08ade45de53e48fe6a38b39c10f6f709"
 dependencies = [
  "libc",
-]
-
-[[package]]
-name = "macroix"
-version = "0.1.0"
-dependencies = [
- "confy",
- "cvars",
- "cvars-console-macroquad",
- "egui",
- "egui_macroquad",
- "egui_plot",
- "kira",
- "log",
- "macroquad",
- "midir",
- "serde",
- "serde_json",
- "simple_logger",
- "symphonia",
- "web-time",
- "webbrowser 0.8.15",
 ]
 
 [[package]]
