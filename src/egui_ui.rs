@@ -8,7 +8,7 @@ use egui_plot::{Line, Plot};
 
 // EguiContexts, EguiPlugin,
 use log::info;
-use macroquad::color::{GREEN, LIGHTGRAY, ORANGE, PURPLE, RED};
+use macroquad::color::{DARKBLUE, DARKBROWN, DARKPURPLE, GREEN, LIGHTGRAY, ORANGE, PURPLE, RED};
 
 use crate::{
     consts::{UserHit, ALL_INSTRUMENTS, BEATS_PER_LOOP, GRID_COLS, GRID_ROWS},
@@ -414,9 +414,9 @@ fn draw_right_panel(ctx: &egui::Context, ui_state: &UIState, events: &mut Vec<Ev
             }
 
             ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
-                ui.add(egui::github_link_file!(
+                ui.add(egui::Hyperlink::from_label_and_url(
+                    "Source code.",
                     "https://github.com/nathanleiby/drum-break",
-                    "Source code."
                 ));
                 egui::warn_if_debug_build(ui);
             });
@@ -531,13 +531,51 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
     });
 
     let beat_fill_color = if ui.visuals().dark_mode {
-        Color32::from_rgb(50, 50, 50)
+        // Color32::from_rgb(50, 50, 50)
+        Color32::DARK_BLUE
     } else {
-        Color32::from_rgba_premultiplied(50, 50, 50, 128)
+        // Color32::from_rgba_premultiplied(50, 50, 50, 128)
+        Color32::DARK_BLUE
     };
 
     let mut shapes = vec![];
+
+    // Draw background
+
+    let bg_rect = egui::Shape::rect_filled(
+        to_screen.transform_rect(egui::Rect {
+            min: pos2(0., 0.),
+            max: pos2(VIRTUAL_WIDTH, VIRTUAL_HEIGHT),
+        }),
+        egui::Rounding::default(),
+        Color32::LIGHT_BLUE,
+    );
+    shapes.push(bg_rect);
+
+    // draw vertical lines
+    for col in 0..visible_cols {
+        let base_pos = pos2((col as f32) * width_scale, 0.);
+        let start_pt = to_screen.transform_pos(base_pos);
+        let end_pt = to_screen.transform_pos(base_pos + egui::Vec2::new(0., VIRTUAL_HEIGHT));
+
+        let shape = egui::Shape::line(
+            vec![start_pt, end_pt],
+            egui::Stroke::new(if col % 4 == 0 { 2. } else { 1. }, Color32::DARK_GRAY),
+        );
+        shapes.push(shape);
+    }
+
     for visible_row in 0..visible_rows {
+        // draw a horizontal line through the middle
+        let base_pos = pos2(0., (visible_row as f32 + 0.5) * height_scale);
+        let start_pt = to_screen.transform_pos(base_pos);
+        let end_pt = to_screen.transform_pos(base_pos + egui::Vec2::new(VIRTUAL_WIDTH, 0.));
+        let shape = egui::Shape::line(
+            vec![start_pt, end_pt],
+            egui::Stroke::new(1., Color32::DARK_GRAY),
+        );
+        shapes.push(shape);
+
         for col in 0..visible_cols {
             let t_rect = rect_for_col_row(col, visible_row, to_screen, width_scale, height_scale);
 
@@ -552,13 +590,6 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
                     egui::Shape::rect_filled(t_rect, egui::Rounding::default(), beat_fill_color);
                 shapes.push(shape)
             }
-
-            let shape = egui::Shape::rect_stroke(
-                t_rect,
-                egui::Rounding::default(),
-                egui::Stroke::new(2., Color32::DARK_GRAY),
-            );
-            shapes.push(shape);
         }
     }
 
@@ -778,7 +809,7 @@ fn note_success_shape(
         Accuracy::Late => PURPLE,
         Accuracy::Correct => GREEN,
         Accuracy::Miss => RED,
-        Accuracy::Unknown => LIGHTGRAY,
+        Accuracy::Unknown => DARKBLUE,
     };
     let bar_color_32 = Color32::from_rgb(
         (bar_color.r * 256.) as u8,
