@@ -8,7 +8,7 @@ use egui_plot::{Line, Plot};
 
 // EguiContexts, EguiPlugin,
 use log::info;
-use macroquad::color::{DARKBLUE, DARKBROWN, DARKPURPLE, GREEN, LIGHTGRAY, ORANGE, PURPLE, RED};
+use macroquad::color::{DARKBLUE, GREEN, LIGHTGRAY, ORANGE, PURPLE, RED};
 
 use crate::{
     consts::{UserHit, ALL_INSTRUMENTS, BEATS_PER_LOOP, GRID_COLS, GRID_ROWS},
@@ -541,7 +541,6 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
     let mut shapes = vec![];
 
     // Draw background
-
     let bg_rect = egui::Shape::rect_filled(
         to_screen.transform_rect(egui::Rect {
             min: pos2(0., 0.),
@@ -586,6 +585,7 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
                 ui_state.enabled_beats,
                 &visible_instruments,
             ) {
+                // TODO: These are being drawn over by `draw_note_successes`. how to handle?
                 let shape =
                     egui::Shape::rect_filled(t_rect, egui::Rounding::default(), beat_fill_color);
                 shapes.push(shape)
