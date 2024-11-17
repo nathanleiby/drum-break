@@ -74,6 +74,8 @@ const MOCK_INITIAL_STATE: bool = false;
 async fn main() -> Result<(), Box<dyn Error>> {
     #[cfg(not(target_arch = "wasm32"))]
     simple_logger::init_with_env().unwrap();
+    #[cfg(target_arch = "wasm32")]
+    wasm_logger::init(wasm_logger::Config::default());
 
     let mut my_cvars = Cvars::new();
     let mut macroquad_console = MacroquadConsole::new();
