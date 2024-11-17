@@ -155,7 +155,7 @@ pub fn process_system_events(
                     };
                     let log_result = log_user_metric(&user_metric);
                     if let Err(e) = log_result {
-                        println!("error logging user_metric. error was: {e}")
+                        log::error!("error logging user_metric. error was: {e}")
                     }
                 }
 
@@ -179,10 +179,10 @@ pub fn process_system_events(
 }
 
 fn log_user_metric(user_metric: &UserMetric) -> Result<(), Box<dyn Error>> {
-    println!("user_metric = {:?}", user_metric);
+    log::info!("user_metric = {:?}", user_metric);
     let data = serde_json::to_string(&user_metric)?;
     let current_dir = env::current_dir()?;
-    println!("user_metric (json) = {}", data);
+    log::info!("user_metric (json) = {}", data);
 
     let dir = current_dir.join("log");
     fs::create_dir_all(&dir)?;
