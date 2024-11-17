@@ -30,6 +30,26 @@ impl MidiInputHandler {
         Self { midi_input }
     }
 
+    pub fn refresh_connected_device(&mut self) {
+        let mut midi_input = MidiInput::new();
+        match midi_input {
+            Some(ref mut midi_input) => {
+                midi_input.connect();
+            }
+            None => log::warn!("warning: no midi input device found"),
+        }
+
+        self.midi_input = midi_input;
+    }
+
+    pub fn attached_device_name(&self) -> &str {
+        if let Some(midi_input) = &self.midi_input {
+            midi_input.get_device_name()
+        } else {
+            "none"
+        }
+    }
+
     /// convert any user input from the last frame into Events
     pub fn process(&mut self) -> Vec<Events> {
         let mut events: Vec<Events> = vec![];

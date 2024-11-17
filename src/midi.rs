@@ -40,7 +40,9 @@ impl MidiInputDataRaw {
 
 impl MidiInput {
     pub fn new() -> Option<Self> {
+        log::info!("MidiInput::new()");
         let midi_input = midir::MidiInput::new("Input device").unwrap();
+        log::info!("port count {}", midi_input.port_count());
         // grab first device
         let input_port = match midi_input.ports().into_iter().next() {
             Some(port) => port,

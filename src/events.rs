@@ -28,6 +28,8 @@ pub enum Events {
     ToggleHelpVisibility,
     ToggleEmptyTrackVisibility,
 
+    RefreshConnectedMidiDevice,
+
     // Dev Tools
     ToggleDebugMode,
     ToggleDevToolsVisibility,

@@ -55,6 +55,7 @@ pub struct UIState {
     miss_margin: f64,
 
     hide_empty_tracks: bool,
+    midi_device_name: String,
     // user interaction state
     // is_dragging,
 }
@@ -96,6 +97,8 @@ impl Default for UIState {
             miss_margin: 0.,
 
             hide_empty_tracks: false,
+
+            midi_device_name: "".to_string(),
         }
     }
 }
@@ -172,6 +175,10 @@ impl UIState {
 
     pub fn set_hide_empty_tracks(&mut self, val: bool) {
         self.hide_empty_tracks = val;
+    }
+
+    pub fn set_midi_device_name(&mut self, val: &str) {
+        self.midi_device_name = val.to_owned();
     }
 }
 
@@ -412,6 +419,20 @@ fn draw_right_panel(ctx: &egui::Context, ui_state: &UIState, events: &mut Vec<Ev
             if ui.button(button_text).clicked() {
                 events.push(Events::ToggleEmptyTrackVisibility);
             }
+
+            ui.separator();
+
+            ui.group(|ui| {
+                ui.add(egui::Label::new("**MIDI**"));
+                ui.add(egui::Label::new(format!(
+                    "attached device: {}",
+                    ui_state.midi_device_name
+                )));
+
+                if ui.button("Refresh Connected Midi Device").clicked() {
+                    events.push(Events::RefreshConnectedMidiDevice);
+                }
+            });
 
             ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
                 ui.add(egui::Hyperlink::from_label_and_url(

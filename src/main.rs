@@ -133,12 +133,18 @@ async fn main() -> Result<(), Box<dyn Error>> {
             &events,
             &mut gs.correct_margin,
             &mut gs.miss_margin,
+            &mut midi_input,
         )?;
 
         audio.schedule(&gs.voices).await?;
 
         // render UI
-        ui.render(&compute_ui_state(&gs, &audio));
+        ui.render(&compute_ui_state(
+            &gs,
+            &audio,
+            midi_input.attached_device_name(),
+        ));
+
         macroquad_console.update(&mut my_cvars);
         if gs.flags.ui_debug_mode {
             fps_tracker.update();

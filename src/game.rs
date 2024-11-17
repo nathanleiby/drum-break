@@ -7,6 +7,7 @@ use crate::audio::Audio;
 use crate::config::AppConfig;
 use crate::consts::TxMsg;
 use crate::egui_ui::UIState;
+use crate::midi_input_handler::MidiInputHandler;
 use crate::score::compute_last_loop_summary;
 use crate::time::current_time_millis;
 use crate::ui::*;
@@ -97,7 +98,7 @@ impl GameState {
 }
 
 // TODO: simplify how we init this.. I don't think all the mutability and helper fns are needed
-pub fn compute_ui_state(gs: &GameState, audio: &Audio) -> UIState {
+pub fn compute_ui_state(gs: &GameState, audio: &Audio, midi_device_name: &str) -> UIState {
     let selector_vec = gs.loops.iter().map(|(name, _)| name.to_string()).collect();
     let mut ui_state = UIState::default().selector_vec(&selector_vec);
     ui_state.set_selected_idx(gs.selected_loop_idx);
@@ -116,6 +117,7 @@ pub fn compute_ui_state(gs: &GameState, audio: &Audio) -> UIState {
     ui_state.set_miss_margin(gs.miss_margin);
     ui_state.set_is_help_visible(gs.flags.help_visible);
     ui_state.set_hide_empty_tracks(gs.flags.hide_empty_tracks);
+    ui_state.set_midi_device_name(midi_device_name);
     ui_state
 }
 
@@ -183,7 +185,6 @@ fn log_user_metric(user_metric: &UserMetric) -> Result<(), Box<dyn Error>> {
     let data = serde_json::to_string(&user_metric)?;
     let current_dir = env::current_dir()?;
     log::info!("user_metric (json) = {}", data);
-
     let dir = current_dir.join("log");
     fs::create_dir_all(&dir)?;
     let fpath = dir.join(format!("user_metric-{}.json", user_metric.system_time_ms));
@@ -202,6 +203,7 @@ pub fn process_user_events(
     events: &Vec<Events>,
     correct_margin: &mut f64,
     miss_margin: &mut f64,
+    midi_input: &mut MidiInputHandler,
 ) -> Result<(), Box<dyn Error>> {
     for event in events {
         info!("[user event] {:?}", event);
@@ -281,6 +283,9 @@ pub fn process_user_events(
             }
             Events::ToggleEmptyTrackVisibility => {
                 flags.hide_empty_tracks = !flags.hide_empty_tracks;
+            }
+            Events::RefreshConnectedMidiDevice => {
+                midi_input.refresh_connected_device();
             }
         }
     }
