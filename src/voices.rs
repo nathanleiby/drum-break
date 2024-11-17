@@ -148,6 +148,8 @@ impl Voices {
         }
     }
 
+    // TODO: how to handle a dynamic number of cols.. vec?
+    // TODO: Probably better to represent this without arrays
     pub fn to_enabled_beats(&self) -> [[bool; GRID_COLS]; GRID_ROWS] {
         let mut out = [[false; GRID_COLS]; GRID_ROWS];
 

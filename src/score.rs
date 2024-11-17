@@ -190,7 +190,7 @@ pub fn get_user_hit_timings_by_instrument(
     user_hits
         .iter()
         .filter(|hit| hit.instrument == instrument)
-        .map(|hit| hit.beat())
+        .map(|hit| hit.beat(BEATS_PER_LOOP))
         .collect::<Vec<f64>>()
 }
 

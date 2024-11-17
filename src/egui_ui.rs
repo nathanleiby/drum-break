@@ -575,6 +575,7 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
         );
         shapes.push(shape);
 
+        // TODO: Instead of looking at each potential beat, draw the beats where it says they exist!
         for col in 0..visible_cols {
             let t_rect = rect_for_col_row(col, visible_row, to_screen, width_scale, height_scale);
 
