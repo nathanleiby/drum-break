@@ -16,7 +16,7 @@ use macroquad::prelude::*;
 
 use crate::{
     config::AppConfig,
-    consts::{TxMsg, UserHit, ALL_INSTRUMENTS, BEATS_PER_LOOP, TICK_SCHEDULE_AHEAD},
+    consts::{TxMsg, UserHit, ALL_INSTRUMENTS, TICK_SCHEDULE_AHEAD},
     voices::{Instrument, Voices},
 };
 
@@ -29,6 +29,7 @@ pub struct Audio {
     clock: ClockHandle,
     last_scheduled_tick: f64,
     bpm: f64,
+    beats_per_loop: usize,
     metronome_enabled: bool,
 
     sounds: HashMap<Instrument, StaticSoundData>,
@@ -45,6 +46,7 @@ pub struct Audio {
 }
 
 const DEFAULT_BPM: f64 = 60.;
+const DEFAULT_BEATS_PER_LOOP: usize = 16;
 const MIN_BPM: f64 = 40.;
 const MAX_BPM: f64 = 240.;
 
@@ -64,6 +66,7 @@ impl Audio {
             clock,
             last_scheduled_tick: -1.,
             bpm: DEFAULT_BPM,
+            beats_per_loop: DEFAULT_BEATS_PER_LOOP,
             metronome_enabled: false,
 
             sounds: HashMap::new(),
@@ -165,6 +168,7 @@ impl Audio {
                 &self.clock,
                 self.last_scheduled_tick,
                 tick_to_schedule,
+                self.beats_per_loop as f64,
             )?;
         }
 
@@ -183,6 +187,7 @@ impl Audio {
                 &self.clock,
                 self.last_scheduled_tick,
                 tick_to_schedule,
+                self.beats_per_loop as f64,
             )?;
         }
 
@@ -196,11 +201,11 @@ impl Audio {
     }
 
     pub fn current_beat(&self) -> f64 {
-        self.current_clock_tick() % BEATS_PER_LOOP
+        self.current_clock_tick() % self.beats_per_loop as f64
     }
 
     pub fn current_loop(&self) -> i32 {
-        (self.current_clock_tick() / BEATS_PER_LOOP) as i32
+        (self.current_clock_tick() / self.beats_per_loop as f64) as i32
     }
 
     fn get_seconds_per_tick(&self) -> f64 {
@@ -283,6 +288,7 @@ impl Audio {
 }
 
 /// schedules notes for a single sound to be played between last_scheduled_tick and tick_to_schedule
+#[allow(clippy::too_many_arguments)]
 fn schedule_audio(
     notes: &[f64],
     sound: &StaticSoundData,
@@ -291,24 +297,49 @@ fn schedule_audio(
     clock: &ClockHandle,
     last_scheduled_tick: f64,
     tick_to_schedule: f64,
+    beats_per_loop: f64,
 ) -> Result<(), Box<dyn Error>> {
-    let prev_beat = last_scheduled_tick % BEATS_PER_LOOP;
-    let next_beat = tick_to_schedule % BEATS_PER_LOOP;
-    let loop_num = (last_scheduled_tick / BEATS_PER_LOOP) as i32; // floor
+    let prev_beat = last_scheduled_tick % beats_per_loop;
+    let next_beat = tick_to_schedule % beats_per_loop;
+    let loop_num = (last_scheduled_tick / beats_per_loop) as i32; // floor
     for note in notes.iter() {
         if note > &prev_beat && note <= &next_beat {
-            schedule_note(note, loop_num, clock, manager, sound, volume)?;
+            schedule_note(
+                note,
+                loop_num,
+                clock,
+                manager,
+                sound,
+                volume,
+                beats_per_loop,
+            )?;
         };
 
         // handle wrap-around case
         if next_beat < prev_beat {
             // from prev_beat to end of loop
-            if *note > prev_beat && *note <= BEATS_PER_LOOP {
-                schedule_note(note, loop_num, clock, manager, sound, volume)?;
+            if *note > prev_beat && *note <= beats_per_loop {
+                schedule_note(
+                    note,
+                    loop_num,
+                    clock,
+                    manager,
+                    sound,
+                    volume,
+                    beats_per_loop,
+                )?;
             }
             // from start of loop to next beat
             if *note >= 0. && *note <= next_beat {
-                schedule_note(note, loop_num + 1, clock, manager, sound, volume)?;
+                schedule_note(
+                    note,
+                    loop_num + 1,
+                    clock,
+                    manager,
+                    sound,
+                    volume,
+                    beats_per_loop,
+                )?;
             }
         }
     }
@@ -324,8 +355,9 @@ fn schedule_note(
     manager: &mut AudioManager,
     sound: &StaticSoundData,
     volume: f64,
+    beats_per_loop: f64,
 ) -> Result<(), Box<dyn Error>> {
-    let note_tick = (*note + (loop_num as f64) * BEATS_PER_LOOP) as u64;
+    let note_tick = (*note + (loop_num as f64) * beats_per_loop) as u64;
     log::debug!(
         "\tScheduling {:?} ({}) at {}",
         sound.settings,
