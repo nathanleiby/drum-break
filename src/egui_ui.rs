@@ -11,7 +11,7 @@ use log::info;
 use macroquad::color::{DARKBLUE, GREEN, LIGHTGRAY, ORANGE, PURPLE, RED};
 
 use crate::{
-    consts::{UserHit, ALL_INSTRUMENTS, BEATS_PER_LOOP, GRID_COLS, GRID_ROWS},
+    consts::{UserHit, ALL_INSTRUMENTS, GRID_COLS, GRID_ROWS},
     events::Events,
     score::{
         compute_accuracy_of_single_hit, compute_last_loop_summary,
@@ -40,6 +40,7 @@ pub struct UIState {
     // audio
     current_loop: usize, // nth loop
     current_beat: f32,
+    beats_per_loop: usize,
 
     enabled_beats: EnabledBeats,
 
@@ -77,6 +78,7 @@ impl Default for UIState {
             current_loop: 2,
             current_beat: 2.3,
 
+            beats_per_loop: 16,
             bpm: 120.,
 
             is_metronome_enabled: false,
@@ -269,9 +271,9 @@ fn draw_top_panel(ctx: &egui::Context, ui_state: &UIState, events: &mut Vec<Even
                     }
                 });
                 ui.add_space(16.0);
-            }
 
-            ui.separator();
+                ui.separator();
+            }
 
             ui.add(egui::Label::new("BPM"));
 
@@ -292,7 +294,7 @@ fn draw_top_panel(ctx: &egui::Context, ui_state: &UIState, events: &mut Vec<Even
 
             ui.add(
                 // egui::ProgressBar::new(game_state.progress)
-                egui::ProgressBar::new(ui_state.current_beat / BEATS_PER_LOOP as f32)
+                egui::ProgressBar::new(ui_state.current_beat / (ui_state.beats_per_loop as f32))
                     // .fill(Color32::BROWN)
                     .show_percentage(),
             );
@@ -664,6 +666,7 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
         to_screen,
         ui,
         &mut shapes,
+        ui_state.beats_per_loop,
     );
 
     // render them
@@ -711,8 +714,9 @@ fn draw_current_beat(
     to_screen: RectTransform,
     ui: &mut egui::Ui,
     shapes: &mut Vec<Shape>,
+    beats_per_loop: usize,
 ) {
-    let base_pos = pos2((current_beat / BEATS_PER_LOOP as f32) * VIRTUAL_WIDTH, 0.);
+    let base_pos = pos2((current_beat / (beats_per_loop as f32)) * VIRTUAL_WIDTH, 0.);
     let t_rect = to_screen.transform_rect(egui::Rect {
         min: base_pos,
         max: base_pos + egui::Vec2::new(2., VIRTUAL_HEIGHT),
@@ -746,11 +750,13 @@ fn draw_user_hits(
                 to_screen,
                 shapes,
                 height_scale,
+                ui_state.beats_per_loop,
             );
         }
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn draw_user_hit(
     user_beat: f64,
     row: usize,
@@ -759,7 +765,9 @@ fn draw_user_hit(
     to_screen: RectTransform,
     shapes: &mut Vec<Shape>,
     height_scale: f32,
+    beats_per_loop: usize,
 ) {
+    let beats_per_loop = beats_per_loop as f32;
     let user_beat_with_latency = user_beat + audio_latency_beats;
 
     let (acc, is_next_loop) = compute_accuracy_of_single_hit(user_beat_with_latency, desired_hits);
@@ -767,11 +775,11 @@ fn draw_user_hit(
     // with audio latency and is_next_loop
     // TODO(bug): hit a note on every beat of 16. Then toggle on and off a note on only beat 1 for that instrument. it causes buggy display of hit timings where the 2nd half (beats 9-16) aren't shown .. bercause it's closer to beat 1 than any other beat, I guess?.
     // TODO(ui): can't see "before" hits because there's no space to left anymore
+    let user_beat_with_latency = user_beat_with_latency as f32;
     let x = if is_next_loop {
-        ((user_beat_with_latency as f32 - BEATS_PER_LOOP as f32) / BEATS_PER_LOOP as f32)
-            * VIRTUAL_WIDTH
+        ((user_beat_with_latency - beats_per_loop) / beats_per_loop) * VIRTUAL_WIDTH
     } else {
-        (user_beat_with_latency as f32 / BEATS_PER_LOOP as f32) * VIRTUAL_WIDTH
+        (user_beat_with_latency / beats_per_loop) * VIRTUAL_WIDTH
     };
 
     let base_pos = pos2(x, row as f32 * height_scale);
