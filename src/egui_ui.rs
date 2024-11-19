@@ -129,8 +129,8 @@ impl UIState {
         self.current_loop = val;
     }
 
-    pub fn set_enabled_beats(&mut self, voices: &Voices) {
-        self.enabled_beats = voices.to_enabled_beats();
+    pub fn set_enabled_beats(&mut self, voices: &Voices, beats_per_loop: usize) {
+        self.enabled_beats = voices.to_enabled_beats(beats_per_loop);
     }
 
     pub fn set_bpm(&mut self, bpm: f32) {

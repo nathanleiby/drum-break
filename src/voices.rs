@@ -5,7 +5,7 @@ use std::error::Error;
 
 use serde::{Deserialize, Serialize};
 
-use crate::consts::{ALL_INSTRUMENTS, BEATS_PER_LOOP, GRID_COLS, GRID_ROWS};
+use crate::consts::{ALL_INSTRUMENTS, GRID_COLS, GRID_ROWS};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Instrument {
@@ -150,12 +150,12 @@ impl Voices {
 
     // TODO: how to handle a dynamic number of cols.. vec?
     // TODO: Probably better to represent this without arrays
-    pub fn to_enabled_beats(&self) -> [[bool; GRID_COLS]; GRID_ROWS] {
+    pub fn to_enabled_beats(&self, beats_per_loop: usize) -> [[bool; GRID_COLS]; GRID_ROWS] {
         let mut out = [[false; GRID_COLS]; GRID_ROWS];
 
         for (instrument_idx, instrument) in ALL_INSTRUMENTS.iter().enumerate() {
             for beat in self.get_instrument_beats(instrument) {
-                for val in 0..(BEATS_PER_LOOP as usize) {
+                for val in 0..beats_per_loop {
                     if *beat == (val as f64) {
                         out[instrument_idx][val] = true;
                     }

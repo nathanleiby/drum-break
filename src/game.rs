@@ -109,7 +109,7 @@ pub fn compute_ui_state(gs: &GameState, audio: &Audio, midi_device_name: &str) -
     ui_state.set_selected_idx(gs.selected_loop_idx);
     ui_state.set_current_beat(audio.current_beat());
     ui_state.set_current_loop(audio.current_loop() as usize);
-    ui_state.set_enabled_beats(&gs.voices);
+    ui_state.set_enabled_beats(&gs.voices, gs.beats_per_loop);
     ui_state.set_is_playing(!audio.is_paused());
     ui_state.set_bpm(audio.get_bpm() as f32);
     ui_state.set_audio_latency_s(audio.get_configured_audio_latency_seconds() as f32);
