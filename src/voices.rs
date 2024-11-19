@@ -171,6 +171,7 @@ impl Voices {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Loop {
     pub bpm: usize,
+    pub length_in_beats: usize,
     pub voices: VoicesFromJSON,
 }
 
@@ -182,7 +183,6 @@ impl Loop {
         Ok(out)
     }
 }
-
 #[cfg(test)]
 mod tests {
     use crate::voices::{Instrument, Loop, Voices};
@@ -192,6 +192,7 @@ mod tests {
         let result = Loop::new_from_file("assets/loops/samba.json");
         let loop_data = result.unwrap();
         assert_eq!(loop_data.bpm, 120);
+        assert_eq!(loop_data.length_in_beats, 16);
         let voices = Voices::new_from_voices_old_model(&loop_data.voices);
         assert_eq!(
             voices.get_instrument_beats(&Instrument::ClosedHihat).len(),

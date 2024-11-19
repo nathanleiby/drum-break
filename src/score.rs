@@ -1,7 +1,5 @@
 /*
   Computes score by comparing timings of user's hits vs desired hits.
-
-  This logic is pure, so it can be iterated independently of other game logic or audio system.
 */
 
 use std::{collections::HashMap, vec};
@@ -230,31 +228,38 @@ pub fn compute_loop_performance_for_voice(
     out
 }
 
-pub fn compute_last_loop_summary(user_hits: &[UserHit], desired_hits: &Voices) -> LastLoopSummary {
+pub fn compute_last_loop_summary(
+    user_hits: &[UserHit],
+    desired_hits: &Voices,
+    beats_per_loop: f64,
+) -> LastLoopSummary {
     let mut out = LastLoopSummary::new();
 
     for instrument in ALL_INSTRUMENTS.iter() {
-        // // get accuracy of hihat
+        // get accuracy of hihat
         let user_timings = get_user_hit_timings_by_instrument(user_hits, *instrument);
         let desired_timings = desired_hits.get_instrument_beats(instrument);
 
-        // let mut accuracies = vec![];
-        // for d in desired_timings.iter() {
-
-        // }
-        // // compare that to desired hits for hihat
-        // for note in user_timings.iter() {
-        //     let (acc, _) = compute_accuracy_of_single_hit(note + audio_latency, desired_timings);
-        //     accuracies.push(acc);
-        // }
-
         let accuracies =
-            compute_loop_performance_for_voice(&user_timings, desired_timings, BEATS_PER_LOOP);
+            compute_loop_performance_for_voice(&user_timings, desired_timings, beats_per_loop);
 
         out.set_score_tracker(instrument, Accuracies { accuracies });
     }
 
     out
+}
+
+pub fn get_hits_from_nth_loop(user_hits: &[UserHit], desired_loop_idx: usize) -> Vec<UserHit> {
+    let last_loop_hits: Vec<UserHit> = user_hits
+        .iter()
+        .filter(|hit| {
+            // include hits from just before start of loop (back to 0 - MISS), since those could be early or on-time hits
+            let loop_num_for_hit = ((hit.clock_tick + MISS_MARGIN) / BEATS_PER_LOOP) as usize;
+            loop_num_for_hit == desired_loop_idx
+        })
+        .cloned()
+        .collect::<Vec<UserHit>>();
+    last_loop_hits
 }
 
 #[cfg(test)]
@@ -362,7 +367,8 @@ mod tests {
         let mut desired_hits = Voices::new();
         desired_hits.toggle_beat(Instrument::Kick, 0.0);
 
-        let result = compute_last_loop_summary(&user_hits, &desired_hits);
+        let beats_per_loop = BEATS_PER_LOOP;
+        let result = compute_last_loop_summary(&user_hits, &desired_hits, beats_per_loop);
         assert_eq!(
             result.get_score_tracker(&Instrument::Kick).accuracies,
             vec![Accuracy::Correct],
@@ -375,7 +381,8 @@ mod tests {
         let mut desired_hits = Voices::new();
         desired_hits.toggle_beat(Instrument::Kick, 0.0);
 
-        let result = compute_last_loop_summary(&user_hits, &desired_hits);
+        let beats_per_loop = BEATS_PER_LOOP;
+        let result = compute_last_loop_summary(&user_hits, &desired_hits, beats_per_loop);
         assert_eq!(
             result.get_score_tracker(&Instrument::Kick).accuracies,
             vec![Accuracy::Miss],

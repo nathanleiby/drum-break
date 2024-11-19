@@ -123,7 +123,13 @@ async fn main() -> Result<(), Box<dyn Error>> {
         events.extend(midi_input.process());
 
         // change game state
-        process_system_events(&rx, &mut audio, &gs.voices, &mut gs.gold_mode);
+        process_system_events(
+            &rx,
+            &mut audio,
+            &gs.voices,
+            &mut gs.gold_mode,
+            gs.beats_per_loop,
+        );
         process_user_events(
             &mut gs.voices,
             &mut audio,

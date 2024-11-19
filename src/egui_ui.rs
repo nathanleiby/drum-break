@@ -15,10 +15,9 @@ use crate::{
     events::Events,
     score::{
         compute_accuracy_of_single_hit, compute_last_loop_summary,
-        compute_loop_performance_for_voice, get_user_hit_timings_by_instrument, Accuracy,
-        MISS_MARGIN,
+        compute_loop_performance_for_voice, get_hits_from_nth_loop,
+        get_user_hit_timings_by_instrument, Accuracy, MISS_MARGIN,
     },
-    ui::get_hits_from_nth_loop,
     voices::{Instrument, Voices},
 };
 
@@ -184,7 +183,7 @@ impl UIState {
     }
 }
 
-pub fn draw_ui(ctx: &egui::Context, ui_state: &UIState, events: &mut Vec<Events>) {
+pub fn layout_ui(ctx: &egui::Context, ui_state: &UIState, events: &mut Vec<Events>) {
     // make everything bigger, so text is legible
     ctx.set_pixels_per_point(2.0);
 
@@ -882,7 +881,11 @@ fn gold_mode(ui: &mut egui::Ui, ui_state: &UIState) {
             &ui_state.user_hits,
             (ui_state.current_loop as i32 - i) as usize, // TODO: check for overflow
         );
-        let summary_data = compute_last_loop_summary(&nth_loop_hits, &ui_state.desired_hits);
+        let summary_data = compute_last_loop_summary(
+            &nth_loop_hits,
+            &ui_state.desired_hits,
+            ui_state.beats_per_loop as f64,
+        );
 
         // Simpler than chart.. TODO: support for colored emoji
         // 🔴

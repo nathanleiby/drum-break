@@ -16,7 +16,7 @@ use macroquad::prelude::*;
 
 use crate::{
     config::AppConfig,
-    consts::{TxMsg, UserHit, ALL_INSTRUMENTS, TICK_SCHEDULE_AHEAD},
+    consts::{TxMsg, UserHit, ALL_INSTRUMENTS, DEFAULT_BEATS_PER_LOOP, TICK_SCHEDULE_AHEAD},
     voices::{Instrument, Voices},
 };
 
@@ -46,7 +46,6 @@ pub struct Audio {
 }
 
 const DEFAULT_BPM: f64 = 60.;
-const DEFAULT_BEATS_PER_LOOP: usize = 16;
 const MIN_BPM: f64 = 40.;
 const MAX_BPM: f64 = 240.;
 

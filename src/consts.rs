@@ -8,6 +8,7 @@ pub const WINDOW_WIDTH: i32 = 1280;
 pub const WINDOW_HEIGHT: i32 = 720;
 
 pub const BEATS_PER_LOOP: f64 = 16.;
+pub const DEFAULT_BEATS_PER_LOOP: usize = 16;
 
 //
 // Audio
@@ -29,7 +30,7 @@ pub const ALL_INSTRUMENTS: [Instrument; 10] = [
 ];
 
 pub const GRID_ROWS: usize = ALL_INSTRUMENTS.len();
-pub const GRID_COLS: usize = BEATS_PER_LOOP as usize;
+pub const GRID_COLS: usize = DEFAULT_BEATS_PER_LOOP;
 
 // Message passing (TODO: move to events?)
 

@@ -5,12 +5,13 @@ use std::sync::mpsc::Receiver;
 
 use crate::audio::Audio;
 use crate::config::AppConfig;
-use crate::consts::TxMsg;
+use crate::consts::{TxMsg, DEFAULT_BEATS_PER_LOOP};
 use crate::egui_ui::UIState;
 use crate::midi_input_handler::MidiInputHandler;
-use crate::score::compute_last_loop_summary;
+use crate::score::{
+    compute_last_loop_summary, get_hits_from_nth_loop, CORRECT_MARGIN, MISS_MARGIN,
+};
 use crate::time::current_time_millis;
-use crate::ui::*;
 use crate::voices::{Voices, VoicesFromJSON};
 
 use log::info;
@@ -55,6 +56,7 @@ pub struct GameState {
     pub flags: Flags,
     pub correct_margin: f64,
     pub miss_margin: f64,
+    pub beats_per_loop: usize,
 }
 
 impl GameState {
@@ -68,8 +70,9 @@ impl GameState {
             selected_loop_idx: 0,
             loops,
             flags: Flags::new(),
-            correct_margin: 0.151,
-            miss_margin: 0.3,
+            correct_margin: CORRECT_MARGIN,
+            miss_margin: MISS_MARGIN,
+            beats_per_loop: DEFAULT_BEATS_PER_LOOP,
         }
     }
 
@@ -87,12 +90,14 @@ impl GameState {
                 "Foo".to_string(),
                 Loop {
                     bpm: 112,
+                    length_in_beats: 16,
                     voices: voices_from_json,
                 },
             )],
             flags: Flags::new(),
-            correct_margin: 0.151,
-            miss_margin: 0.3,
+            correct_margin: CORRECT_MARGIN,
+            miss_margin: MISS_MARGIN,
+            beats_per_loop: DEFAULT_BEATS_PER_LOOP,
         }
     }
 }
@@ -134,6 +139,7 @@ pub fn process_system_events(
     audio: &mut Audio,
     voices: &Voices,
     gold_mode: &mut GoldMode,
+    beats_per_loop: usize,
 ) {
     // read events
 
@@ -144,7 +150,8 @@ pub fn process_system_events(
             TxMsg::StartingLoop(loop_num) => {
                 let last_loop_hits =
                     get_hits_from_nth_loop(&audio.user_hits, (audio.current_loop() - 1) as usize);
-                let summary_data = compute_last_loop_summary(&last_loop_hits, voices);
+                let summary_data =
+                    compute_last_loop_summary(&last_loop_hits, voices, beats_per_loop as f64);
                 info!("last loop summary = {:?}", summary_data);
                 let totals = summary_data.combined();
 
