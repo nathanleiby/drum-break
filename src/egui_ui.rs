@@ -572,6 +572,26 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
     );
     shapes.push(bg_rect);
 
+    const LIGHTER_BLUE: Color32 = Color32::from_rgb(153, 206, 200);
+    // draw horizontal "zebra" stripes for row legibility
+    for visible_row in 0..visible_rows {
+        if visible_row % 2 == 0 {
+            continue;
+        }
+
+        // draw a horizontal line through the middle
+        let base_pos = pos2(0., (visible_row as f32) * height_scale);
+        let start_pt = to_screen.transform_pos(base_pos);
+        let end_pt =
+            to_screen.transform_pos(base_pos + egui::Vec2::new(VIRTUAL_WIDTH, 1. * height_scale));
+        let shape = egui::Shape::rect_filled(
+            egui::Rect::from_two_pos(start_pt, end_pt),
+            egui::Rounding::default(),
+            LIGHTER_BLUE,
+        );
+        shapes.push(shape);
+    }
+
     // draw vertical lines
     for col in 0..visible_cols {
         let base_pos = pos2((col as f32) * width_scale, 0.);
