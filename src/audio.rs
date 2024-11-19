@@ -32,6 +32,8 @@ pub struct Audio {
     metronome_enabled: bool,
 
     sounds: HashMap<Instrument, StaticSoundData>,
+    metronome_sound: Option<StaticSoundData>,
+
     pub user_hits: Vec<UserHit>,
     calibration_input: VecDeque<f64>,
     configured_audio_latency_seconds: f64,
@@ -63,7 +65,9 @@ impl Audio {
             last_scheduled_tick: -1.,
             bpm: DEFAULT_BPM,
             metronome_enabled: false,
+
             sounds: HashMap::new(),
+            metronome_sound: None,
 
             user_hits: vec![],
             calibration_input: VecDeque::new(),
@@ -92,6 +96,11 @@ impl Audio {
             let sound = StaticSoundData::from_cursor(Cursor::new(f))?;
             self.sounds.insert(ins, sound);
         }
+
+        let sound_path = "assets/sounds/click.wav";
+        let f = load_file(sound_path).await?;
+        let sound = StaticSoundData::from_cursor(Cursor::new(f))?;
+        self.metronome_sound = Some(sound);
 
         Ok(())
     }
@@ -160,12 +169,11 @@ impl Audio {
         }
 
         if self.is_metronome_enabled() {
-            // TODO: play a different sound at start of each measure
-            // clicks on quarter notes
             let metronome_notes = vec![0., 2., 4., 6., 8., 10., 12., 14.];
-            let sound_path = "assets/sounds/click.wav"; // TODO: metronome.ogg?
-            let f = load_file(sound_path).await?;
-            let sound = StaticSoundData::from_cursor(Cursor::new(f))?;
+            let sound = self
+                .metronome_sound
+                .clone()
+                .expect("Failed to load sound for 'Metronome'... was audio.initialize() run?");
             let volume = 1.;
             schedule_audio(
                 &metronome_notes,
