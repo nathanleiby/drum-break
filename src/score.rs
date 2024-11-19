@@ -98,11 +98,11 @@ pub fn compute_accuracy_of_single_hit(
 }
 
 #[derive(Debug)]
-pub struct ScoreTracker {
+pub struct Accuracies {
     pub accuracies: Vec<Accuracy>,
 }
 
-impl ScoreTracker {
+impl Accuracies {
     fn new() -> Self {
         Self { accuracies: vec![] }
     }
@@ -131,43 +131,43 @@ impl ScoreTracker {
 
 #[derive(Debug)]
 pub struct LastLoopSummary {
-    data: HashMap<Instrument, ScoreTracker>,
+    data: HashMap<Instrument, Accuracies>,
 }
 
 impl LastLoopSummary {
     pub fn new() -> Self {
         let mut data = HashMap::new();
         for ins in ALL_INSTRUMENTS.iter() {
-            data.insert(*ins, ScoreTracker::new());
+            data.insert(*ins, Accuracies::new());
         }
 
         Self { data }
     }
 
-    pub fn get_score_tracker(&self, instrument: &Instrument) -> &ScoreTracker {
+    pub fn get_score_tracker(&self, instrument: &Instrument) -> &Accuracies {
         let st = self.data.get(instrument);
         if let Some(st) = st {
             st
         } else {
-            panic!("invalid -- ScoreTracker should be defined for all instruments at startup")
+            panic!("invalid -- Accuracies should be defined for all instruments at startup")
         }
     }
 
-    pub fn set_score_tracker(&mut self, instrument: &Instrument, score_tracker: ScoreTracker) {
-        let to_update: &mut ScoreTracker = self.get_mut_score_tracker(instrument);
+    pub fn set_score_tracker(&mut self, instrument: &Instrument, score_tracker: Accuracies) {
+        let to_update: &mut Accuracies = self.get_mut_score_tracker(instrument);
         *to_update = score_tracker;
     }
 
-    fn get_mut_score_tracker(&mut self, instrument: &Instrument) -> &mut ScoreTracker {
+    fn get_mut_score_tracker(&mut self, instrument: &Instrument) -> &mut Accuracies {
         let st = self.data.get_mut(instrument);
         if let Some(st) = st {
             st
         } else {
-            panic!("invalid -- ScoreTracker should be defined for all instruments at startup")
+            panic!("invalid -- Accuracies should be defined for all instruments at startup")
         }
     }
 
-    pub fn total(self) -> ScoreTracker {
+    pub fn combined(self) -> Accuracies {
         let mut all_acc = vec![];
 
         for ins in ALL_INSTRUMENTS.iter() {
@@ -177,7 +177,7 @@ impl LastLoopSummary {
             }
         }
 
-        ScoreTracker {
+        Accuracies {
             accuracies: all_acc,
         }
     }
@@ -251,7 +251,7 @@ pub fn compute_last_loop_summary(user_hits: &[UserHit], desired_hits: &Voices) -
         let accuracies =
             compute_loop_performance_for_voice(&user_timings, desired_timings, BEATS_PER_LOOP);
 
-        out.set_score_tracker(instrument, ScoreTracker { accuracies });
+        out.set_score_tracker(instrument, Accuracies { accuracies });
     }
 
     out

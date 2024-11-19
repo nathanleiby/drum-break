@@ -146,7 +146,7 @@ pub fn process_system_events(
                     get_hits_from_nth_loop(&audio.user_hits, (audio.current_loop() - 1) as usize);
                 let summary_data = compute_last_loop_summary(&last_loop_hits, voices);
                 info!("last loop summary = {:?}", summary_data);
-                let totals = summary_data.total();
+                let totals = summary_data.combined();
 
                 if loop_num > 0 {
                     // Log user metric to a file, for eventual data analysis
