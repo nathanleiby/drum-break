@@ -2,12 +2,36 @@
   "bpm": 175,
   "voices": {
     "closed_hihat": [],
-    "snare": [2, 6, 10, 14],
-    "kick": [0, 4, 5, 7, 9, 12, 13],
-    "open_hihat": [2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0],
+    "snare": [
+      2,
+      6,
+      10,
+      14
+    ],
+    "kick": [
+      0,
+      4,
+      5,
+      7,
+      9,
+      12,
+      13
+    ],
+    "open_hihat": [
+      2.0,
+      4.0,
+      6.0,
+      8.0,
+      10.0,
+      12.0,
+      14.0
+    ],
     "ride": [],
-    "crash": [0.0]
+    "crash": [
+      0.0
+    ]
   },
   "id": "0fb2feb0-c79b-4c43-a6c7-aa223e5f9d49",
-  "name": "Basket Case (verse)"
+  "name": "Basket Case (verse)",
+  "length_in_beats": 16
 }

@@ -1,5 +1,6 @@
 {
   "bpm": 120,
+  "length_in_beats": 16,
   "voices": {
     "closed_hihat": [
       0.0,

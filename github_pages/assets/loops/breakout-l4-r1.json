@@ -27,5 +27,6 @@
     "crash": []
   },
   "id": "92c3ad13-b18a-44cb-b026-66ccd5d968db",
-  "name": "breakout-l4-r1"
+  "name": "breakout-l4-r1",
+  "length_in_beats": 16
 }
