@@ -15,8 +15,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: Install OS dependencies (alsa)
-        run: sudo apt install libasound2-dev
+      - name: Install OS dependencies (alsa), using cache
+        uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: libasound2-dev
+      - name: Install rust
+        run: rustup toolchain install stable --profile minimal
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
       - name: Lint
         run: cargo clippy --all --all-features --tests -- -D warnings
       - name: Build
