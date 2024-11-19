@@ -140,6 +140,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             &mut gs.correct_margin,
             &mut gs.miss_margin,
             &mut midi_input,
+            &mut gs.beats_per_loop,
         )?;
 
         audio.schedule(&gs.voices).await?;

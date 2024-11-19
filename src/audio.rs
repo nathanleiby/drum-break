@@ -116,6 +116,11 @@ impl Audio {
         self.configured_audio_latency_seconds = latency;
     }
 
+    // beats per loop
+    pub fn set_beats_per_loop(&mut self, val: usize) {
+        self.beats_per_loop = val;
+    }
+
     // TODO: Move this outside and then use it to summary loop accuracy
     fn check_if_new_beat_or_new_loop(&mut self) {
         // For debugging, print when we pass an integer beat

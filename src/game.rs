@@ -111,6 +111,7 @@ pub fn compute_ui_state(gs: &GameState, audio: &Audio, midi_device_name: &str) -
     ui_state.set_current_loop(audio.current_loop() as usize);
     ui_state.set_is_playing(!audio.is_paused());
     ui_state.set_bpm(audio.get_bpm() as f32);
+    ui_state.set_beats_per_loop(gs.beats_per_loop);
     ui_state.set_audio_latency_s(audio.get_configured_audio_latency_seconds() as f32);
     ui_state.set_user_hits(&audio.user_hits);
     ui_state.set_desired_hits(&gs.voices);
@@ -213,6 +214,7 @@ pub fn process_user_events(
     correct_margin: &mut f64,
     miss_margin: &mut f64,
     midi_input: &mut MidiInputHandler,
+    beats_per_loop: &mut usize,
 ) -> Result<(), Box<dyn Error>> {
     for event in events {
         info!("[user event] {:?}", event);
@@ -275,7 +277,8 @@ pub fn process_user_events(
                 let new_loop = loops.as_slice()[*loop_num].clone().1;
                 *voices = Voices::new_from_voices_old_model(&new_loop.voices);
                 audio.set_bpm(new_loop.bpm as f64);
-
+                *beats_per_loop = new_loop.length_in_beats;
+                audio.set_beats_per_loop(new_loop.length_in_beats);
                 *selected_loop_idx = *loop_num;
             }
             Events::ToggleDevToolsVisibility => {

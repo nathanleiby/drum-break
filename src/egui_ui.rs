@@ -127,6 +127,10 @@ impl UIState {
         self.bpm = bpm;
     }
 
+    pub fn set_beats_per_loop(&mut self, value: usize) {
+        self.beats_per_loop = value;
+    }
+
     pub fn set_audio_latency_s(&mut self, offset: f32) {
         self.latency_offset_s = offset;
     }
