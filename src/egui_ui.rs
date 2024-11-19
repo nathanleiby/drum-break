@@ -572,7 +572,7 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
     );
     shapes.push(bg_rect);
 
-    const LIGHTER_BLUE: Color32 = Color32::from_rgb(153, 206, 200);
+    const LIGHTER_BLUE: Color32 = Color32::from_rgb(163, 206, 220);
     // draw horizontal "zebra" stripes for row legibility
     for visible_row in 0..visible_rows {
         if visible_row % 2 == 0 {
