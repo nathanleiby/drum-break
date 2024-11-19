@@ -151,7 +151,7 @@ pub fn process_system_events(
                 let last_loop_hits =
                     get_hits_from_nth_loop(&audio.user_hits, (audio.current_loop() - 1) as usize);
                 let summary_data =
-                    compute_last_loop_summary(&last_loop_hits, voices, beats_per_loop as f64);
+                    compute_last_loop_summary(&last_loop_hits, voices, beats_per_loop);
                 info!("last loop summary = {:?}", summary_data);
                 let totals = summary_data.combined();
 

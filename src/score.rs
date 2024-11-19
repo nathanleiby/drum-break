@@ -31,8 +31,7 @@ pub const MISS_MARGIN: f64 = 0.3;
 pub fn compute_accuracy_of_single_hit(
     user_beat_with_latency: f64,
     desired_hits: &[f64],
-    // correct_margin,
-    // miss_margin,
+    beats_per_loop: usize,
 ) -> (Accuracy, bool) {
     // find the nearest desired_hit
     let mut target_beat = None; // should always be a miss
@@ -55,7 +54,7 @@ pub fn compute_accuracy_of_single_hit(
     // handle end of loop wrap-around case
     let mut is_next_loop = false;
     if desired_hits.contains(&0.) {
-        let desired = 0. + BEATS_PER_LOOP;
+        let desired = 0. + beats_per_loop as f64;
         // if there's no target_beat yet, set it to the first desired hit
         match target_beat {
             None => {
@@ -72,10 +71,7 @@ pub fn compute_accuracy_of_single_hit(
     }
 
     match target_beat {
-        None => {
-            // log::info!("No target beat found, returning Miss");
-            (Accuracy::Miss, false)
-        }
+        None => (Accuracy::Miss, false),
         Some((b, _)) => {
             log::debug!("Target beat found: {:?}", b);
             let distance = user_beat_with_latency - b;
@@ -86,10 +82,6 @@ pub fn compute_accuracy_of_single_hit(
                 _ => Accuracy::Correct,
             };
 
-            // log::info!(
-            //     "Accuracy: {:?} .. user_input_beat = {:?} .. target_beat = {:?} .. distance = {:?} .. is_next_loop = {:?}",
-            //     acc, user_beat_with_latency, target_beat, distance, is_next_loop
-            // );
             (acc, is_next_loop)
         }
     }
@@ -199,6 +191,7 @@ pub fn compute_loop_performance_for_voice(
     user_hits: &Vec<f64>,
     desired_hits: &Vec<f64>,
     loop_current_beat: f64,
+    beats_per_loop: usize,
     // TODO: consider audio_latency
 ) -> Vec<Accuracy> {
     let mut out = Vec::new();
@@ -213,7 +206,8 @@ pub fn compute_loop_performance_for_voice(
         // find the first user hit that a non-miss
         let mut was_miss = true;
         for user_hit in user_hits {
-            let (acc, _) = compute_accuracy_of_single_hit(*user_hit, &[*desired_hit]);
+            let (acc, _) =
+                compute_accuracy_of_single_hit(*user_hit, &[*desired_hit], beats_per_loop);
             if acc != Accuracy::Miss {
                 was_miss = false;
                 out.push(acc);
@@ -231,7 +225,7 @@ pub fn compute_loop_performance_for_voice(
 pub fn compute_last_loop_summary(
     user_hits: &[UserHit],
     desired_hits: &Voices,
-    beats_per_loop: f64,
+    beats_per_loop: usize,
 ) -> LastLoopSummary {
     let mut out = LastLoopSummary::new();
 
@@ -240,8 +234,12 @@ pub fn compute_last_loop_summary(
         let user_timings = get_user_hit_timings_by_instrument(user_hits, *instrument);
         let desired_timings = desired_hits.get_instrument_beats(instrument);
 
-        let accuracies =
-            compute_loop_performance_for_voice(&user_timings, desired_timings, beats_per_loop);
+        let accuracies = compute_loop_performance_for_voice(
+            &user_timings,
+            desired_timings,
+            beats_per_loop as f64, // "current beat" is the end of the loop
+            beats_per_loop,
+        );
 
         out.set_score_tracker(instrument, Accuracies { accuracies });
     }
@@ -265,7 +263,7 @@ pub fn get_hits_from_nth_loop(user_hits: &[UserHit], desired_loop_idx: usize) ->
 #[cfg(test)]
 mod tests {
     use crate::{
-        consts::{UserHit, BEATS_PER_LOOP},
+        consts::{UserHit, DEFAULT_BEATS_PER_LOOP},
         score::{
             compute_accuracy_of_single_hit, compute_last_loop_summary, Accuracy, CORRECT_MARGIN,
             MISS_MARGIN,
@@ -282,7 +280,12 @@ mod tests {
     #[test]
     fn it_computes_accuracy_against_one_note() {
         let compute_accuracy_legacy = |user_beat_with_latency: f64, desired_hits: &Vec<f64>| {
-            compute_accuracy_of_single_hit(user_beat_with_latency, desired_hits).0
+            compute_accuracy_of_single_hit(
+                user_beat_with_latency,
+                desired_hits,
+                DEFAULT_BEATS_PER_LOOP,
+            )
+            .0
         };
 
         // exactly correct
@@ -324,35 +327,47 @@ mod tests {
     #[test]
     fn it_computes_accuracy_against_correct_target_note_from_many() {
         let compute_accuracy_legacy = |user_beat_with_latency: f64, desired_hits: &Vec<f64>| {
-            compute_accuracy_of_single_hit(user_beat_with_latency, desired_hits).0
+            compute_accuracy_of_single_hit(
+                user_beat_with_latency,
+                desired_hits,
+                DEFAULT_BEATS_PER_LOOP,
+            )
+            .0
         };
 
+        let beats_per_loop = DEFAULT_BEATS_PER_LOOP as f64;
         // should check if it's closer to the nearest note: 0.0, not 1.0
         let result = compute_accuracy_legacy(CORRECT_MARGIN, &vec![0.0, 1.0]);
         assert_eq!(result, Accuracy::Correct);
 
         // handle wrap-around case
-        let result = compute_accuracy_legacy(BEATS_PER_LOOP - CORRECT_MARGIN, &vec![0.0, 1.0]);
+        let result = compute_accuracy_legacy(beats_per_loop - CORRECT_MARGIN, &vec![0.0, 1.0]);
         assert_eq!(result, Accuracy::Correct);
 
         let result = compute_accuracy_legacy(
-            BEATS_PER_LOOP - CORRECT_MARGIN - f64::EPSILON * 5.,
+            beats_per_loop - CORRECT_MARGIN - f64::EPSILON * 5.,
             &vec![0.0, 1.0],
         );
         assert_eq!(result, Accuracy::Early);
 
-        let result = compute_accuracy_legacy(BEATS_PER_LOOP - MISS_MARGIN, &vec![0.0, 1.0]);
+        let result = compute_accuracy_legacy(beats_per_loop - MISS_MARGIN, &vec![0.0, 1.0]);
         assert_eq!(result, Accuracy::Miss);
     }
 
     #[test]
     fn it_computes_accuracy_considering_is_next_loop() {
-        let result = compute_accuracy_of_single_hit(BEATS_PER_LOOP - CORRECT_MARGIN, &[0.0]);
+        let beats_per_loop = DEFAULT_BEATS_PER_LOOP as f64;
+        let result = compute_accuracy_of_single_hit(
+            beats_per_loop - CORRECT_MARGIN,
+            &[0.0],
+            DEFAULT_BEATS_PER_LOOP,
+        );
         assert_eq!(result, (Accuracy::Correct, true));
 
         let result = compute_accuracy_of_single_hit(
-            BEATS_PER_LOOP - CORRECT_MARGIN - f64::EPSILON * 5.,
+            beats_per_loop - CORRECT_MARGIN - f64::EPSILON * 5.,
             &[0.0],
+            DEFAULT_BEATS_PER_LOOP,
         );
         assert_eq!(result, (Accuracy::Early, true));
     }
@@ -367,8 +382,7 @@ mod tests {
         let mut desired_hits = Voices::new();
         desired_hits.toggle_beat(Instrument::Kick, 0.0);
 
-        let beats_per_loop = BEATS_PER_LOOP;
-        let result = compute_last_loop_summary(&user_hits, &desired_hits, beats_per_loop);
+        let result = compute_last_loop_summary(&user_hits, &desired_hits, DEFAULT_BEATS_PER_LOOP);
         assert_eq!(
             result.get_score_tracker(&Instrument::Kick).accuracies,
             vec![Accuracy::Correct],
@@ -381,8 +395,7 @@ mod tests {
         let mut desired_hits = Voices::new();
         desired_hits.toggle_beat(Instrument::Kick, 0.0);
 
-        let beats_per_loop = BEATS_PER_LOOP;
-        let result = compute_last_loop_summary(&user_hits, &desired_hits, beats_per_loop);
+        let result = compute_last_loop_summary(&user_hits, &desired_hits, DEFAULT_BEATS_PER_LOOP);
         assert_eq!(
             result.get_score_tracker(&Instrument::Kick).accuracies,
             vec![Accuracy::Miss],
@@ -394,8 +407,12 @@ mod tests {
         let user_hits = vec![0.5, 0.6, 0.8];
         let desired_hits = vec![0.0, 0.5, 1.0];
         let loop_current_beat = 4.;
-        let result =
-            compute_loop_performance_for_voice(&user_hits, &desired_hits, loop_current_beat);
+        let result = compute_loop_performance_for_voice(
+            &user_hits,
+            &desired_hits,
+            loop_current_beat,
+            DEFAULT_BEATS_PER_LOOP,
+        );
         assert_eq!(
             result,
             vec![Accuracy::Miss, Accuracy::Correct, Accuracy::Early]

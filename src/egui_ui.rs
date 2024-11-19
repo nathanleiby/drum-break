@@ -649,6 +649,7 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
         width_scale,
         height_scale,
         &visible_instruments,
+        ui_state.beats_per_loop,
     );
 
     // Draw User Hits
@@ -766,14 +767,15 @@ fn draw_user_hit(
     height_scale: f32,
     beats_per_loop: usize,
 ) {
-    let beats_per_loop = beats_per_loop as f32;
     let user_beat_with_latency = user_beat + audio_latency_beats;
 
-    let (acc, is_next_loop) = compute_accuracy_of_single_hit(user_beat_with_latency, desired_hits);
+    let (acc, is_next_loop) =
+        compute_accuracy_of_single_hit(user_beat_with_latency, desired_hits, beats_per_loop);
 
     // with audio latency and is_next_loop
     // TODO(bug): hit a note on every beat of 16. Then toggle on and off a note on only beat 1 for that instrument. it causes buggy display of hit timings where the 2nd half (beats 9-16) aren't shown .. bercause it's closer to beat 1 than any other beat, I guess?.
     // TODO(ui): can't see "before" hits because there's no space to left anymore
+    let beats_per_loop = beats_per_loop as f32;
     let user_beat_with_latency = user_beat_with_latency as f32;
     let x = if is_next_loop {
         ((user_beat_with_latency - beats_per_loop) / beats_per_loop) * VIRTUAL_WIDTH
@@ -815,6 +817,7 @@ fn draw_note_successes(
     width_scale: f32,
     height_scale: f32,
     visible_instruments: &[&Instrument],
+    beats_per_loop: usize,
 ) {
     for (instrument_idx, instrument) in visible_instruments.iter().enumerate() {
         let actual = get_user_hit_timings_by_instrument(user_hits, **instrument);
@@ -826,8 +829,12 @@ fn draw_note_successes(
 
         let desired = desired_hits.get_instrument_beats(instrument);
 
-        let loop_perf =
-            compute_loop_performance_for_voice(&actual_w_latency, desired, loop_current_beat);
+        let loop_perf = compute_loop_performance_for_voice(
+            &actual_w_latency,
+            desired,
+            loop_current_beat,
+            beats_per_loop,
+        );
         for (note_idx, note) in desired.iter().enumerate() {
             let shape = note_success_shape(
                 *note,
@@ -884,7 +891,7 @@ fn gold_mode(ui: &mut egui::Ui, ui_state: &UIState) {
         let summary_data = compute_last_loop_summary(
             &nth_loop_hits,
             &ui_state.desired_hits,
-            ui_state.beats_per_loop as f64,
+            ui_state.beats_per_loop,
         );
 
         // Simpler than chart.. TODO: support for colored emoji
