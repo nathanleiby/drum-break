@@ -27,5 +27,6 @@
     "open_hihat": [],
     "ride": [],
     "crash": []
-  }
+  },
+  "length_in_beats": 16
 }
