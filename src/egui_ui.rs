@@ -11,7 +11,7 @@ use log::info;
 use macroquad::color::{DARKBLUE, GREEN, LIGHTGRAY, ORANGE, PURPLE, RED};
 
 use crate::{
-    consts::{UserHit, ALL_INSTRUMENTS, GRID_COLS, GRID_ROWS},
+    consts::{UserHit, ALL_INSTRUMENTS},
     events::Events,
     score::{
         compute_accuracy_of_single_hit, compute_last_loop_summary,
@@ -20,8 +20,6 @@ use crate::{
     },
     voices::{Instrument, Voices},
 };
-
-pub type EnabledBeats = [[bool; GRID_COLS]; GRID_ROWS];
 
 // This resource holds information about the game:
 pub struct UIState {
@@ -40,8 +38,6 @@ pub struct UIState {
     current_loop: usize, // nth loop
     current_beat: f32,
     beats_per_loop: usize,
-
-    enabled_beats: EnabledBeats,
 
     latency_offset_s: f32,
 
@@ -86,8 +82,6 @@ impl Default for UIState {
 
             latency_offset_s: 0.,
 
-            enabled_beats: [[false; GRID_COLS]; GRID_ROWS],
-
             user_hits: vec![],
             desired_hits: Voices::new(),
 
@@ -127,10 +121,6 @@ impl UIState {
 
     pub fn set_current_loop(&mut self, val: usize) {
         self.current_loop = val;
-    }
-
-    pub fn set_enabled_beats(&mut self, voices: &Voices, beats_per_loop: usize) {
-        self.enabled_beats = voices.to_enabled_beats(beats_per_loop);
     }
 
     pub fn set_bpm(&mut self, bpm: f32) {
@@ -454,31 +444,6 @@ fn draw_central_panel(ctx: &egui::Context, ui_state: &UIState, events: &mut Vec<
 const VIRTUAL_WIDTH: f32 = 800.;
 const VIRTUAL_HEIGHT: f32 = 1000.;
 
-fn is_beat_enabled(
-    visible_row: usize,
-    col: usize,
-    enabled_beats: EnabledBeats,
-    visible_instruments: &[&Instrument],
-) -> bool {
-    // determine instrument
-    let res = visible_instruments
-        .iter()
-        .enumerate()
-        .find(|x| x.0 == visible_row);
-    let ins = match res {
-        Some(x) => *x.1,
-        None => panic!("invalid instrument idx"),
-    };
-
-    // see if it's enabled
-    let res2 = ALL_INSTRUMENTS.iter().enumerate().find(|x| x.1 == ins);
-    let row = match res2 {
-        Some(x) => x.0,
-        None => panic!("invalid instrument idx"),
-    };
-
-    enabled_beats[row][col]
-}
 fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events>) {
     let (response, painter) = ui.allocate_painter(
         egui::Vec2::new(ui.available_width(), ui.available_height()),
@@ -504,7 +469,7 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
         ALL_INSTRUMENTS
             .iter()
             .enumerate()
-            .filter(|(idx, _)| ui_state.enabled_beats[*idx].iter().any(|b| *b))
+            .filter(|(_, ins)| !ui_state.desired_hits.get_instrument_beats(ins).is_empty())
             .map(|(_, ins)| ins)
             .collect()
     } else {
@@ -512,7 +477,7 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
     };
 
     let visible_rows = visible_instruments.len();
-    let visible_cols = GRID_COLS; // future, this depends on length of loop
+    let visible_cols = ui_state.beats_per_loop;
 
     let width_scale: f32 = VIRTUAL_WIDTH / visible_cols as f32;
     let height_scale: f32 = VIRTUAL_HEIGHT / visible_rows as f32;
@@ -580,7 +545,6 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
             continue;
         }
 
-        // draw a horizontal line through the middle
         let base_pos = pos2(0., (visible_row as f32) * height_scale);
         let start_pt = to_screen.transform_pos(base_pos);
         let end_pt =
@@ -606,6 +570,7 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
         shapes.push(shape);
     }
 
+    // Draw horizontal lines
     for visible_row in 0..visible_rows {
         // draw a horizontal line through the middle
         let base_pos = pos2(0., (visible_row as f32 + 0.5) * height_scale);
@@ -616,29 +581,25 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
             egui::Stroke::new(1., Color32::DARK_GRAY),
         );
         shapes.push(shape);
+    }
 
-        // TODO: Instead of looking at each potential beat, draw the beats where it says they exist!
-        for col in 0..visible_cols {
-            let t_rect = rect_for_col_row(col, visible_row, to_screen, width_scale, height_scale);
-
-            // if this beat is enabled (row is instrument, col is beat)..
-            if is_beat_enabled(
-                visible_row,
-                col,
-                ui_state.enabled_beats,
-                &visible_instruments,
-            ) {
-                // TODO: These are being drawn over by `draw_note_successes`. how to handle?
-                let shape =
-                    egui::Shape::rect_filled(t_rect, egui::Rounding::default(), beat_fill_color);
-                shapes.push(shape)
-            }
+    for (visible_row, ins) in visible_instruments.iter().enumerate().take(visible_rows) {
+        let desired_hits = ui_state.desired_hits.get_instrument_beats(ins);
+        for d in desired_hits {
+            let t_rect = rect_for_col_row(*d, visible_row, to_screen, width_scale, height_scale);
+            let shape =
+                egui::Shape::rect_filled(t_rect, egui::Rounding::default(), beat_fill_color);
+            shapes.push(shape)
         }
     }
 
     // Draw Note Successes
     let loop_last_completed_beat = ui_state.current_beat - MISS_MARGIN as f32;
-    let current_loop_hits = get_hits_from_nth_loop(&ui_state.user_hits, ui_state.current_loop);
+    let current_loop_hits = get_hits_from_nth_loop(
+        &ui_state.user_hits,
+        ui_state.current_loop,
+        ui_state.beats_per_loop,
+    );
     draw_note_successes(
         &current_loop_hits,
         &ui_state.desired_hits,
@@ -686,14 +647,14 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
             Instrument::Tom3 => "Tom3 (Low)",
             Instrument::PedalHiHat => "Pedal Hi-hat",
         };
-        let t_rect = rect_for_col_row(0, row, to_screen, width_scale, height_scale);
+        let t_rect = rect_for_col_row(0., row, to_screen, width_scale, height_scale);
         let label = egui::Label::new(name);
         ui.put(t_rect, label);
     }
 }
 
 fn rect_for_col_row(
-    col: usize,
+    col: f64,
     row: usize,
     to_screen: RectTransform,
     width_scale: f32,
@@ -739,7 +700,11 @@ fn draw_user_hits(
     visible_instruments: &[&Instrument],
 ) {
     for (instrument_idx, instrument) in visible_instruments.iter().enumerate() {
-        let user_notes = get_user_hit_timings_by_instrument(&ui_state.user_hits, **instrument);
+        let user_notes = get_user_hit_timings_by_instrument(
+            &ui_state.user_hits,
+            **instrument,
+            ui_state.beats_per_loop,
+        );
         let desired_notes = ui_state.desired_hits.get_instrument_beats(instrument);
         for note in user_notes.iter() {
             draw_user_hit(
@@ -820,7 +785,7 @@ fn draw_note_successes(
     beats_per_loop: usize,
 ) {
     for (instrument_idx, instrument) in visible_instruments.iter().enumerate() {
-        let actual = get_user_hit_timings_by_instrument(user_hits, **instrument);
+        let actual = get_user_hit_timings_by_instrument(user_hits, **instrument, beats_per_loop);
         // add audio_latency to each note
         let actual_w_latency = actual
             .iter()
@@ -857,8 +822,7 @@ fn note_success_shape(
     width_scale: f32,
     height_scale: f32,
 ) -> Shape {
-    let col = beats_offset as usize; // TODO: truncate, for now
-    let rect = rect_for_col_row(col, row, to_screen, width_scale, height_scale);
+    let rect = rect_for_col_row(beats_offset, row, to_screen, width_scale, height_scale);
 
     let bar_color = match acc {
         Accuracy::Early => ORANGE,
@@ -887,6 +851,7 @@ fn gold_mode(ui: &mut egui::Ui, ui_state: &UIState) {
         let nth_loop_hits = get_hits_from_nth_loop(
             &ui_state.user_hits,
             (ui_state.current_loop as i32 - i) as usize, // TODO: check for overflow
+            ui_state.beats_per_loop,
         );
         let summary_data = compute_last_loop_summary(
             &nth_loop_hits,

@@ -6,7 +6,7 @@ use std::{collections::HashMap, vec};
 
 use crate::{
     consts::UserHit,
-    consts::{ALL_INSTRUMENTS, BEATS_PER_LOOP},
+    consts::ALL_INSTRUMENTS,
     voices::{Instrument, Voices},
 };
 
@@ -176,11 +176,12 @@ impl LastLoopSummary {
 pub fn get_user_hit_timings_by_instrument(
     user_hits: &[UserHit],
     instrument: Instrument,
+    beats_per_loop: usize,
 ) -> Vec<f64> {
     user_hits
         .iter()
         .filter(|hit| hit.instrument == instrument)
-        .map(|hit| hit.beat(BEATS_PER_LOOP))
+        .map(|hit| hit.beat(beats_per_loop))
         .collect::<Vec<f64>>()
 }
 
@@ -231,7 +232,8 @@ pub fn compute_last_loop_summary(
 
     for instrument in ALL_INSTRUMENTS.iter() {
         // get accuracy of hihat
-        let user_timings = get_user_hit_timings_by_instrument(user_hits, *instrument);
+        let user_timings =
+            get_user_hit_timings_by_instrument(user_hits, *instrument, beats_per_loop);
         let desired_timings = desired_hits.get_instrument_beats(instrument);
 
         let accuracies = compute_loop_performance_for_voice(
@@ -247,12 +249,17 @@ pub fn compute_last_loop_summary(
     out
 }
 
-pub fn get_hits_from_nth_loop(user_hits: &[UserHit], desired_loop_idx: usize) -> Vec<UserHit> {
+pub fn get_hits_from_nth_loop(
+    user_hits: &[UserHit],
+    desired_loop_idx: usize,
+    beats_per_loop: usize,
+) -> Vec<UserHit> {
     let last_loop_hits: Vec<UserHit> = user_hits
         .iter()
         .filter(|hit| {
             // include hits from just before start of loop (back to 0 - MISS), since those could be early or on-time hits
-            let loop_num_for_hit = ((hit.clock_tick + MISS_MARGIN) / BEATS_PER_LOOP) as usize;
+            let loop_num_for_hit =
+                ((hit.clock_tick + MISS_MARGIN) / beats_per_loop as f64) as usize;
             loop_num_for_hit == desired_loop_idx
         })
         .cloned()

@@ -109,7 +109,6 @@ pub fn compute_ui_state(gs: &GameState, audio: &Audio, midi_device_name: &str) -
     ui_state.set_selected_idx(gs.selected_loop_idx);
     ui_state.set_current_beat(audio.current_beat());
     ui_state.set_current_loop(audio.current_loop() as usize);
-    ui_state.set_enabled_beats(&gs.voices, gs.beats_per_loop);
     ui_state.set_is_playing(!audio.is_paused());
     ui_state.set_bpm(audio.get_bpm() as f32);
     ui_state.set_audio_latency_s(audio.get_configured_audio_latency_seconds() as f32);
@@ -148,8 +147,11 @@ pub fn process_system_events(
         match msg {
             TxMsg::AudioNew => (),
             TxMsg::StartingLoop(loop_num) => {
-                let last_loop_hits =
-                    get_hits_from_nth_loop(&audio.user_hits, (audio.current_loop() - 1) as usize);
+                let last_loop_hits = get_hits_from_nth_loop(
+                    &audio.user_hits,
+                    (audio.current_loop() - 1) as usize,
+                    beats_per_loop,
+                );
                 let summary_data =
                     compute_last_loop_summary(&last_loop_hits, voices, beats_per_loop);
                 info!("last loop summary = {:?}", summary_data);
