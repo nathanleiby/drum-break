@@ -27,6 +27,7 @@ pub enum Events {
 
     ToggleHelpVisibility,
     ToggleEmptyTrackVisibility,
+    ToggleSidePanelVisibility,
 
     RefreshConnectedMidiDevice,
 

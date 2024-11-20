@@ -44,6 +44,7 @@ pub struct UIState {
     desired_hits: Voices,
 
     is_help_visible: bool,
+    are_side_panels_visible: bool,
 
     is_dev_tools_visible: bool,
     correct_margin: f64,
@@ -85,6 +86,7 @@ impl Default for UIState {
             desired_hits: Voices::new(),
 
             is_help_visible: false,
+            are_side_panels_visible: false,
 
             is_dev_tools_visible: false,
             correct_margin: 0.,
@@ -157,6 +159,10 @@ impl UIState {
 
     pub fn set_is_dev_tools_visible(&mut self, enabled: bool) {
         self.is_dev_tools_visible = enabled;
+    }
+
+    pub fn set_are_side_panels_visible(&mut self, visible: bool) {
+        self.are_side_panels_visible = visible;
     }
 
     pub fn set_correct_margin(&mut self, val: f64) {
@@ -250,18 +256,15 @@ fn dev_tools(ctx: &egui::Context, ui_state: &UIState, events: &mut Vec<Events>) 
 fn draw_top_panel(ctx: &egui::Context, ui_state: &UIState, events: &mut Vec<Events>) {
     egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
         egui::menu::bar(ui, |ui| {
-            // NOTE: no File->Quit on web pages!
-            let is_web = cfg!(target_arch = "wasm32");
-            if !is_web {
-                ui.menu_button("File", |ui| {
-                    if ui.button("Quit").clicked() {
-                        events.push(Events::Quit);
-                    }
-                });
-                ui.add_space(16.0);
-
-                ui.separator();
+            let button_text = match ui_state.is_playing {
+                true => "Pause",
+                false => "Play",
+            };
+            if ui.button(button_text).clicked() {
+                events.push(Events::Pause);
             }
+
+            ui.separator();
 
             ui.add(egui::Label::new("BPM"));
 
@@ -280,17 +283,43 @@ fn draw_top_panel(ctx: &egui::Context, ui_state: &UIState, events: &mut Vec<Even
 
             ui.separator();
 
-            ui.add(
-                // egui::ProgressBar::new(game_state.progress)
-                egui::ProgressBar::new(ui_state.current_beat / (ui_state.beats_per_loop as f32))
-                    // .fill(Color32::BROWN)
-                    .show_percentage(),
-            );
+            let selector_text = if !ui_state.selector_vec.is_empty() {
+                &ui_state.selector_vec[ui_state.selected_idx]
+            } else {
+                "No loops"
+            };
+            egui::ComboBox::from_label("")
+                .selected_text(selector_text.to_string())
+                .show_ui(ui, |ui| {
+                    for i in 0..ui_state.selector_vec.len() {
+                        let mut current_value = &ui_state.selector_vec[i];
+                        let value = ui.selectable_value(
+                            &mut current_value,
+                            &ui_state.selector_vec[ui_state.selected_idx],
+                            &ui_state.selector_vec[i],
+                        );
+                        if value.clicked() {
+                            events.push(Events::ChangeLoop(i));
+                        }
+                    }
+                });
+
+            ui.separator();
+
+            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                if ui.button("Advanced View").clicked() {
+                    events.push(Events::ToggleSidePanelVisibility);
+                }
+            });
         });
     });
 }
 
 fn draw_left_panel(ctx: &egui::Context, ui_state: &UIState, events: &mut Vec<Events>) {
+    if !ui_state.are_side_panels_visible {
+        return;
+    }
+
     egui::SidePanel::left("left_panel")
         .resizable(true)
         .default_width(150.0)
@@ -300,17 +329,10 @@ fn draw_left_panel(ctx: &egui::Context, ui_state: &UIState, events: &mut Vec<Eve
                 ui.heading("Left Panel");
             });
 
-            let button_text = match ui_state.is_playing {
-                true => "Pause",
-                false => "Play",
-            };
-            if ui.button(button_text).clicked() {
-                events.push(Events::Pause);
-            }
-
             ui.separator();
 
             ui.add(egui::Label::new("**Volume**"));
+            // TODO: improve volume controls (https://github.com/nathanleiby/drum-break/issues/11)
             ui.add(egui::Label::new("Metronome"));
             let button_text = match ui_state.is_metronome_enabled {
                 true => "Disable Metronome",
@@ -319,15 +341,6 @@ fn draw_left_panel(ctx: &egui::Context, ui_state: &UIState, events: &mut Vec<Eve
             if ui.button(button_text).clicked() {
                 events.push(Events::ToggleMetronome);
             }
-
-            // TODO: control volume: Metronome, target nomtes
-            // ui.add(egui::Slider::new(&mut ui_state.volume_metronome, 0.0..=1.0));
-            ui.add(egui::Label::new("Target Notes"));
-            // TODO
-            // ui.add(egui::Slider::new(
-            //     &mut ui_state.volume_target_notes,
-            //     0.0..=1.0,
-            // ));
 
             ui.separator();
 
@@ -344,6 +357,10 @@ fn draw_left_panel(ctx: &egui::Context, ui_state: &UIState, events: &mut Vec<Eve
 }
 
 fn draw_right_panel(ctx: &egui::Context, ui_state: &UIState, events: &mut Vec<Events>) {
+    if !ui_state.are_side_panels_visible {
+        return;
+    }
+
     egui::SidePanel::right("right_panel")
         .resizable(true)
         .default_width(150.0)
@@ -353,43 +370,11 @@ fn draw_right_panel(ctx: &egui::Context, ui_state: &UIState, events: &mut Vec<Ev
                 ui.heading("Right Panel");
             });
 
-            let selector_text = if !ui_state.selector_vec.is_empty() {
-                &ui_state.selector_vec[ui_state.selected_idx]
-            } else {
-                "No loops"
-            };
-            egui::ComboBox::from_label("Choose Loop")
-                .selected_text(selector_text.to_string())
-                .show_ui(ui, |ui| {
-                    for i in 0..ui_state.selector_vec.len() {
-                        let mut current_value = &ui_state.selector_vec[i];
-                        let value = ui.selectable_value(
-                            &mut current_value,
-                            &ui_state.selector_vec[ui_state.selected_idx],
-                            &ui_state.selector_vec[i],
-                        );
-                        if value.clicked() {
-                            // TODO: handle with event
-                            // ui_state.selected_idx = i;
-                            // TODO: load the relevant loop's data
-                            events.push(Events::ChangeLoop(i));
-                        }
-                    }
-                });
-
-            ui.separator();
-
             ui.group(|ui| {
                 ui.add(egui::Label::new("Latency Offset"));
                 ui.label(format!("{:?}", ui_state.latency_offset_s));
-                // TODO
-                // ui.add(egui::Slider::new(
-                //     &mut ui_state.latency_offset,
-                //     -1000.0..=1000.0,
-                // ));
                 if ui.button("-").clicked() {
                     events.push(Events::SetAudioLatency { delta_s: -0.1 });
-                    // ui_state.latency_offset -= 5.;
                 }
                 if ui.button("+").clicked() {
                     events.push(Events::SetAudioLatency { delta_s: 0.1 });
@@ -516,14 +501,6 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
         }
     });
 
-    let beat_fill_color = if ui.visuals().dark_mode {
-        // Color32::from_rgb(50, 50, 50)
-        Color32::DARK_BLUE
-    } else {
-        // Color32::from_rgba_premultiplied(50, 50, 50, 128)
-        Color32::DARK_BLUE
-    };
-
     let mut shapes = vec![];
 
     draw_background(to_screen, &mut shapes);
@@ -533,16 +510,6 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
     draw_vertical_lines(visible_cols, width_scale, to_screen, &mut shapes);
 
     draw_horizontal_lines(visible_rows, height_scale, to_screen, &mut shapes);
-
-    for (visible_row, ins) in visible_instruments.iter().enumerate().take(visible_rows) {
-        let desired_hits = ui_state.desired_hits.get_instrument_beats(ins);
-        for d in desired_hits {
-            let t_rect = rect_for_col_row(*d, visible_row, to_screen, width_scale, height_scale);
-            let shape =
-                egui::Shape::rect_filled(t_rect, egui::Rounding::default(), beat_fill_color);
-            shapes.push(shape)
-        }
-    }
 
     // Draw Note Successes
     let loop_last_completed_beat = ui_state.current_beat - MISS_MARGIN as f32;
@@ -598,6 +565,7 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
             Instrument::Tom3 => "Tom3 (Low)",
             Instrument::PedalHiHat => "Pedal Hi-hat",
         };
+        // TODO: align text elsewhere
         let t_rect = rect_for_col_row(0., row, to_screen, width_scale, height_scale);
         let label = egui::Label::new(name);
         ui.put(t_rect, label);
@@ -616,6 +584,7 @@ fn draw_background(to_screen: RectTransform, shapes: &mut Vec<Shape>) {
     shapes.push(bg_rect);
 }
 
+/// Draw horizontal "zebra" stripes for row legibility
 fn draw_zebra_stripes(
     visible_rows: usize,
     height_scale: f32,
@@ -623,7 +592,6 @@ fn draw_zebra_stripes(
     shapes: &mut Vec<Shape>,
 ) {
     const LIGHTER_BLUE: Color32 = Color32::from_rgb(163, 206, 220);
-    // draw horizontal "zebra" stripes for row legibility
     for visible_row in 0..visible_rows {
         if visible_row % 2 == 0 {
             continue;
@@ -655,12 +623,13 @@ fn draw_vertical_lines(
 
         let shape = egui::Shape::line(
             vec![start_pt, end_pt],
-            egui::Stroke::new(if col % 4 == 0 { 2. } else { 1. }, Color32::DARK_GRAY),
+            egui::Stroke::new(if col % 4 == 0 { 2. } else { 0.5 }, Color32::DARK_GRAY),
         );
         shapes.push(shape);
     }
 }
 
+/// Draw a horizontal line through the middle of each instrument's track
 fn draw_horizontal_lines(
     visible_rows: usize,
     height_scale: f32,
@@ -668,7 +637,6 @@ fn draw_horizontal_lines(
     shapes: &mut Vec<Shape>,
 ) {
     for visible_row in 0..visible_rows {
-        // draw a horizontal line through the middle
         let base_pos = pos2(0., (visible_row as f32 + 0.5) * height_scale);
         let start_pt = to_screen.transform_pos(base_pos);
         let end_pt = to_screen.transform_pos(base_pos + egui::Vec2::new(VIRTUAL_WIDTH, 0.));
@@ -681,26 +649,33 @@ fn draw_horizontal_lines(
 }
 
 fn rect_for_col_row(
-    col: f64,
+    beat: f64,
     row: usize,
     to_screen: RectTransform,
     width_scale: f32,
     height_scale: f32,
 ) -> egui::Rect {
-    let base_pos = pos2(col as f32 * width_scale, row as f32 * height_scale);
+    let base_pos = pos2(beat as f32 * width_scale, row as f32 * height_scale);
 
-    // TODO: fix scaling to always draw a nicer looking square based grid
-
+    let percent_padding = 0.02;
     to_screen.transform_rect(egui::Rect {
-        min: base_pos,
-        max: base_pos + egui::Vec2::new(width_scale * 0.95, height_scale * 0.95),
+        min: base_pos
+            + egui::Vec2::new(
+                width_scale * percent_padding,
+                height_scale * percent_padding,
+            ),
+        max: base_pos
+            + egui::Vec2::new(
+                width_scale * (1. - percent_padding),
+                height_scale * (1. - percent_padding),
+            ),
     })
 }
 
 fn draw_current_beat(
     current_beat: f32,
     to_screen: RectTransform,
-    ui: &mut egui::Ui,
+    ui: &egui::Ui,
     shapes: &mut Vec<Shape>,
     beats_per_loop: usize,
 ) {
@@ -864,7 +839,7 @@ fn note_success_shape(
         (bar_color.b * 256.) as u8,
     );
 
-    egui::Shape::rect_filled(rect, egui::Rounding::default(), bar_color_32)
+    egui::Shape::rect_filled(rect, egui::Rounding::default().at_least(5.0), bar_color_32)
 }
 
 fn gold_mode(ui: &mut egui::Ui, ui_state: &UIState) {

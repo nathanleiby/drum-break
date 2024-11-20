@@ -12,6 +12,8 @@ pub const DEFAULT_BEATS_PER_LOOP: usize = 16;
 //
 // Audio
 //
+// TODO: I notice that if the BPM is high in a web build (like 180) it seems like things are hiccuping. Maybe could schedule further ahead?
+// pub const TICK_SCHEDULE_AHEAD: f64 = 4.; // schedule audio this many (N) ticks ahead of time (i.e. N seconds ahead if at 60bpm)
 pub const TICK_SCHEDULE_AHEAD: f64 = 2.; // schedule audio this many (N) ticks ahead of time (i.e. N seconds ahead if at 60bpm)
 
 // General use

@@ -33,6 +33,7 @@ pub struct Flags {
     pub dev_tools_visible: bool,
     pub help_visible: bool,
     pub hide_empty_tracks: bool,
+    pub side_panels_visible: bool,
 }
 
 impl Flags {
@@ -42,6 +43,7 @@ impl Flags {
             dev_tools_visible: false,
             help_visible: false,
             hide_empty_tracks: false,
+            side_panels_visible: false,
         }
     }
 }
@@ -115,6 +117,7 @@ pub fn compute_ui_state(gs: &GameState, audio: &Audio, midi_device_name: &str) -
     ui_state.set_audio_latency_s(audio.get_configured_audio_latency_seconds() as f32);
     ui_state.set_user_hits(&audio.user_hits);
     ui_state.set_desired_hits(&gs.voices);
+    ui_state.set_are_side_panels_visible(gs.flags.side_panels_visible);
     ui_state.set_metronome_enabled(audio.is_metronome_enabled());
 
     ui_state.set_is_dev_tools_visible(gs.flags.dev_tools_visible);
@@ -295,6 +298,9 @@ pub fn process_user_events(
             }
             Events::ToggleEmptyTrackVisibility => {
                 flags.hide_empty_tracks = !flags.hide_empty_tracks;
+            }
+            Events::ToggleSidePanelVisibility => {
+                flags.side_panels_visible = !flags.side_panels_visible;
             }
             Events::RefreshConnectedMidiDevice => {
                 midi_input.refresh_connected_device();
