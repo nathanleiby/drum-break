@@ -6,7 +6,6 @@ use egui::{
 
 use egui_plot::{Line, Plot};
 
-// EguiContexts, EguiPlugin,
 use log::info;
 use macroquad::color::{DARKBLUE, GREEN, LIGHTGRAY, ORANGE, PURPLE, RED};
 
@@ -220,8 +219,6 @@ fn dev_tools(ctx: &egui::Context, ui_state: &UIState, events: &mut Vec<Events>) 
         return;
     }
 
-    // TODO: Floating window could work, but need to capture mouse events to ensure it isn't toggling the beat grid behidn it
-    // egui::Window::new("Developer Tools").show(ctx, |ui| {
     egui::TopBottomPanel::bottom("bottom_panel").show(ctx, |ui| {
         ui.vertical_centered(|ui| {
             ui.heading("Dev Tools");
@@ -252,8 +249,6 @@ fn dev_tools(ctx: &egui::Context, ui_state: &UIState, events: &mut Vec<Events>) 
 
 fn draw_top_panel(ctx: &egui::Context, ui_state: &UIState, events: &mut Vec<Events>) {
     egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
-        // The top panel is often a good place for a menu bar:
-
         egui::menu::bar(ui, |ui| {
             // NOTE: no File->Quit on web pages!
             let is_web = cfg!(target_arch = "wasm32");
@@ -531,61 +526,13 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
 
     let mut shapes = vec![];
 
-    // Draw background
-    let bg_rect = egui::Shape::rect_filled(
-        to_screen.transform_rect(egui::Rect {
-            min: pos2(0., 0.),
-            max: pos2(VIRTUAL_WIDTH, VIRTUAL_HEIGHT),
-        }),
-        egui::Rounding::default(),
-        Color32::LIGHT_BLUE,
-    );
-    shapes.push(bg_rect);
+    draw_background(to_screen, &mut shapes);
 
-    const LIGHTER_BLUE: Color32 = Color32::from_rgb(163, 206, 220);
-    // draw horizontal "zebra" stripes for row legibility
-    for visible_row in 0..visible_rows {
-        if visible_row % 2 == 0 {
-            continue;
-        }
+    draw_zebra_stripes(visible_rows, height_scale, to_screen, &mut shapes);
 
-        let base_pos = pos2(0., (visible_row as f32) * height_scale);
-        let start_pt = to_screen.transform_pos(base_pos);
-        let end_pt =
-            to_screen.transform_pos(base_pos + egui::Vec2::new(VIRTUAL_WIDTH, 1. * height_scale));
-        let shape = egui::Shape::rect_filled(
-            egui::Rect::from_two_pos(start_pt, end_pt),
-            egui::Rounding::default(),
-            LIGHTER_BLUE,
-        );
-        shapes.push(shape);
-    }
+    draw_vertical_lines(visible_cols, width_scale, to_screen, &mut shapes);
 
-    // draw vertical lines
-    for col in 0..visible_cols {
-        let base_pos = pos2((col as f32) * width_scale, 0.);
-        let start_pt = to_screen.transform_pos(base_pos);
-        let end_pt = to_screen.transform_pos(base_pos + egui::Vec2::new(0., VIRTUAL_HEIGHT));
-
-        let shape = egui::Shape::line(
-            vec![start_pt, end_pt],
-            egui::Stroke::new(if col % 4 == 0 { 2. } else { 1. }, Color32::DARK_GRAY),
-        );
-        shapes.push(shape);
-    }
-
-    // Draw horizontal lines
-    for visible_row in 0..visible_rows {
-        // draw a horizontal line through the middle
-        let base_pos = pos2(0., (visible_row as f32 + 0.5) * height_scale);
-        let start_pt = to_screen.transform_pos(base_pos);
-        let end_pt = to_screen.transform_pos(base_pos + egui::Vec2::new(VIRTUAL_WIDTH, 0.));
-        let shape = egui::Shape::line(
-            vec![start_pt, end_pt],
-            egui::Stroke::new(1., Color32::DARK_GRAY),
-        );
-        shapes.push(shape);
-    }
+    draw_horizontal_lines(visible_rows, height_scale, to_screen, &mut shapes);
 
     for (visible_row, ins) in visible_instruments.iter().enumerate().take(visible_rows) {
         let desired_hits = ui_state.desired_hits.get_instrument_beats(ins);
@@ -654,6 +601,82 @@ fn draw_beat_grid(ui_state: &UIState, ui: &mut egui::Ui, events: &mut Vec<Events
         let t_rect = rect_for_col_row(0., row, to_screen, width_scale, height_scale);
         let label = egui::Label::new(name);
         ui.put(t_rect, label);
+    }
+}
+
+fn draw_background(to_screen: RectTransform, shapes: &mut Vec<Shape>) {
+    let bg_rect = egui::Shape::rect_filled(
+        to_screen.transform_rect(egui::Rect {
+            min: pos2(0., 0.),
+            max: pos2(VIRTUAL_WIDTH, VIRTUAL_HEIGHT),
+        }),
+        egui::Rounding::default(),
+        Color32::LIGHT_BLUE,
+    );
+    shapes.push(bg_rect);
+}
+
+fn draw_zebra_stripes(
+    visible_rows: usize,
+    height_scale: f32,
+    to_screen: RectTransform,
+    shapes: &mut Vec<Shape>,
+) {
+    const LIGHTER_BLUE: Color32 = Color32::from_rgb(163, 206, 220);
+    // draw horizontal "zebra" stripes for row legibility
+    for visible_row in 0..visible_rows {
+        if visible_row % 2 == 0 {
+            continue;
+        }
+
+        let base_pos = pos2(0., (visible_row as f32) * height_scale);
+        let start_pt = to_screen.transform_pos(base_pos);
+        let end_pt =
+            to_screen.transform_pos(base_pos + egui::Vec2::new(VIRTUAL_WIDTH, 1. * height_scale));
+        let shape = egui::Shape::rect_filled(
+            egui::Rect::from_two_pos(start_pt, end_pt),
+            egui::Rounding::default(),
+            LIGHTER_BLUE,
+        );
+        shapes.push(shape);
+    }
+}
+
+fn draw_vertical_lines(
+    visible_cols: usize,
+    width_scale: f32,
+    to_screen: RectTransform,
+    shapes: &mut Vec<Shape>,
+) {
+    for col in 0..visible_cols {
+        let base_pos = pos2((col as f32) * width_scale, 0.);
+        let start_pt = to_screen.transform_pos(base_pos);
+        let end_pt = to_screen.transform_pos(base_pos + egui::Vec2::new(0., VIRTUAL_HEIGHT));
+
+        let shape = egui::Shape::line(
+            vec![start_pt, end_pt],
+            egui::Stroke::new(if col % 4 == 0 { 2. } else { 1. }, Color32::DARK_GRAY),
+        );
+        shapes.push(shape);
+    }
+}
+
+fn draw_horizontal_lines(
+    visible_rows: usize,
+    height_scale: f32,
+    to_screen: RectTransform,
+    shapes: &mut Vec<Shape>,
+) {
+    for visible_row in 0..visible_rows {
+        // draw a horizontal line through the middle
+        let base_pos = pos2(0., (visible_row as f32 + 0.5) * height_scale);
+        let start_pt = to_screen.transform_pos(base_pos);
+        let end_pt = to_screen.transform_pos(base_pos + egui::Vec2::new(VIRTUAL_WIDTH, 0.));
+        let shape = egui::Shape::line(
+            vec![start_pt, end_pt],
+            egui::Stroke::new(1., Color32::DARK_GRAY),
+        );
+        shapes.push(shape);
     }
 }
 
