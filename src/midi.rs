@@ -41,7 +41,13 @@ impl MidiInputDataRaw {
 impl MidiInput {
     pub fn new() -> Option<Self> {
         log::info!("MidiInput::new()");
-        let midi_input = midir::MidiInput::new("Input device").unwrap();
+        let client_name = format!("midi_input_{}", macroquad::rand::gen_range(0, 1000000));
+        let midi_input = midir::MidiInput::new(client_name.as_str());
+        if midi_input.is_err() {
+            return None;
+        }
+        let midi_input = midi_input.unwrap();
+
         log::info!("port count {}", midi_input.port_count());
         // grab first device
         let input_port = match midi_input.ports().into_iter().next() {
