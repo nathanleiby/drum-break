@@ -8,3 +8,6 @@ release*.zip
 
 dist/
 drum-break.wasm
+
+# vs code extension
+.specstory
