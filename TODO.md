@@ -1,21 +1,15 @@
 # TODO
 
-Working on:
-
-- [x] Get logging working in browser
-- getting midi input working in browser
-  - verified it does wwork you just need to wait
-- show attached midi device in UI
-- allow refreshing attached midi device via button press
-- variable number of beats per loop
+(_Moved todos to https://github.com/nathanleiby/drum-break/issues._)
 
 ---
 
-_Moved todos to https://github.com/nathanleiby/drum-break/issues._
+Working on:
 
-- Add zebra stripes to rows of table, for better legibility
-- Metronome still causes screen to flash.
-  - Can likely fix same way.. "load once at start, then clone"
+---
+
+- Fix midi mapping for TD27. Closed HiHat hit is triggering "open hihat" note in app.
+- Nicer icon and helper text in top right (see [rerun code](https://github.com/rerun-io/rerun/blob/1ad3042a85622804a6923a5d0c65f82ba1e601d3/crates/viewer/re_viewer/src/ui/top_panel.rs#L267-L281))
 - improve usability of updating Latency offset.. clicking `]` over and over is slow.. and `shift + ]` jumps a bit too far per step (half it?).
 - re-think audio scheduling. pretty sure i have a task for this but just a reminder ("just in time" is imperfect)
   - e.g. can stop sounds if they're removed, by calling handle.stop() ([docs](https://tesselode.github.io/kira/playing-sounds.html))
