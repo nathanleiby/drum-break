@@ -50,10 +50,7 @@ impl MidiInput {
 
         log::info!("port count {}", midi_input.port_count());
         // grab first device
-        let input_port = match midi_input.ports().into_iter().next() {
-            Some(port) => port,
-            None => return None,
-        };
+        let input_port = midi_input.ports().into_iter().next()?;
 
         let device_name = midi_input
             .port_name(&input_port)
